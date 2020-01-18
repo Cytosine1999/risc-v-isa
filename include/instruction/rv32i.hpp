@@ -397,13 +397,6 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<[](UXLenT a, UXLenT b) { return a & b; }>(reg); }
     };
 
-    class InstructionFenceSet : public Instruction32I {
-    public:
-        static constexpr UInnerT OP_CODE = 0110111;
-
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
-    };
-
     class FENCEInst : public InstructionFenceSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b000;
@@ -416,25 +409,6 @@ namespace risc_v_isa {
 
             // todo
         }
-    };
-
-    class FENCEIInst : public InstructionFenceSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b001;
-
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 32, 20>); }
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class InstructionSystemSet : public Instruction32I {
-    public:
-        static constexpr UInnerT OP_CODE = 0b1110011;
     };
 
     class InstructionEnvironmentSet : public InstructionSystemSet {
@@ -461,78 +435,6 @@ namespace risc_v_isa {
     class EBREAKInst : public InstructionEnvironmentSet {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRWInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b001;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRSInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b010;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRCInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b011;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRWIInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b101;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRSIInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b110;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
-    };
-
-    class CSRRCIInst : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b111;
 
         template<typename RegT>
         void operator()(RegT &reg) const {

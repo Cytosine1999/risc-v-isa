@@ -221,6 +221,18 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_7 = 0b0000000;
     };
 
+    class InstructionFenceSet : public Instruction32I {
+    public:
+        static constexpr UInnerT OP_CODE = 0110111;
+
+        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
+    };
+
+    class InstructionSystemSet : public Instruction32I {
+    public:
+        static constexpr UInnerT OP_CODE = 0b1110011;
+    };
+
 #if defined(__RVCUSTOM0__)
     class InstructionCustome0 : public Instruction32 {
     public:

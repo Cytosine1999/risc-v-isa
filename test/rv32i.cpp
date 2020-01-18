@@ -106,23 +106,9 @@ public:
 //
 //    RetT visit_fence_inst(FENCEInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
 //
-//    RetT visit_fencei_inst(FENCEIInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
-//
 //    RetT visit_ecall_inst(ECALLInst *self) { return static_cast<T *>(this)->visit_environment_set_inst(self); }
 //
 //    RetT visit_ebreak_inst(EBREAKInst *self) { return static_cast<T *>(this)->visit_environment_set_inst(self); }
-//
-//    RetT visit_csrrw_inst(CSRRWInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-//
-//    RetT visit_csrrs_inst(CSRRSInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-//
-//    RetT visit_csrrc_inst(CSRRCInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-//
-//    RetT visit_csrrwi_inst(CSRRWIInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-//
-//    RetT visit_csrrsi_inst(CSRRSIInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-//
-//    RetT visit_csrrci_inst(CSRRCIInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
 
 };
 

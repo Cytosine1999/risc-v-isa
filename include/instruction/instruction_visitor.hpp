@@ -12,6 +12,17 @@
 #include "rv32i.hpp"
 
 #endif // defined(__RV32I__) || defined(__RV64I__) || defined(__RV128I__)
+#if defined(__RV_ZIFENCEI_EXTENSION__)
+
+#include "zifencei.hpp"
+
+#endif // defined(__RV_ZIFENCEI_EXTENSION__)
+#if defined(__RV_ZICSR_EXTENSION__)
+
+#include "zicsr.hpp"
+
+#endif // defined(__RV_ZICSR_EXTENSION__)
+
 
 namespace risc_v_isa {
     template<typename T, typename _RetT = void>
@@ -295,10 +306,12 @@ namespace risc_v_isa {
                     if (reinterpret_cast<FENCEInst *>(self)->get_unused() != 0)
                         return static_cast<T *>(this)->illegal_instruction(self);
                     return visit_fence_inst(reinterpret_cast<FENCEInst *>(self));
+#if defined(__RV_ZIFENCEI_EXTENSION__)
                 case FENCEIInst::FUNC_3:
                     if (reinterpret_cast<FENCEIInst *>(self)->get_unused() != 0)
                         return static_cast<T *>(this)->illegal_instruction(self);
                     return visit_fencei_inst(reinterpret_cast<FENCEIInst *>(self));
+#endif // defined(__RV_ZIFENCEI_EXTENSION__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(self);
             }
@@ -310,6 +323,7 @@ namespace risc_v_isa {
                     if (reinterpret_cast<InstructionEnvironmentSet *>(self)->get_unused() != 0)
                         return static_cast<T *>(this)->illegal_instruction(self);
                     return visit_environment_set(reinterpret_cast<InstructionEnvironmentSet *>(self));
+#if defined(__RV_ZICSR_EXTENSION__)
                 case CSRRWInst::FUNC_3:
                     return visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(self));
                 case CSRRSInst::FUNC_3:
@@ -322,6 +336,7 @@ namespace risc_v_isa {
                     return visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(self));
                 case CSRRCIInst::FUNC_3:
                     return visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(self));
+#endif // defined(__RV_ZICSR_EXTENSION__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(self);
             }
@@ -465,8 +480,6 @@ namespace risc_v_isa {
 
         RetT visit_fence_inst(FENCEInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
 
-        RetT visit_fencei_inst(FENCEIInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
-
         RetT visit_system_set_inst(InstructionSystemSet *self) { return static_cast<T *>(this)->visit_32_inst(self); }
 
         void end_system_set_inst(InstructionSystemSet *self) {}
@@ -481,6 +494,11 @@ namespace risc_v_isa {
 
         RetT visit_ebreak_inst(EBREAKInst *self) { return static_cast<T *>(this)->visit_environment_set_inst(self); }
 
+#endif // defined(__RV32I__) || defined(__RV64I__) || defined(__RV128I__)
+#if defined(__RV_ZIFENCEI_EXTENSION__)
+        RetT visit_fencei_inst(FENCEIInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
+#endif // defined(__RV_ZIFENCEI_EXTENSION__)
+#if defined(__RV_ZICSR_EXTENSION__)
         RetT visit_csrrw_inst(CSRRWInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
 
         RetT visit_csrrs_inst(CSRRSInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
@@ -492,8 +510,7 @@ namespace risc_v_isa {
         RetT visit_csrrsi_inst(CSRRSIInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
 
         RetT visit_csrrci_inst(CSRRCIInst *self) { return static_cast<T *>(this)->visit_system_set_inst(self); }
-
-#endif // defined(__RV32I__) || defined(__RV64I__) || defined(__RV128I__)
+#endif // defined(__RV_ZICSR_EXTENSION__)
 #if defined(__RVCUSTOM0__)
         RetT visit_custom_0_inst(InstructionCustome0 *self) { return static_cast<T *>(this)->visit_32_inst(self); }
 #endif // defined(__RVCUSTOM0__)
