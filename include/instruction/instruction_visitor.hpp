@@ -2,31 +2,13 @@
 #define RISC_V_ISA_INSTRUCTION_VISITOR_HPP
 
 
-#include <iostream>
-
 #include "utility.hpp"
 #include "instruction.hpp"
-
-#if defined(__RV32I__) || defined(__RV64I__)
-
 #include "rv32i.hpp"
-
-#endif // defined(__RV32I__) || defined(__RV64I__)
-#if defined(__RV_ZIFENCEI_EXTENSION__)
-
 #include "zifencei.hpp"
-
-#endif // defined(__RV_ZIFENCEI_EXTENSION__)
-#if defined(__RV_ZICSR_EXTENSION__)
-
 #include "zicsr.hpp"
-
-#endif // defined(__RV_ZICSR_EXTENSION__)
-#if defined(__RV32M__) || defined(__RV64M__)
-
 #include "rv32m.hpp"
 
-#endif // defined(__RV32M__) || defined(__RV64M__)
 
 namespace risc_v_isa {
     template<typename T, typename _RetT = void>
@@ -318,7 +300,30 @@ namespace risc_v_isa {
 #if defined(__RV32M__) || defined(__RV64M__)
                 case InstructionMulDivSet::FUNC_7:
                     switch (inst->get_funct3()) {
-                        // todo
+                        case MULInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_mul_inst(reinterpret_cast<MULInst *>(inst));
+                            break;
+                        case MULHInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_mulh_inst(reinterpret_cast<MULHInst *>(inst));
+                            break;
+                        case MULHSUInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_mulhsu_inst(reinterpret_cast<MULHSUInst *>(inst));
+                            break;
+                        case MULHUInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_mulhu_inst(reinterpret_cast<MULHUInst *>(inst));
+                            break;
+                        case DIVInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_div_inst(reinterpret_cast<DIVInst *>(inst));
+                            break;
+                        case DIVUInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_divu_inst(reinterpret_cast<DIVUInst *>(inst));
+                            break;
+                        case REMInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_rem_inst(reinterpret_cast<REMInst *>(inst));
+                            break;
+                        case REMUInst::FUNCT_3:
+                            ret = static_cast<T *>(this)->visit_remu_inst(reinterpret_cast<REMUInst *>(inst));
+                            break;
                         default:
                             return static_cast<T *>(this)->illegal_instruction(inst);
                     }
@@ -406,15 +411,11 @@ namespace risc_v_isa {
         }
 
         RetT illegal_instruction(Instruction *inst) {
-            std::cerr << "Illegal instruction at " << inst << std::endl;
-
-            abort();
+            risc_v_isa_unreachable("Illegal instruction met!");
         }
 
         RetT visit_inst(Instruction *inst) {
-            std::cerr << "Uncaught instruction in visitor definition!" << std::endl;
-
-            abort();
+            risc_v_isa_unreachable("Uncaught instruction in visitor definition!");
         }
 
         void end_inst(Instruction *inst) {}
@@ -556,6 +557,21 @@ namespace risc_v_isa {
 #endif // defined(__RV32I__) || defined(__RV64I__)
 #if defined(__RV32M__) || defined(__RV64M__)
 
+        RetT visit_mul_inst(MULInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_mulh_inst(MULHInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_mulhsu_inst(MULHSUInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_mulhu_inst(MULHUInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_div_inst(DIVInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_divu_inst(DIVUInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_rem_inst(REMInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
+
+        RetT visit_remu_inst(REMUInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
 
 #endif // defined(__RV32M__) || defined(__RV64M__)
 #if defined(__RV_ZIFENCEI_EXTENSION__)

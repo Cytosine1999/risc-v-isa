@@ -8,6 +8,7 @@
 #include "memory/memory.hpp"
 
 
+#if defined(__RV32I__) || defined(__RV64I__)
 namespace risc_v_isa {
     namespace {
         struct EQ {
@@ -472,6 +473,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
     };
 }
+#endif // defined(__RV32I__) || defined(__RV64I__)
 
 
 #endif //RISC_V_ISA_RV32I_HPP

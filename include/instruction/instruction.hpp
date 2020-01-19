@@ -7,6 +7,11 @@
 #include "memory/memory.hpp"
 
 
+// todo: some question to be defined,
+//      1. use operator() as semantic?
+//      2. unify signature of all instruction?
+//      3. use bool as return type?
+
 namespace risc_v_isa {
     class Instruction {
 

@@ -18,9 +18,11 @@ namespace risc_v_isa {
         Memory(usize page_num) : memory_size{page_num * page_size()} {
             memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size + page_size(), PROT_READ | PROT_WRITE,
                                                    MAP_ANONYMOUS | MAP_SHARED, -1, 0));
-            if (memory_offset == MAP_FAILED) abort();
+            if (memory_offset == MAP_FAILED) risc_v_isa_abort("Memory map failed!");
 
-            mprotect(memory_offset + memory_size, page_size(), PROT_NONE); // todo: memory wrap around through interrupt
+            // todo: memory wrap around through interrupt
+            if(mprotect(memory_offset + memory_size, page_size(), PROT_NONE) != 0)
+                risc_v_isa_abort("Guard page set failed!");
         }
 
         Memory(const Memory &other) = delete;

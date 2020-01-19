@@ -2,6 +2,7 @@
 #define RISC_V_ISA_UTILITY_HPP
 
 
+#include <iostream>
 #include <zconf.h>
 #include <cstdint>
 #include <cstddef>
@@ -18,6 +19,22 @@
 
 
 namespace risc_v_isa {
+    __attribute__((noreturn)) void _abort(const char *file, int line, const char *msg) {
+        std::cerr << "Abort at file " << file << ", line " << line << ": " << msg << std::endl;
+
+        abort();
+    }
+
+#define risc_v_isa_abort(msg) risc_v_isa::_abort(__FILE__, __LINE__, msg)
+
+    __attribute__((noreturn)) void _unreachable(const char *file, int line, const char *msg) {
+        std::cerr << "Unreachable at file " << file << ", line " << line << ": " << msg << std::endl;
+
+        abort();
+    }
+
+#define risc_v_isa_unreachable(msg) risc_v_isa::_unreachable(__FILE__, __LINE__, msg)
+
     using i8 = int8_t;
     using u8 = u_int8_t;
     using i16 = int16_t;
