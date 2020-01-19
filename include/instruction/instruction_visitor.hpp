@@ -77,23 +77,23 @@ namespace risc_v_isa {
         RetT visit_32(Instruction32 *inst) {
             RetT ret{};
 
-            usize op = inst->get_op_code();
+            usize op = inst->get_op_code(); // todo: remove
 
             switch (inst->get_op_code()) {
 #if defined(__RV32I__) || defined(__RV64I__) || defined(__RV128I__)
                 case LUIInst::OP_CODE:
-                    ret = visit_lui_inst(reinterpret_cast<LUIInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_lui_inst(reinterpret_cast<LUIInst *>(inst));
                     break;
                 case AUIPCInst::OP_CODE:
-                    ret = visit_auipc_inst(reinterpret_cast<AUIPCInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_auipc_inst(reinterpret_cast<AUIPCInst *>(inst));
                     break;
                 case JALInst::OP_CODE:
-                    ret = visit_jal_inst(reinterpret_cast<JALInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_jal_inst(reinterpret_cast<JALInst *>(inst));
                     break;
                 case JALRInst::OP_CODE:
                     if (reinterpret_cast<JALRInst *>(inst)->get_funct3() != JALRInst::FUNC_3)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    ret = visit_jalr_inst(reinterpret_cast<JALRInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_jalr_inst(reinterpret_cast<JALRInst *>(inst));
                     break;
                 case InstructionBranchSet::OP_CODE:
                     ret = visit_branch_set(reinterpret_cast<InstructionBranchSet *>(inst));
@@ -121,22 +121,22 @@ namespace risc_v_isa {
 #endif // defined(__RV32I__) || defined(__RV64I__) || defined(__RV128I__)
 #if defined(__RVCUSTOM0__)
                 case InstructionCustome0::OP_CODE:
-                    ret = visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    ret = static_cast<T *>(this)->visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
                     break;
 #endif // defined(__RVCUSTOM0__)
 #if defined(__RVCUSTOM1__)
                 case InstructionCustome1::OP_CODE:
-                    ret = visit_custom_1_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    ret = static_cast<T *>(this)->visit_custom_1_inst(reinterpret_cast<InstructionCustome0 *>(inst));
                     break;
 #endif // defined(__RVCUSTOM1__)
 #if defined(__RVCUSTOM2__)
                 case InstructionCustome2::OP_CODE:
-                    ret = visit_custom_2_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    ret = static_cast<T *>(this)->visit_custom_2_inst(reinterpret_cast<InstructionCustome0 *>(inst));
                     break;
 #endif // defined(__RVCUSTOM2__)
 #if defined(__RVCUSTOM3__)
                 case InstructionCustome3::OP_CODE:
-                    ret = visit_custom_3_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    ret = static_cast<T *>(this)->visit_custom_3_inst(reinterpret_cast<InstructionCustome0 *>(inst));
                     break;
 #endif // defined(__RVCUSTOM3__)
                 default:
@@ -155,22 +155,22 @@ namespace risc_v_isa {
 
             switch (inst->get_funct3()) {
                 case BEQInst::FUNC_3:
-                    ret = visit_beq_inst(reinterpret_cast<BEQInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_beq_inst(reinterpret_cast<BEQInst *>(inst));
                     break;
                 case BNEInst::FUNC_3:
-                    ret = visit_bne_inst(reinterpret_cast<BNEInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_bne_inst(reinterpret_cast<BNEInst *>(inst));
                     break;
                 case BLTInst::FUNC_3:
-                    ret = visit_blt_inst(reinterpret_cast<BLTInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_blt_inst(reinterpret_cast<BLTInst *>(inst));
                     break;
                 case BGEInst::FUNC_3:
-                    ret = visit_bge_inst(reinterpret_cast<BGEInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_bge_inst(reinterpret_cast<BGEInst *>(inst));
                     break;
                 case BLTUInst::FUNC_3:
-                    ret = visit_bltu_inst(reinterpret_cast<BLTUInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_bltu_inst(reinterpret_cast<BLTUInst *>(inst));
                     break;
                 case BGEUInst::FUNC_3:
-                    ret = visit_bgeu_inst(reinterpret_cast<BGEUInst *>(inst));
+                    ret = static_cast<T *>(this)->visit_bgeu_inst(reinterpret_cast<BGEUInst *>(inst));
                     break;
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
@@ -184,15 +184,15 @@ namespace risc_v_isa {
         RetT visit_load_set(InstructionLoadSet *inst) {
             switch (inst->get_funct3()) {
                 case LBInst::FUNC_3:
-                    return visit_lb_inst(reinterpret_cast<LBInst *>(inst));
+                    return static_cast<T *>(this)->visit_lb_inst(reinterpret_cast<LBInst *>(inst));
                 case LHInst::FUNC_3:
-                    return visit_lh_inst(reinterpret_cast<LHInst *>(inst));
+                    return static_cast<T *>(this)->visit_lh_inst(reinterpret_cast<LHInst *>(inst));
                 case LWInst::FUNC_3:
-                    return visit_lw_inst(reinterpret_cast<LWInst *>(inst));
+                    return static_cast<T *>(this)->visit_lw_inst(reinterpret_cast<LWInst *>(inst));
                 case LBUInst::FUNC_3:
-                    return visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
+                    return static_cast<T *>(this)->visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
                 case LHUInst::FUNC_3:
-                    return visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
+                    return static_cast<T *>(this)->visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -201,11 +201,11 @@ namespace risc_v_isa {
         RetT visit_store_set(InstructionStoreSet *inst) {
             switch (inst->get_funct3()) {
                 case SBInst::FUNC_3:
-                    return visit_sb_inst(reinterpret_cast<SBInst *>(inst));
+                    return static_cast<T *>(this)->visit_sb_inst(reinterpret_cast<SBInst *>(inst));
                 case SHInst::FUNC_3:
-                    return visit_sh_inst(reinterpret_cast<SHInst *>(inst));
+                    return static_cast<T *>(this)->visit_sh_inst(reinterpret_cast<SHInst *>(inst));
                 case SWInst::FUNC_3:
-                    return visit_sw_inst(reinterpret_cast<SWInst *>(inst));
+                    return static_cast<T *>(this)->visit_sw_inst(reinterpret_cast<SWInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -214,19 +214,19 @@ namespace risc_v_isa {
         RetT visit_arith_imm_set(InstructionArithImmSet *inst) {
             switch (inst->get_funct3()) {
                 case ADDIInst::FUNC_3:
-                    return visit_addi_inst(reinterpret_cast<ADDIInst *>(inst));
+                    return static_cast<T *>(this)->visit_addi_inst(reinterpret_cast<ADDIInst *>(inst));
                 case SLTIInst::FUNC_3:
-                    return visit_slti_inst(reinterpret_cast<SLTIInst *>(inst));
+                    return static_cast<T *>(this)->visit_slti_inst(reinterpret_cast<SLTIInst *>(inst));
                 case SLTIUInst::FUNC_3:
-                    return visit_sltiu_inst(reinterpret_cast<SLTIUInst *>(inst));
+                    return static_cast<T *>(this)->visit_sltiu_inst(reinterpret_cast<SLTIUInst *>(inst));
                 case XORIInst::FUNC_3:
-                    return visit_xori_inst(reinterpret_cast<XORIInst *>(inst));
+                    return static_cast<T *>(this)->visit_xori_inst(reinterpret_cast<XORIInst *>(inst));
                 case ORIInst::FUNC_3:
-                    return visit_ori_inst(reinterpret_cast<ORIInst *>(inst));
+                    return static_cast<T *>(this)->visit_ori_inst(reinterpret_cast<ORIInst *>(inst));
                 case ANDIInst::FUNC_3:
-                    return visit_andi_inst(reinterpret_cast<ANDIInst *>(inst));
+                    return static_cast<T *>(this)->visit_andi_inst(reinterpret_cast<ANDIInst *>(inst));
                 case SLLIWInst::FUNC_3:
-                    return visit_slli_inst(reinterpret_cast<SLLIWInst *>(inst));
+                    return static_cast<T *>(this)->visit_slli_inst(reinterpret_cast<SLLIWInst *>(inst));
                 case InstructionSrliwSraiw::FUNC_3:
                     return visit_srli_srai(reinterpret_cast<InstructionSrliwSraiw *>(inst));
                 default:
@@ -237,9 +237,9 @@ namespace risc_v_isa {
         RetT visit_srli_srai(InstructionSrliwSraiw *inst) {
             switch (inst->get_funct_shift()) {
                 case SRLIWInst::FUNC_SHIFT:
-                    return visit_srli_inst(reinterpret_cast<SRLIWInst *>(inst));
+                    return static_cast<T *>(this)->visit_srli_inst(reinterpret_cast<SRLIWInst *>(inst));
                 case SRAIWInst::FUNC_SHIFT:
-                    return visit_srai_inst(reinterpret_cast<SRAIWInst *>(inst));
+                    return static_cast<T *>(this)->visit_srai_inst(reinterpret_cast<SRAIWInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -252,29 +252,29 @@ namespace risc_v_isa {
                 case SLLWInst::FUNC_3:
                     if (reinterpret_cast<SLLWInst *>(inst)->get_funct7() != SLLWInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_sll_inst(reinterpret_cast<SLLWInst *>(inst));
+                    return static_cast<T *>(this)->visit_sll_inst(reinterpret_cast<SLLWInst *>(inst));
                 case SLTInst::FUNC_3:
                     if (reinterpret_cast<SLTInst *>(inst)->get_funct7() != SLTInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_slt_inst(reinterpret_cast<SLTInst *>(inst));
+                    return static_cast<T *>(this)->visit_slt_inst(reinterpret_cast<SLTInst *>(inst));
                 case SLTUInst::FUNC_3:
                     if (reinterpret_cast<SLTUInst *>(inst)->get_funct7() != SLTUInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_sltu_inst(reinterpret_cast<SLTUInst *>(inst));
+                    return static_cast<T *>(this)->visit_sltu_inst(reinterpret_cast<SLTUInst *>(inst));
                 case XORInst::FUNC_3:
                     if (reinterpret_cast<XORInst *>(inst)->get_funct7() != XORInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_xor_inst(reinterpret_cast<XORInst *>(inst));
+                    return static_cast<T *>(this)->visit_xor_inst(reinterpret_cast<XORInst *>(inst));
                 case InstructionSrlwSraw::FUNC_3:
                     return visit_srl_sra(reinterpret_cast<InstructionSrlwSraw *>(inst));
                 case ORInst::FUNC_3:
                     if (reinterpret_cast<ORInst *>(inst)->get_funct7() != ORInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_or_inst(reinterpret_cast<ORInst *>(inst));
+                    return static_cast<T *>(this)->visit_or_inst(reinterpret_cast<ORInst *>(inst));
                 case ANDInst::FUNC_3:
                     if (reinterpret_cast<ANDInst *>(inst)->get_funct7() != ANDInst::FUNC_7)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_and_inst(reinterpret_cast<ANDInst *>(inst));
+                    return static_cast<T *>(this)->visit_and_inst(reinterpret_cast<ANDInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -283,9 +283,9 @@ namespace risc_v_isa {
         RetT visit_add_sub(InstructionAddSub *inst) {
             switch (inst->get_funct7()) {
                 case ADDInst::FUNC_7:
-                    return visit_add_inst(reinterpret_cast<ADDInst *>(inst));
+                    return static_cast<T *>(this)->visit_add_inst(reinterpret_cast<ADDInst *>(inst));
                 case SUBInst::FUNC_7:
-                    return visit_sub_inst(reinterpret_cast<SUBInst *>(inst));
+                    return static_cast<T *>(this)->visit_sub_inst(reinterpret_cast<SUBInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -294,9 +294,9 @@ namespace risc_v_isa {
         RetT visit_srl_sra(InstructionSrlwSraw *inst) {
             switch (inst->get_funct7()) {
                 case SRLWInst::FUNC_7:
-                    return visit_srl_inst(reinterpret_cast<SRLWInst *>(inst));
+                    return static_cast<T *>(this)->visit_srl_inst(reinterpret_cast<SRLWInst *>(inst));
                 case SRAWInst::FUNC_7:
-                    return visit_sra_inst(reinterpret_cast<SRAWInst *>(inst));
+                    return static_cast<T *>(this)->visit_sra_inst(reinterpret_cast<SRAWInst *>(inst));
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -307,12 +307,12 @@ namespace risc_v_isa {
                 case FENCEInst::FUNC_3:
                     if (reinterpret_cast<FENCEInst *>(inst)->get_unused() != 0)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
+                    return static_cast<T *>(this)->visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
 #if defined(__RV_ZIFENCEI_EXTENSION__)
                 case FENCEIInst::FUNC_3:
                     if (reinterpret_cast<FENCEIInst *>(inst)->get_unused() != 0)
                         return static_cast<T *>(this)->illegal_instruction(inst);
-                    return visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
+                    return static_cast<T *>(this)->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
 #endif // defined(__RV_ZIFENCEI_EXTENSION__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
@@ -327,17 +327,17 @@ namespace risc_v_isa {
                     return visit_environment_set(reinterpret_cast<InstructionEnvironmentSet *>(inst));
 #if defined(__RV_ZICSR_EXTENSION__)
                 case CSRRWInst::FUNC_3:
-                    return visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
                 case CSRRSInst::FUNC_3:
-                    return visit_csrrs_inst(reinterpret_cast<CSRRSInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrs_inst(reinterpret_cast<CSRRSInst *>(inst));
                 case CSRRCInst::FUNC_3:
-                    return visit_csrrc_inst(reinterpret_cast<CSRRCInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrc_inst(reinterpret_cast<CSRRCInst *>(inst));
                 case CSRRWIInst::FUNC_3:
-                    return visit_csrrwi_inst(reinterpret_cast<CSRRWIInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrwi_inst(reinterpret_cast<CSRRWIInst *>(inst));
                 case CSRRSIInst::FUNC_3:
-                    return visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(inst));
                 case CSRRCIInst::FUNC_3:
-                    return visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
+                    return static_cast<T *>(this)->visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
 #endif // defined(__RV_ZICSR_EXTENSION__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);

@@ -254,8 +254,6 @@ int main() {
             3, 6, 7, 8
     };
 
-    std::cout << BITS_MASK<u32, 7, 0> << std::endl;
-
     RegisterFile reg{};
     Memory mem{1};
 

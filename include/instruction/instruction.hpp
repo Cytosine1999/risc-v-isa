@@ -158,7 +158,7 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0x0000011;
+        static constexpr UInnerT OP_CODE = 0b0000011;
 
     };
 
@@ -180,7 +180,7 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0x0100011;
+        static constexpr UInnerT OP_CODE = 0b0100011;
 
     };
 
@@ -200,7 +200,7 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0x0010011;
+        static constexpr UInnerT OP_CODE = 0b0010011;
 
     };
 
@@ -220,13 +220,13 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0x0110011;
+        static constexpr UInnerT OP_CODE = 0b0110011;
         static constexpr UInnerT FUNC_7 = 0b0000000;
     };
 
     class InstructionFenceSet : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0110111;
+        static constexpr UInnerT OP_CODE = 0b0001111;
 
         usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
     };
@@ -239,28 +239,28 @@ namespace risc_v_isa {
 #if defined(__RVCUSTOM0__)
     class InstructionCustome0 : public Instruction32 {
     public:
-        static constexpr UInnerT OP_CODE = 0x0001011;
+        static constexpr UInnerT OP_CODE = 0b0001011;
 
     };
 #endif // defined(__RVCUSTOM0__)
 #if defined(__RVCUSTOM1__)
     class InstructionCustome1 : public Instruction32 {
     public:
-        static constexpr UInnerT OP_CODE = 0x0101011;
+        static constexpr UInnerT OP_CODE = 0b0101011;
 
     };
 #endif // defined(__RVCUSTOM1__)
 #if defined(__RVCUSTOM2__)
     class InstructionCustome2 : public Instruction32 {
     public:
-        static constexpr UInnerT OP_CODE = 0x1011011;
+        static constexpr UInnerT OP_CODE = 0b1011011;
 
     };
 #endif // defined(__RVCUSTOM2__)
 #if defined(__RVCUSTOM3__)
     class InstructionCustome3 : public Instruction32 {
     public:
-        static constexpr UInnerT OP_CODE = 0x1111011;
+        static constexpr UInnerT OP_CODE = 0b1111011;
 
     };
 #endif // defined(__RVCUSTOM3__)

@@ -81,11 +81,11 @@ namespace risc_v_isa {
         static_assert(sizeof(T) * 8 >= end && end > begin && sizeof(T) * 8 >= end - begin + offset);
 
         if constexpr (begin > offset)
-            return (val >> (begin - offset)) && BITS_MASK<T, end - begin, 0> << offset;
+            return (val >> (begin - offset)) & BITS_MASK<T, end - begin, 0> << offset;
         else if constexpr (begin < offset)
-            return (val << (offset - begin)) && BITS_MASK<T, end - begin, 0> << offset;
+            return (val << (offset - begin)) & BITS_MASK<T, end - begin, 0> << offset;
         else
-            return val && BITS_MASK<T, end, begin>;
+            return val & BITS_MASK<T, end, begin>;
     }
 
     template<typename T, typename U>
