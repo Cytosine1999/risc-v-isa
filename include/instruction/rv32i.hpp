@@ -139,23 +139,6 @@ namespace risc_v_isa {
         }
     };
 
-    class InstructionBranchSet : public Instruction32B {
-    protected:
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            usize rs1 = get_rs1();
-            usize rs2 = get_rs2();
-            XLenT imm = get_imm();
-            reg.inc_pc(OP::op(reg.get_x(rs1), reg.get_x(rs2)) ? imm : INST_WIDTH);
-        }
-
-    public:
-        static constexpr UInnerT OP_CODE = 0b1100011;
-
-    };
-
     class BEQInst : public InstructionBranchSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b000;
@@ -373,28 +356,33 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<SRA>(reg); }
     };
 
-    class InstructionAddSub : public InstructionArithRegSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b000;
-    };
-
-    class ADDInst : public InstructionAddSub {
+    class InstructionIntegerRegSet : public InstructionArithRegSet {
     public:
         static constexpr UInnerT FUNC_7 = 0b0000000;
+    };
+
+    class InstructionIntegerRegModSet : public InstructionArithRegSet {
+    public:
+        static constexpr UInnerT FUNC_7 = 0b0100000;
+    };
+
+    class ADDInst : public InstructionIntegerRegSet {
+    public:
+        static constexpr UInnerT FUNC_3 = 0b000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<ADD>(reg); }
     };
 
-    class SUBInst : public InstructionAddSub {
+    class SUBInst : public InstructionIntegerRegModSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0100000;
+        static constexpr UInnerT FUNC_3 = 0b000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SUB>(reg); }
     };
 
-    class SLLWInst : public InstructionArithRegSet {
+    class SLLWInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b001;
 
@@ -402,7 +390,7 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<SLL>(reg); }
     };
 
-    class SLTInst : public InstructionArithRegSet {
+    class SLTInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b010;
 
@@ -410,7 +398,7 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<SLT>(reg); }
     };
 
-    class SLTUInst : public InstructionArithRegSet {
+    class SLTUInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b011;
 
@@ -418,7 +406,7 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<SLTU>(reg); }
     };
 
-    class XORInst : public InstructionArithRegSet {
+    class XORInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b100;
 
@@ -426,29 +414,23 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<XOR>(reg); }
     };
 
-    class InstructionSrlwSraw : public InstructionArithRegSet {
+    class SRLWInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b101;
-
-    };
-
-    class SRLWInst : public InstructionSrlwSraw {
-    public:
-        static constexpr UInnerT FUNC_7 = 0b0000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRL>(reg); }
     };
 
-    class SRAWInst : public InstructionSrlwSraw {
+    class SRAWInst : public InstructionIntegerRegModSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0100000;
+        static constexpr UInnerT FUNC_3 = 0b101;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRA>(reg); }
     };
 
-    class ORInst : public InstructionArithRegSet {
+    class ORInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b110;
 
@@ -456,7 +438,7 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<OR>(reg); }
     };
 
-    class ANDInst : public InstructionArithRegSet {
+    class ANDInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b111;
 
@@ -464,18 +446,11 @@ namespace risc_v_isa {
         void operator()(RegT &reg) const { operate_on<AND>(reg); }
     };
 
-    class FENCEInst : public InstructionFenceSet {
+    class FENCEInst : public InstructionFenceSet { // todo: deal with modification
     public:
         static constexpr UInnerT FUNC_3 = 0b000;
 
         usize get_unused() const { return inner & (BITS_MASK<UInnerT, 32, 28>); }
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
     };
 
     class InstructionEnvironmentSet : public InstructionSystemSet {
@@ -490,25 +465,11 @@ namespace risc_v_isa {
     class ECALLInst : public InstructionEnvironmentSet {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
     };
 
     class EBREAKInst : public InstructionEnvironmentSet {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            // todo
-        }
     };
 }
 

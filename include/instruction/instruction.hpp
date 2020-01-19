@@ -15,7 +15,12 @@ namespace risc_v_isa {
 #ifdef __RVC__
 
     class Instruction16 : public Instruction {
+        using InnerT = i16;
+        using UInnerT = u16;
 
+        static constexpr usize INST_WIDTH = sizeof(UInnerT);
+
+        InnerT inner;
     };
 
 #endif
@@ -26,10 +31,7 @@ namespace risc_v_isa {
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
-        static UInnerT slice_op_code(UInnerT val) {
-            UInnerT ret = get_slice<UInnerT, 7, 0>(val);
-            return ret;
-        }
+        static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 0>(val); }
 
         static UInnerT slice_rd(UInnerT val) { return get_slice<UInnerT, 12, 7>(val); }
 
@@ -139,6 +141,23 @@ namespace risc_v_isa {
 
     };
 
+    class InstructionBranchSet : public Instruction32B {
+    protected:
+        template<typename OP, typename RegT>
+        void operate_on(RegT &reg) const {
+            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+
+            usize rs1 = get_rs1();
+            usize rs2 = get_rs2();
+            XLenT imm = get_imm();
+            reg.inc_pc(OP::op(reg.get_x(rs1), reg.get_x(rs2)) ? imm : INST_WIDTH);
+        }
+
+    public:
+        static constexpr UInnerT OP_CODE = 0b1100011;
+
+    };
+
     class InstructionLoadSet : public Instruction32I {
     protected:
         template <typename ValT, typename RegT, typename MemT>
@@ -221,10 +240,9 @@ namespace risc_v_isa {
 
     public:
         static constexpr UInnerT OP_CODE = 0b0110011;
-        static constexpr UInnerT FUNC_7 = 0b0000000;
     };
 
-    class InstructionFenceSet : public Instruction32I {
+    class InstructionFenceSet : public Instruction32I { // todo: deal with modification
     public:
         static constexpr UInnerT OP_CODE = 0b0001111;
 
@@ -289,6 +307,8 @@ namespace risc_v_isa {
         else
             return nullptr;
     }
+
+    // todo: more dyn_cast
 }
 
 

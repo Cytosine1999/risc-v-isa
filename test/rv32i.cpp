@@ -54,12 +54,6 @@ public:
         return ILLEGAL_INSTRUCTION;
     }
 
-    RetT visit_inst(Instruction *inst) {
-        std::cerr << "Visitor of none void return not fully defined!" << std::endl;
-
-        abort();
-    }
-
     RetT visit_lui_inst(LUIInst *inst) {
         (*inst)(reg);
         return NONE;
@@ -222,8 +216,7 @@ public:
     }
 
     RetT visit_fence_inst(FENCEInst *inst) {
-        (*inst)(reg);
-        return NONE;
+        return NONE; // todo
     }
 
     RetT visit_ecall_inst(ECALLInst *inst) {

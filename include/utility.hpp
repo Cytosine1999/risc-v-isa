@@ -8,13 +8,13 @@
 #include <type_traits>
 
 
-#if defined(__RV128I__) && !defined(__x86_64__)
-#error "`RV128I` is not available for 32 bit architecture!"
-#endif
-
-#if defined(__RV128I__) && (defined(__RVCUSTOM2__) || defined(__RVCUSTOM3__))
-#error "`RV128I` conflicts with custom-2 and custon-3!"
-#endif
+//#if defined(__RV128I__) && !defined(__x86_64__)
+//#error "`RV128I` is not available for 32 bit architecture!"
+//#endif
+//
+//#if defined(__RV128I__) && (defined(__RVCUSTOM2__) || defined(__RVCUSTOM3__))
+//#error "`RV128I` conflicts with custom-2 and custon-3!"
+//#endif
 
 
 namespace risc_v_isa {
@@ -26,10 +26,10 @@ namespace risc_v_isa {
     using u32 = u_int32_t;
     using i64 = int64_t;
     using u64 = u_int64_t;
-#ifdef __x86_64__
-    using i128 = __int128;
-    using u128 = unsigned __int128;
-#endif
+//#ifdef __x86_64__
+//    using i128 = __int128;
+//    using u128 = unsigned __int128;
+//#endif
 #ifdef __x86_64__
     using isize = int64_t;
     using usize = u_int64_t;
@@ -55,9 +55,9 @@ namespace risc_v_isa {
 #elif defined(__RV64I__)
     using XLenT = i64;
     using UXLenT = u64;
-#elif defined(__RV128I__)
-    using XLenT = i128;
-    using UXLenT = u128;
+//#elif defined(__RV128I__)
+//    using XLenT = i128;
+//    using UXLenT = u128;
 #else
     using XLenT = void;
     using UXLenT = void;
