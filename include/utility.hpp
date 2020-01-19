@@ -44,6 +44,7 @@ namespace risc_v_isa {
 
     usize page_size() { return _PAGE_SIZE; }
 
+    // todo: move to initialize of hart?
     __attribute__((constructor)) void __initial_sys_config() {
         _PAGE_SIZE = sysconf(_SC_PAGESIZE);
     }
@@ -67,11 +68,11 @@ namespace risc_v_isa {
 
     namespace {
         template<typename T, usize end>
-        constexpr u32 _BITS_MASK = (static_cast<T>(1u) << end) - static_cast<T>(1u);
+        constexpr T _BITS_MASK = (static_cast<T>(1u) << end) - static_cast<T>(1u);
     }
 
-    template<typename T, usize end, usize begin = 0>
-    constexpr u32 BITS_MASK = _BITS_MASK<typename std::enable_if<(
+    template<typename T, usize end, usize begin>
+    constexpr T BITS_MASK = _BITS_MASK<typename std::enable_if<(
             std::is_unsigned<T>::value && sizeof(T) * 8 >= end && end > begin), T>::type,
             end - begin> << begin;
 
@@ -80,9 +81,9 @@ namespace risc_v_isa {
         static_assert(sizeof(T) * 8 >= end && end > begin && sizeof(T) * 8 >= end - begin + offset);
 
         if constexpr (begin > offset)
-            return (val >> (begin - offset)) && BITS_MASK<T, end - begin> << offset;
+            return (val >> (begin - offset)) && BITS_MASK<T, end - begin, 0> << offset;
         else if constexpr (begin < offset)
-            return (val << (offset - begin)) && BITS_MASK<T, end - begin> << offset;
+            return (val << (offset - begin)) && BITS_MASK<T, end - begin, 0> << offset;
         else
             return val && BITS_MASK<T, end, begin>;
     }

@@ -26,7 +26,10 @@ namespace risc_v_isa {
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
-        static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 0>(val); }
+        static UInnerT slice_op_code(UInnerT val) {
+            UInnerT ret = get_slice<UInnerT, 7, 0>(val);
+            return ret;
+        }
 
         static UInnerT slice_rd(UInnerT val) { return get_slice<UInnerT, 12, 7>(val); }
 
@@ -146,7 +149,7 @@ namespace risc_v_isa {
             size_t rd = get_rd();
             size_t rs1 = get_rs1();
             XLenT imm = get_imm();
-            ValT *ptr = *mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
+            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
             InnerT val = *ptr;
             if (rd != 0) reg.set_x(rd, val);
@@ -169,7 +172,7 @@ namespace risc_v_isa {
             size_t rs1 = get_rs1();
             size_t rs2 = get_rs2();
             XLenT imm = get_imm();
-            ValT *ptr = *mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
+            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
             *ptr = static_cast<ValT>(rs2);
             reg.inc_pc(INST_WIDTH);
@@ -191,7 +194,7 @@ namespace risc_v_isa {
             if (rd != 0) {
                 usize rs1 = get_rs1();
                 XLenT imm = get_imm();
-                set_gp_reg(rd, OP(reg.get_x(rs1), imm));
+                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
             }
             reg.inc_pc(INST_WIDTH);
         }
@@ -211,7 +214,7 @@ namespace risc_v_isa {
             if (rd != 0) {
                 usize rs1 = get_rs1();
                 usize rs2 = get_rs2();
-                set_gp_reg(rd, OP(reg.get_x(rs1), reg.get_x(rs2)));
+                reg.set_x(rd, OP::op(reg.get_x(rs1), reg.get_x(rs2)));
             }
             reg.inc_pc(INST_WIDTH);
         }

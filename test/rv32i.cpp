@@ -10,10 +10,14 @@ using namespace risc_v_isa;
 
 
 enum InternalInterrupt {
-
+    NONE,
+    ILLEGAL_INSTRUCTION,
+    MEMORY_ERROR,
+    ECALL,
+    EBREAK,
 };
 
-class RV32Hart : public InstructionVisitor<RV32Hart, bool> {
+class RV32Hart : public InstructionVisitor<RV32Hart, InternalInterrupt> {
 private:
     RegisterFile &reg;
     Memory &mem;
@@ -22,93 +26,213 @@ public:
     RV32Hart(RegisterFile &reg, Memory &mem) : reg{reg}, mem{mem} {}
 
     void start() {
-//        while(true) {
-//            Instruction *inst = mem.address<Instruction>(reg.get_pc());
-//
-//            if (!visit(inst))
-//                break;
-//        }
+        while (true) {
+            Instruction *inst = mem.address<Instruction>(reg.get_pc());
+
+            switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
+                case ILLEGAL_INSTRUCTION:
+                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' '
+                              << *reinterpret_cast<u32 *>(inst) << std::endl;
+
+                    return;
+                case MEMORY_ERROR:
+                    std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
+
+                    return;
+                case ECALL:
+
+                    break;
+                case EBREAK:
+
+                    break;
+                default:;
+            }
+        }
     }
 
-//    RetT visit_lui_inst(LUIInst *self) { return static_cast<T *>(this)->visit_32_inst(self); }
-//
-//    RetT visit_auipc_inst(AUIPCInst *self) { return static_cast<T *>(this)->visit_32_inst(self); }
-//
-//    RetT visit_jal_inst(JALInst *self) { return static_cast<T *>(this)->visit_32_inst(self); }
-//
-//    RetT visit_jalr_inst(JALRInst *self) { return static_cast<T *>(this)->visit_32_inst(self); }
-//
-//    RetT visit_beq_inst(BEQInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_bne_inst(BNEInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_blt_inst(BLTInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_bge_inst(BGEInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_bltu_inst(BLTUInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_bgeu_inst(BGEUInst *self) { return static_cast<T *>(this)->visit_branch_set_inst(self); }
-//
-//    RetT visit_lb_inst(LBInst *self) { return static_cast<T *>(this)->visit_load_set_inst(self); }
-//
-//    RetT visit_lh_inst(LHInst *self) { return static_cast<T *>(this)->visit_load_set_inst(self); }
-//
-//    RetT visit_lw_inst(LWInst *self) { return static_cast<T *>(this)->visit_load_set_inst(self); }
-//
-//    RetT visit_lbu_inst(LBUInst *self) { return static_cast<T *>(this)->visit_load_set_inst(self); }
-//
-//    RetT visit_lhu_inst(LHUInst *self) { return static_cast<T *>(this)->visit_load_set_inst(self); }
-//
-//    RetT visit_sb_inst(SBInst *self) { return static_cast<T *>(this)->visit_store_set_inst(self); }
-//
-//    RetT visit_sh_inst(SHInst *self) { return static_cast<T *>(this)->visit_store_set_inst(self); }
-//
-//    RetT visit_sw_inst(SWInst *self) { return static_cast<T *>(this)->visit_store_set_inst(self); }
-//
-//    RetT visit_addi_inst(ADDIInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_slti_inst(SLTIInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_sltiu_inst(SLTIUInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_xori_inst(XORIInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_ori_inst(ORIInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_andi_inst(ANDIInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_slli_inst(SLLIWInst *self) { return static_cast<T *>(this)->visit_arith_imm_set_inst(self); }
-//
-//    RetT visit_srli_inst(SRLIWInst *self) { return static_cast<T *>(this)->visit_srli_srai_inst(self); }
-//
-//    RetT visit_srai_inst(SRAIWInst *self) { return static_cast<T *>(this)->visit_srli_srai_inst(self); }
-//
-//    RetT visit_add_inst(ADDInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_sub_inst(SUBInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_sll_inst(SLLWInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_slt_inst(SLTInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_sltu_inst(SLTUInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_xor_inst(XORInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_srl_inst(SRLWInst *self) { return static_cast<T *>(this)->visit_srl_sra_inst(self); }
-//
-//    RetT visit_sra_inst(SRAWInst *self) { return static_cast<T *>(this)->visit_srl_sra_inst(self); }
-//
-//    RetT visit_or_inst(ORInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_and_inst(ANDInst *self) { return static_cast<T *>(this)->visit_arith_reg_set_inst(self); }
-//
-//    RetT visit_fence_inst(FENCEInst *self) { return static_cast<T *>(this)->visit_fence_set_inst(self); }
-//
-//    RetT visit_ecall_inst(ECALLInst *self) { return static_cast<T *>(this)->visit_environment_set_inst(self); }
-//
-//    RetT visit_ebreak_inst(EBREAKInst *self) { return static_cast<T *>(this)->visit_environment_set_inst(self); }
+    RetT illegal_instruction(Instruction *inst) {
+        return ILLEGAL_INSTRUCTION;
+    }
+
+    RetT visit_inst(Instruction *inst) {
+        std::cerr << "Visitor of none void return not fully defined!" << std::endl;
+
+        abort();
+    }
+
+    RetT visit_lui_inst(LUIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_auipc_inst(AUIPCInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_jal_inst(JALInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_jalr_inst(JALRInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_beq_inst(BEQInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_bne_inst(BNEInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_blt_inst(BLTInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_bge_inst(BGEInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_bltu_inst(BLTUInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_bgeu_inst(BGEUInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_lb_inst(LBInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_lh_inst(LHInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_lw_inst(LWInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_lbu_inst(LBUInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_lhu_inst(LHUInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_sb_inst(SBInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_sh_inst(SHInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_sw_inst(SWInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
+
+    RetT visit_addi_inst(ADDIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_slti_inst(SLTIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_sltiu_inst(SLTIUInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_xori_inst(XORIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_ori_inst(ORIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_andi_inst(ANDIInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_slli_inst(SLLIWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_srli_inst(SRLIWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_srai_inst(SRAIWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_add_inst(ADDInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_sub_inst(SUBInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_sll_inst(SLLWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_slt_inst(SLTInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_sltu_inst(SLTUInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_xor_inst(XORInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_srl_inst(SRLWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_sra_inst(SRAWInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_or_inst(ORInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_and_inst(ANDInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_fence_inst(FENCEInst *inst) {
+        (*inst)(reg);
+        return NONE;
+    }
+
+    RetT visit_ecall_inst(ECALLInst *inst) {
+        return ECALL;
+    }
+
+    RetT visit_ebreak_inst(EBREAKInst *inst) {
+        return EBREAK;
+    }
 
 };
 
@@ -130,6 +254,8 @@ int main() {
             3, 6, 7, 8
     };
 
+    std::cout << BITS_MASK<u32, 7, 0> << std::endl;
+
     RegisterFile reg{};
     Memory mem{1};
 
@@ -141,7 +267,5 @@ int main() {
     reg.set_pc(0);
     reg.set_x(RegisterFile::SP, 4092);
 
-
-
-    std::cout << page_size() << std::endl;
+    core.start();
 }

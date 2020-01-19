@@ -6,7 +6,6 @@
 #include <cstdlib>
 #include <zconf.h>
 #include <sys/mman.h>
-#include <mach/vm_page_size.h>
 
 
 namespace risc_v_isa {
@@ -21,7 +20,7 @@ namespace risc_v_isa {
                                                    MAP_ANONYMOUS | MAP_SHARED, -1, 0));
             if (memory_offset == MAP_FAILED) abort();
 
-            mprotect(memory_offset + memory_size, page_size(), PROT_NONE);
+            mprotect(memory_offset + memory_size, page_size(), PROT_NONE); // todo: memory wrap around through interrupt
         }
 
         Memory(const Memory &other) = delete;
@@ -30,7 +29,7 @@ namespace risc_v_isa {
 
         template<typename LoadT>
         LoadT *address(UXLenT addr) {
-            return addr < memory_size ? reinterpret_cast<LoadT *>(addr + memory_size) : nullptr;
+            return addr < memory_size ? reinterpret_cast<LoadT *>(memory_offset + addr) : nullptr;
         }
 
         bool memory_copy(UXLenT offset, const void *src, usize length) {
