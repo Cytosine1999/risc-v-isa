@@ -45,9 +45,11 @@ namespace risc_v_isa {
         }
 
 #if defined(__RVC__)
+
         RetT visit_16(InstructionBranchSet *inst) {
             return;
         }
+
 #endif // defined(__RVC__)
 
 #if defined(__RV32I__) || defined(__RV64I__)
@@ -422,7 +424,9 @@ namespace risc_v_isa {
 
 #endif // defined(__RV32I__) || defined(__RV64I__)
 #if defined(__RVC__)
+
         RetT visit_16_inst(Instruction16 *inst) { return static_cast<T *>(this)->visit_inst(); }
+
 #endif // defined(__RVC__)
 #if defined(__RV32I__) || defined(__RV64I__)
 
@@ -554,7 +558,6 @@ namespace risc_v_isa {
 
         RetT visit_ebreak_inst(EBREAKInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
-#endif // defined(__RV32I__) || defined(__RV64I__)
 #if defined(__RV32M__) || defined(__RV64M__)
 
         RetT visit_mul_inst(MULInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
@@ -575,9 +578,12 @@ namespace risc_v_isa {
 
 #endif // defined(__RV32M__) || defined(__RV64M__)
 #if defined(__RV_ZIFENCEI_EXTENSION__)
+
         RetT visit_fencei_inst(FENCEIInst *inst) { return static_cast<T *>(this)->visit_fence_set_inst(inst); }
+
 #endif // defined(__RV_ZIFENCEI_EXTENSION__)
 #if defined(__RV_ZICSR_EXTENSION__)
+
         RetT visit_csrrw_inst(CSRRWInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
         RetT visit_csrrs_inst(CSRRSInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
@@ -589,19 +595,29 @@ namespace risc_v_isa {
         RetT visit_csrrsi_inst(CSRRSIInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
         RetT visit_csrrci_inst(CSRRCIInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
+
 #endif // defined(__RV_ZICSR_EXTENSION__)
 #if defined(__RVCUSTOM0__)
+
         RetT visit_custom_0_inst(InstructionCustome0 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
+
 #endif // defined(__RVCUSTOM0__)
 #if defined(__RVCUSTOM1__)
+
         RetT visit_custom_1_inst(InstructionCustome1 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
+
 #endif // defined(__RVCUSTOM1__)
 #if defined(__RVCUSTOM2__)
+
         RetT visit_custom_2_inst(InstructionCustome2 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
+
 #endif // defined(__RVCUSTOM2__)
 #if defined(__RVCUSTOM3__)
+
         RetT visit_custom_3_inst(InstructionCustome3 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
+
 #endif // defined(__RVCUSTOM3__)
+#endif // defined(__RV32I__) || defined(__RV64I__)
     };
 }
 

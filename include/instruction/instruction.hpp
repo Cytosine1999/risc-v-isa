@@ -34,8 +34,6 @@ namespace risc_v_isa {
         using InnerT = i32;
         using UInnerT = u32;
 
-        static constexpr usize INST_WIDTH = sizeof(UInnerT);
-
         static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 0>(val); }
 
         static UInnerT slice_rd(UInnerT val) { return get_slice<UInnerT, 12, 7>(val); }
@@ -55,6 +53,8 @@ namespace risc_v_isa {
         InnerT inner;
 
     public:
+        static constexpr usize INST_WIDTH = sizeof(UInnerT);
+
         explicit Instruction32(InnerT val) : inner(val) {}
 
         usize get_op_code() const { return slice_op_code(inner); }
@@ -175,8 +175,7 @@ namespace risc_v_isa {
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
-            InnerT val = *ptr;
-            if (rd != 0) reg.set_x(rd, val);
+            if (rd != 0) reg.set_x(rd, *ptr);
             reg.inc_pc(INST_WIDTH);
             return true;
         }
@@ -198,7 +197,7 @@ namespace risc_v_isa {
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
-            *ptr = static_cast<ValT>(rs2);
+            *ptr = static_cast<ValT>(reg.get_x(rs2));
             reg.inc_pc(INST_WIDTH);
             return true;
         }
