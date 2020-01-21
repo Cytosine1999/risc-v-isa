@@ -11,68 +11,82 @@
 #if defined(__RV32I__) || defined(__RV64I__)
 namespace risc_v_isa {
     namespace {
-        constexpr UXLenT PTR_MASK = BITS_MASK<UXLenT, XLEN, 2>;
+        constexpr UXLenT PTR_MASK = BITS_MASK<UXLenT, XLEN, 1>;
 
-        struct EQ {
-            static bool op(XLenT a, XLenT b) { return a == b; }
-        };
+        struct EQ { static bool op(XLenT a, XLenT b) { return a == b; } };
 
-        struct NE {
-            static bool op(XLenT a, XLenT b) { return a != b; }
-        };
+        struct NE { static bool op(XLenT a, XLenT b) { return a != b; } };
 
-        struct LT {
-            static bool op(XLenT a, XLenT b) { return a < b; }
-        };
+        struct LT { static bool op(XLenT a, XLenT b) { return a < b; } };
 
-        struct GE {
-            static bool op(XLenT a, XLenT b) { return a >= b; }
-        };
+        struct GE { static bool op(XLenT a, XLenT b) { return a >= b; } };
 
-        struct LTU {
-            static bool op(UXLenT a, UXLenT b) { return a < b; }
-        };
+        struct LTU { static bool op(UXLenT a, UXLenT b) { return a < b; } };
 
-        struct ADD {
-            static XLenT op(XLenT a, XLenT b) { return a + b; }
-        };
+        struct ADD { static XLenT op(XLenT a, XLenT b) { return a + b; } };
 
-        struct SUB {
-            static XLenT op(XLenT a, XLenT b) { return a - b; }
-        };
+        struct SUB { static XLenT op(XLenT a, XLenT b) { return a - b; } };
 
-        struct SLT {
-            static XLenT op(XLenT a, XLenT b) { return a < b; }
-        };
+        struct SLT { static XLenT op(XLenT a, XLenT b) { return a < b; } };
 
-        struct SLTU {
-            static XLenT op(UXLenT a, UXLenT b) { return a < b; }
-        };
+        struct SLTU { static XLenT op(UXLenT a, UXLenT b) { return a < b; } };
 
-        struct XOR {
-            static XLenT op(UXLenT a, UXLenT b) { return a ^ b; }
-        };
+        struct XOR { static XLenT op(UXLenT a, UXLenT b) { return a ^ b; } };
 
-        struct OR {
-            static XLenT op(UXLenT a, UXLenT b) { return a | b; }
-        };
+        struct OR { static XLenT op(UXLenT a, UXLenT b) { return a | b; } };
 
-        struct AND {
-            static XLenT op(UXLenT a, UXLenT b) { return a & b; }
-        };
+        struct AND { static XLenT op(UXLenT a, UXLenT b) { return a & b; } };
 
-        struct SLL {
-            static XLenT op(UXLenT a, UXLenT b) { return a << b; }
-        };
+        struct SLL { static XLenT op(UXLenT a, UXLenT b) { return a << b; } };
 
-        struct SRL {
-            static XLenT op(UXLenT a, UXLenT b) { return a >> b; }
-        };
+        struct SRL { static XLenT op(UXLenT a, UXLenT b) { return a >> b; } };
 
-        struct SRA {
-            static XLenT op(XLenT a, UXLenT b) { return a >> b; }
-        };
+        struct SRA { static XLenT op(XLenT a, UXLenT b) { return a >> b; } };
     }
+
+    class InstructionShiftImmSet : public InstructionArithImmSet {
+    protected:
+        template<typename OP, typename RegT>
+        void operate_on(RegT &reg) const {
+            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+
+            usize rd = get_rd();
+            if (rd != 0) {
+                usize rs1 = get_rs1();
+                XLenT imm = get_shift_amount();
+                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
+            }
+            reg.inc_pc(INST_WIDTH);
+        }
+
+    public:
+        usize get_shift_amount() const { return slice_shift_amount(inner); }
+        usize get_funct_shift() const { return slice_funct_shift(inner); }
+    };
+
+    class InstructionShiftRightImmSet : public InstructionShiftImmSet {
+    public:
+        static constexpr UInnerT FUNC_3 = 0b101;
+    };
+
+    class InstructionIntegerRegSet : public InstructionArithRegSet {
+    public:
+        static constexpr UInnerT FUNC_7 = 0b0000000;
+    };
+
+    class InstructionIntegerRegModSet : public InstructionArithRegSet {
+    public:
+        static constexpr UInnerT FUNC_7 = 0b0100000;
+    };
+
+    class InstructionEnvironmentSet : public InstructionSystemSet {
+    public:
+        static constexpr UInnerT FUNC_3 = 0b000;
+
+        usize get_funct_environment() const { return inner & BITS_MASK<UInnerT, 32, 20>; }
+
+        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
+    };
 
     class LUIInst : public Instruction32U {
     public:
@@ -123,14 +137,19 @@ namespace risc_v_isa {
         static constexpr UInnerT OP_CODE = 0b1101111;
 
         template<typename RegT>
-        void operator()(RegT &reg) const {
+        bool operator()(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
 
             usize rd = get_rd();
             XLenT imm = get_imm();
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
-            reg.set_pc(pc + imm);
+            UXLenT target = pc + imm;
+#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if (get_slice<UXLenT , 2, 1>(target) != 0) return false;
+#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            reg.set_pc(target);
+            return true;
         }
 
         friend std::ostream &operator<<(std::ostream &stream, const JALInst &inst) {
@@ -145,14 +164,19 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_3 = 0b000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const {
+        bool operator()(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
 
             usize rd = get_rd();
             usize rs1 = get_rs1();
             XLenT imm = get_slice<UInnerT, 32, 21, 1>(inner);
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
-            reg.set_pc((reg.get_x(rs1) + imm) & PTR_MASK);
+            UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
+#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if (get_slice<UXLenT , 2, 1>(target) != 0) return false;
+#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            reg.set_pc(target);
+            return true;
         }
 
         friend std::ostream &operator<<(std::ostream &stream, const JALRInst &inst) {
@@ -421,79 +445,44 @@ namespace risc_v_isa {
         }
     };
 
-    class InstructionShiftImmSet : public InstructionArithImmSet {
-    protected:
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                XLenT imm = get_shift_amount();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
-
-    public:
-        usize get_shift_amount() const { return slice_shift_amount32(inner); }
-    };
-
-    class SLLIWInst : public InstructionShiftImmSet {
+    class SLLIInst : public InstructionShiftImmSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLL>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SLLIWInst &inst) {
-            stream << "\tslliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+        friend std::ostream &operator<<(std::ostream &stream, const SLLIInst &inst) {
+            stream << "\tslli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
     };
 
-    class InstructionSrliwSraiw : public InstructionShiftImmSet {
+    class SRLIInst : public InstructionShiftRightImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
-
-        usize get_funct_shift() const { return slice_funct_shift32(inner); }
-    };
-
-    class SRLIWInst : public InstructionSrliwSraiw {
-    public:
-        static constexpr UInnerT FUNC_SHIFT = 0b0000000;
+        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRL>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SRLIWInst &inst) {
-            stream << "\tsrliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+        friend std::ostream &operator<<(std::ostream &stream, const SRLIInst &inst) {
+            stream << "\tsrli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
     };
 
-    class SRAIWInst : public InstructionSrliwSraiw {
+    class SRAIInst : public InstructionShiftRightImmSet {
     public:
-        static constexpr UInnerT FUNC_SHIFT = 0b0100000;
+        static constexpr UInnerT FUNC_SHIFT = 0b010000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRA>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SRAIWInst &inst) {
-            stream << "\tsraiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+        friend std::ostream &operator<<(std::ostream &stream, const SRAIInst &inst) {
+            stream << "\tsrai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
-    };
-
-    class InstructionIntegerRegSet : public InstructionArithRegSet {
-    public:
-        static constexpr UInnerT FUNC_7 = 0b0000000;
-    };
-
-    class InstructionIntegerRegModSet : public InstructionArithRegSet {
-    public:
-        static constexpr UInnerT FUNC_7 = 0b0100000;
     };
 
     class ADDInst : public InstructionIntegerRegSet {
@@ -522,15 +511,15 @@ namespace risc_v_isa {
         }
     };
 
-    class SLLWInst : public InstructionIntegerRegSet {
+    class SLLInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b001;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLL>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SLLWInst &inst) {
-            stream << "\tsllw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+        friend std::ostream &operator<<(std::ostream &stream, const SLLInst &inst) {
+            stream << "\tsll\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -574,28 +563,28 @@ namespace risc_v_isa {
         }
     };
 
-    class SRLWInst : public InstructionIntegerRegSet {
+    class SRLInst : public InstructionIntegerRegSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b101;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRL>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SRLWInst &inst) {
-            stream << "\tsrlw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+        friend std::ostream &operator<<(std::ostream &stream, const SRLInst &inst) {
+            stream << "\tsrl\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
 
-    class SRAWInst : public InstructionIntegerRegModSet {
+    class SRAInst : public InstructionIntegerRegModSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b101;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRA>(reg); }
 
-        friend std::ostream &operator<<(std::ostream &stream, const SRAWInst &inst) {
-            stream << "\tsraw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+        friend std::ostream &operator<<(std::ostream &stream, const SRAInst &inst) {
+            stream << "\tsra\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -626,25 +615,14 @@ namespace risc_v_isa {
         }
     };
 
-    class FENCEInst : public InstructionFenceSet { // todo: deal with modification
+    class FENCEInst : public InstructionFenceSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b000;
-
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 32, 28>); }
 
         friend std::ostream &operator<<(std::ostream &stream, const FENCEInst &inst) {
             stream << "\tfence";
             return stream;
         }
-    };
-
-    class InstructionEnvironmentSet : public InstructionSystemSet {
-    public:
-        static constexpr UInnerT FUNC_3 = 0b000;
-
-        usize get_funct_environment() const { return inner & BITS_MASK<UInnerT, 32, 20>; }
-
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
     };
 
     class ECALLInst : public InstructionEnvironmentSet {

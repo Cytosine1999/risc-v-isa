@@ -17,8 +17,18 @@
 //#error "`RV128I` conflicts with custom-2 and custon-3!"
 //#endif
 
+/// if this macro is defined, the alignment of instruction is loosen to 16
+#if defined(__RVC__)
+#define INSTRUCTION_ADDRESS_MISALIGNED
+#endif
 
 namespace risc_v_isa {
+    void _warn(const char *file, int line, const char *msg) {
+        std::cerr << "Warn at file " << file << ", line " << line << ": " << msg << std::endl;
+    }
+
+#define risc_v_isa_warn(msg) risc_v_isa::_warn(__FILE__, __LINE__, msg)
+
     __attribute__((noreturn)) void _abort(const char *file, int line, const char *msg) {
         std::cerr << "Abort at file " << file << ", line " << line << ": " << msg << std::endl;
 
@@ -69,12 +79,15 @@ namespace risc_v_isa {
 #if defined(__RV32I__)
     using XLenT = i32;
     using UXLenT = u32;
+    constexpr usize XLEN_INDEX = 5;
 #elif defined(__RV64I__)
     using XLenT = i64;
     using UXLenT = u64;
+    constexpr usize XLEN_INDEX = 6;
 //#elif defined(__RV128I__)
 //    using XLenT = i128;
 //    using UXLenT = u128;
+//    constexpr usize XLEN_INDEX = 7;
 #else
     using XLenT = void;
     using UXLenT = void;
@@ -94,7 +107,7 @@ namespace risc_v_isa {
             end - begin> << begin;
 
     template<typename T, usize end, usize begin, isize offset = 0>
-    constexpr T get_slice(T val) {
+    constexpr inline T get_slice(T val) {
         static_assert(sizeof(T) * 8 >= end && end > begin && sizeof(T) * 8 >= end - begin + offset);
 
         if constexpr (begin > offset)
@@ -106,7 +119,7 @@ namespace risc_v_isa {
     }
 
     template<typename T, typename U>
-    T *dyn_cast(U self);
+    T dyn_cast(U self);
 }
 
 

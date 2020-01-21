@@ -12,4 +12,4 @@ add_library(risc_v_isa src/instruction.cpp)
 target_compile_definitions(risc_v_isa PRIVATE __RV32I__)
 
 add_executable(rv32i_test test/rv32i.cpp)
-target_compile_definitions(rv32i_test PRIVATE __RV32I__ __RV32M__)
+target_compile_definitions(rv32i_test PRIVATE __RV64I__ __RV32M__)

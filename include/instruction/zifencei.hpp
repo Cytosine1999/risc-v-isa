@@ -6,12 +6,11 @@
 
 
 #if defined(__RV_ZIFENCEI_EXTENSION__)
+
 namespace risc_v_isa {
     class FENCEIInst : public InstructionFenceSet {
     public:
         static constexpr UInnerT FUNC_3 = 0b001;
-
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 32, 20>); }
 
         template<typename RegT>
         void operator()(RegT &reg) const {
@@ -21,6 +20,7 @@ namespace risc_v_isa {
         }
     };
 }
+
 #endif // defined(__RV_ZIFENCEI_EXTENSION__)
 
 
