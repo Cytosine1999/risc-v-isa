@@ -9,6 +9,7 @@
 #include "zifencei.hpp"
 #include "zicsr.hpp"
 #include "rv32m.hpp"
+#include "rv64m.hpp"
 
 
 namespace risc_v_isa {
@@ -25,18 +26,16 @@ namespace risc_v_isa {
             RetT ret{};
 
             while (true) {
-#if defined(__RVC__)
+#if defined(__RV_EXTENSION_C__)
                 if ((val & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>) {
                     return visit_16(reinterpret_cast<Instruction16 *>(inst));
                     break;
                 }
 #endif
-#if defined(__RV32I__) || defined(__RV64I__)
                 if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
                     return visit_32(reinterpret_cast<Instruction32 *>(inst));
                     break;
                 }
-#endif
                 return static_cast<T *>(this)->illegal_instruction(inst);
             }
 
@@ -45,15 +44,13 @@ namespace risc_v_isa {
             return ret;
         }
 
-#if defined(__RVC__)
+#if defined(__RV_EXTENSION_C__)
 
         RetT visit_16(Instruction16 *inst) {
             return;
         }
 
-#endif // defined(__RVC__)
-
-#if defined(__RV32I__) || defined(__RV64I__)
+#endif // defined(__RV_EXTENSION_C__)
 
         RetT visit_32(Instruction32 *inst) {
             switch (inst->get_op_code()) {
@@ -81,28 +78,28 @@ namespace risc_v_isa {
                     return visit_fence_set(reinterpret_cast<InstructionFenceSet *>(inst));
                 case InstructionSystemSet::OP_CODE:
                     return visit_system_set(reinterpret_cast<InstructionSystemSet *>(inst));
-#if defined(__RV64I__)
+#if defined(__RV_64_BIT__)
                 case InstructionArithImmWSet::OP_CODE:
                     return visit_arith_imm_w_set(reinterpret_cast<InstructionArithImmWSet *>(inst));
                 case InstructionArithRegWSet::OP_CODE:
                     return visit_arith_reg_w_set(reinterpret_cast<InstructionArithRegWSet *>(inst));
-#endif // defined(__RV64I__)
-#if defined(__RVCUSTOM0__)
+#endif // defined(__RV_64_BIT__)
+#if defined(__RV_CUSTOM_0__)
                 case InstructionCustome0::OP_CODE:
                     return static_cast<T *>(this)->visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
-#endif // defined(__RVCUSTOM0__)
-#if defined(__RVCUSTOM1__)
+#endif // defined(__RV_CUSTOM_0__)
+#if defined(__RV_CUSTOM_1__)
                 case InstructionCustome1::OP_CODE:
                     return static_cast<T *>(this)->visit_custom_1_inst(reinterpret_cast<InstructionCustome0 *>(inst));
-#endif // defined(__RVCUSTOM1__)
-#if defined(__RVCUSTOM2__)
+#endif // defined(__RV_CUSTOM_1__)
+#if defined(__RV_CUSTOM_2__)
                 case InstructionCustome2::OP_CODE:
                     return static_cast<T *>(this)->visit_custom_2_inst(reinterpret_cast<InstructionCustome0 *>(inst));
-#endif // defined(__RVCUSTOM2__)
-#if defined(__RVCUSTOM3__)
+#endif // defined(__RV_CUSTOM_2__)
+#if defined(__RV_CUSTOM_3__)
                 case InstructionCustome3::OP_CODE:
                     return static_cast<T *>(this)->visit_custom_3_inst(reinterpret_cast<InstructionCustome0 *>(inst));
-#endif // defined(__RVCUSTOM3__)
+#endif // defined(__RV_CUSTOM_3__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -138,12 +135,12 @@ namespace risc_v_isa {
                     return static_cast<T *>(this)->visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
                 case LHUInst::FUNC_3:
                     return static_cast<T *>(this)->visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
-#if defined(__RV64I__)
+#if defined(__RV_64_BIT__)
                 case LDInst::FUNC_3:
                     return static_cast<T *>(this)->visit_ld_inst(reinterpret_cast<LDInst *>(inst));
                 case LWUInst::FUNC_3:
                     return static_cast<T *>(this)->visit_lwu_inst(reinterpret_cast<LWUInst *>(inst));
-#endif // defined(__RV64I__)
+#endif // defined(__RV_64_BIT__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -157,10 +154,10 @@ namespace risc_v_isa {
                     return static_cast<T *>(this)->visit_sh_inst(reinterpret_cast<SHInst *>(inst));
                 case SWInst::FUNC_3:
                     return static_cast<T *>(this)->visit_sw_inst(reinterpret_cast<SWInst *>(inst));
-#if defined(__RV64I__)
+#if defined(__RV_64_BIT__)
                 case SDInst::FUNC_3:
                     return static_cast<T *>(this)->visit_sd_inst(reinterpret_cast<SDInst *>(inst));
-#endif // defined(__RV64I__)
+#endif // defined(__RV_64_BIT__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -233,7 +230,7 @@ namespace risc_v_isa {
                         default:
                             return static_cast<T *>(this)->illegal_instruction(inst);
                     }
-#if defined(__RV32M__) || defined(__RV64M__)
+#if defined(__RV_EXTENSION_M__)
                 case InstructionMulDivSet::FUNC_7:
                     switch (inst->get_funct3()) {
                         case MULInst::FUNCT_3:
@@ -255,7 +252,7 @@ namespace risc_v_isa {
                         default:
                             return static_cast<T *>(this)->illegal_instruction(inst);
                     }
-#endif // defined(__RV32M__) || defined(__RV64M__)
+#endif // defined(__RV_EXTENSION_M__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -265,10 +262,10 @@ namespace risc_v_isa {
             switch (inst->get_funct3()) {
                 case FENCEInst::FUNC_3:
                     return static_cast<T *>(this)->visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
-#if defined(__RV_ZIFENCEI_EXTENSION__)
+#if defined(__RV_EXTENSION_ZIFENCEI__)
                 case FENCEIInst::FUNC_3:
                     return static_cast<T *>(this)->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
-#endif // defined(__RV_ZIFENCEI_EXTENSION__)
+#endif // defined(__RV_EXTENSION_ZIFENCEI__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
@@ -287,7 +284,7 @@ namespace risc_v_isa {
                         default:
                             return static_cast<T *>(this)->illegal_instruction(inst);
                     }
-#if defined(__RV_ZICSR_EXTENSION__)
+#if defined(__RV_EXTENSION_ZICSR__)
                 case CSRRWInst::FUNC_3:
                     return static_cast<T *>(this)->visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
                 case CSRRSInst::FUNC_3:
@@ -300,13 +297,13 @@ namespace risc_v_isa {
                     return static_cast<T *>(this)->visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(inst));
                 case CSRRCIInst::FUNC_3:
                     return static_cast<T *>(this)->visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
-#endif // defined(__RV_ZICSR_EXTENSION__)
+#endif // defined(__RV_EXTENSION_ZICSR__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
         }
 
-#if defined(__RV64I__)
+#if defined(__RV_64_BIT__)
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
             switch (inst->get_funct3()) {
@@ -355,12 +352,29 @@ namespace risc_v_isa {
                         default:
                             return static_cast<T *>(this)->illegal_instruction(inst);
                     }
+#if defined(__RV_EXTENSION_M__)
+                case InstructionMulDivWSet::FUNC_7:
+                    switch (inst->get_funct3()) {
+                        case MULWInst::FUNCT_3:
+                            return static_cast<T *>(this)->visit_mulw_inst(reinterpret_cast<MULWInst *>(inst));
+                        case DIVWInst::FUNCT_3:
+                            return static_cast<T *>(this)->visit_divw_inst(reinterpret_cast<DIVWInst *>(inst));
+                        case DIVUWInst::FUNCT_3:
+                            return static_cast<T *>(this)->visit_divuw_inst(reinterpret_cast<DIVUWInst *>(inst));
+                        case REMWInst::FUNCT_3:
+                            return static_cast<T *>(this)->visit_remw_inst(reinterpret_cast<REMWInst *>(inst));
+                        case REMUWInst::FUNCT_3:
+                            return static_cast<T *>(this)->visit_remuw_inst(reinterpret_cast<REMUWInst *>(inst));
+                        default:
+                            return static_cast<T *>(this)->illegal_instruction(inst);
+                    }
+#endif // defined(__RV_EXTENSION_M__)
                 default:
                     return static_cast<T *>(this)->illegal_instruction(inst);
             }
         }
 
-#endif // defined(__RV64I__)
+#endif // defined(__RV_64_BIT__)
 
         RetT illegal_instruction(Instruction *inst) {
             risc_v_isa_unreachable("Illegal instruction met!");
@@ -372,13 +386,11 @@ namespace risc_v_isa {
 
         void end_inst(Instruction *inst) {}
 
-#endif // defined(__RV32I__) || defined(__RV64I__)
-#if defined(__RVC__)
+#if defined(__RV_EXTENSION_C__)
 
         RetT visit_16_inst(Instruction16 *inst) { return static_cast<T *>(this)->visit_inst(); }
 
-#endif // defined(__RVC__)
-#if defined(__RV32I__) || defined(__RV64I__)
+#endif // defined(__RV_EXTENSION_C__)
 
         RetT visit_32_inst(Instruction32 *inst) { return static_cast<T *>(this)->visit_inst(inst); }
 
@@ -492,7 +504,7 @@ namespace risc_v_isa {
 
         RetT visit_ebreak_inst(EBREAKInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
-#if defined(__RV32M__) || defined(__RV64M__)
+#if defined(__RV_EXTENSION_M__)
 
         RetT visit_mul_inst(MULInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
 
@@ -510,8 +522,8 @@ namespace risc_v_isa {
 
         RetT visit_remu_inst(REMUInst *inst) { return static_cast<T *>(this)->visit_arith_reg_set_inst(inst); }
 
-#endif // defined(__RV32M__) || defined(__RV64M__)
-#if defined(__RV64I__)
+#endif // defined(__RV_EXTENSION_M__)
+#if defined(__RV_64_BIT__)
 
         RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) {
             return static_cast<T *>(this)->visit_32i_inst(inst);
@@ -545,13 +557,26 @@ namespace risc_v_isa {
 
         RetT visit_sraw_inst(SRAWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
 
-#endif // defined(__RV64I__)
-#if defined(__RV_ZIFENCEI_EXTENSION__)
+#if defined(__RV_EXTENSION_M__)
+
+        RetT visit_mulw_inst(MULWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
+
+        RetT visit_divw_inst(DIVWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
+
+        RetT visit_divuw_inst(DIVUWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
+
+        RetT visit_remw_inst(REMWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
+
+        RetT visit_remuw_inst(REMUWInst *inst) { return static_cast<T *>(this)->visit_arith_reg_w_set_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_M__)
+#endif // defined(__RV_64_BIT__)
+#if defined(__RV_EXTENSION_ZIFENCEI__)
 
         RetT visit_fencei_inst(FENCEIInst *inst) { return static_cast<T *>(this)->visit_fence_set_inst(inst); }
 
-#endif // defined(__RV_ZIFENCEI_EXTENSION__)
-#if defined(__RV_ZICSR_EXTENSION__)
+#endif // defined(__RV_EXTENSION_ZIFENCEI__)
+#if defined(__RV_EXTENSION_ZICSR__)
 
         RetT visit_csrrw_inst(CSRRWInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
@@ -565,28 +590,27 @@ namespace risc_v_isa {
 
         RetT visit_csrrci_inst(CSRRCIInst *inst) { return static_cast<T *>(this)->visit_system_set_inst(inst); }
 
-#endif // defined(__RV_ZICSR_EXTENSION__)
-#if defined(__RVCUSTOM0__)
+#endif // defined(__RV_EXTENSION_ZICSR__)
+#if defined(__RV_CUSTOM_0__)
 
         RetT visit_custom_0_inst(InstructionCustome0 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
 
-#endif // defined(__RVCUSTOM0__)
-#if defined(__RVCUSTOM1__)
+#endif // defined(__RV_CUSTOM_0__)
+#if defined(__RV_CUSTOM_1__)
 
         RetT visit_custom_1_inst(InstructionCustome1 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
 
-#endif // defined(__RVCUSTOM1__)
-#if defined(__RVCUSTOM2__)
+#endif // defined(__RV_CUSTOM_1__)
+#if defined(__RV_CUSTOM_2__)
 
         RetT visit_custom_2_inst(InstructionCustome2 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
 
-#endif // defined(__RVCUSTOM2__)
-#if defined(__RVCUSTOM3__)
+#endif // defined(__RV_CUSTOM_2__)
+#if defined(__RV_CUSTOM_3__)
 
         RetT visit_custom_3_inst(InstructionCustome3 *inst) { return static_cast<T *>(this)->visit_32_inst(inst); }
 
-#endif // defined(__RVCUSTOM3__)
-#endif // defined(__RV32I__) || defined(__RV64I__)
+#endif // defined(__RV_CUSTOM_3__)
     };
 }
 

@@ -5,7 +5,7 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV_ZIFENCEI_EXTENSION__)
+#if defined(__RV_EXTENSION_ZIFENCEI__)
 
 namespace risc_v_isa {
     class FENCEIInst : public InstructionFenceSet {
@@ -21,7 +21,7 @@ namespace risc_v_isa {
     };
 }
 
-#endif // defined(__RV_ZIFENCEI_EXTENSION__)
+#endif // defined(__RV_EXTENSION_ZIFENCEI__)
 
 
 #endif //RISC_V_ISA_ZIFENCEI_HPP

@@ -8,7 +8,7 @@
 #include "memory/memory.hpp"
 
 
-#if defined(__RV32I__) || defined(__RV64I__)
+#if defined(__RV_64_BIT__)
 namespace risc_v_isa {
     namespace {
         constexpr UXLenT PTR_MASK = BITS_MASK<UXLenT, XLEN, 1>;
@@ -645,7 +645,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV32I__) || defined(__RV64I__)
+#endif // defined(__RV_64_BIT__)
 
 
 #endif //RISC_V_ISA_RV32I_HPP

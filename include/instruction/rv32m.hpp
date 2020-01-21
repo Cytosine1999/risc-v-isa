@@ -5,7 +5,7 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV32M__) || defined(__RV64M__)
+#if defined(__RV_EXTENSION_M__)
 namespace risc_v_isa {
     namespace {
         constexpr usize HALF_WIDTH = XLEN_BYTE / 2;
@@ -221,7 +221,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV32M__) || defined(__RV64M__)
+#endif // defined(__RV_EXTENSION_M__)
 
 
 #endif //RISC_V_ISA_RV32M_HPP

@@ -13,12 +13,12 @@
 //#error "`RV128I` is not available for 32 bit architecture!"
 //#endif
 //
-//#if defined(__RV128I__) && (defined(__RVCUSTOM2__) || defined(__RVCUSTOM3__))
+//#if defined(__RV128I__) && (defined(__RV_CUSTOM_2__) || defined(__RV_CUSTOM_3__))
 //#error "`RV128I` conflicts with custom-2 and custon-3!"
 //#endif
 
 /// if this macro is defined, the alignment of instruction is loosen to 16
-#if defined(__RVC__)
+#if defined(__RV_EXTENSION_C__)
 #define INSTRUCTION_ADDRESS_MISALIGNED
 #endif
 
@@ -57,7 +57,7 @@ namespace risc_v_isa {
 //    using i128 = __int128;
 //    using u128 = unsigned __int128;
 //#endif
-#ifdef __x86_64__
+#if defined(__x86_64__)
     using isize = int64_t;
     using usize = u_int64_t;
 #else
@@ -76,11 +76,11 @@ namespace risc_v_isa {
         _PAGE_SIZE = sysconf(_SC_PAGESIZE);
     }
 
-#if defined(__RV32I__)
+#if defined(__RV_32_BIT__)
     using XLenT = i32;
     using UXLenT = u32;
     constexpr usize XLEN_INDEX = 5;
-#elif defined(__RV64I__)
+#elif defined(__RV_64_BIT__)
     using XLenT = i64;
     using UXLenT = u64;
     constexpr usize XLEN_INDEX = 6;

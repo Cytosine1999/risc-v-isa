@@ -17,7 +17,7 @@ namespace risc_v_isa {
 
     };
 
-#ifdef __RVC__
+#if defined(__RV_EXTENSION_C__)
 
     class Instruction16 : public Instruction {
         using InnerT = i16;
@@ -28,7 +28,7 @@ namespace risc_v_isa {
         InnerT inner;
     };
 
-#endif
+#endif // defined(__RV_EXTENSION_C__)
 
     class Instruction32 : public Instruction {
     protected:
@@ -327,36 +327,79 @@ namespace risc_v_isa {
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
-#if defined(__RVCUSTOM0__)
+#if defined(__RV_64_BIT__)
+
+    class InstructionArithImmWSet : public Instruction32I {
+    protected:
+        template<typename OP, typename RegT>
+        void operate_on(RegT &reg) const {
+            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+
+            usize rd = get_rd();
+            if (rd != 0) {
+                usize rs1 = get_rs1();
+                XLenT imm = get_imm();
+                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
+            }
+            reg.inc_pc(INST_WIDTH);
+        }
+
+    public:
+        static constexpr UInnerT OP_CODE = 0b0011011;
+    };
+
+    class InstructionArithRegWSet : public Instruction32R {
+    protected:
+        template<typename OP, typename RegT>
+        void operate_on(RegT &reg) const {
+            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+
+            usize rd = get_rd();
+            if (rd != 0) {
+                usize rs1 = get_rs1();
+                usize rs2 = get_rs2();
+                reg.set_x(rd, OP::op(reg.get_x(rs1), reg.get_x(rs2)));
+            }
+            reg.inc_pc(INST_WIDTH);
+        }
+
+    public:
+        static constexpr UInnerT OP_CODE = 0b0111011;
+
+        InstructionArithRegWSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
+    };
+
+#endif // defined(__RV_64_BIT__)
+#if defined(__RV_CUSTOM_0__)
     class InstructionCustome0 : public Instruction32 {
     public:
         static constexpr UInnerT OP_CODE = 0b0001011;
 
     };
-#endif // defined(__RVCUSTOM0__)
-#if defined(__RVCUSTOM1__)
+#endif // defined(__RV_CUSTOM_0__)
+#if defined(__RV_CUSTOM_1__)
     class InstructionCustome1 : public Instruction32 {
     public:
         static constexpr UInnerT OP_CODE = 0b0101011;
 
     };
-#endif // defined(__RVCUSTOM1__)
-#if defined(__RVCUSTOM2__)
+#endif // defined(__RV_CUSTOM_1__)
+#if defined(__RV_CUSTOM_2__)
     class InstructionCustome2 : public Instruction32 {
     public:
         static constexpr UInnerT OP_CODE = 0b1011011;
 
     };
-#endif // defined(__RVCUSTOM2__)
-#if defined(__RVCUSTOM3__)
+#endif // defined(__RV_CUSTOM_2__)
+#if defined(__RV_CUSTOM_3__)
     class InstructionCustome3 : public Instruction32 {
     public:
         static constexpr UInnerT OP_CODE = 0b1111011;
 
     };
-#endif // defined(__RVCUSTOM3__)
-
-#ifdef __RVC__
+#endif // defined(__RV_CUSTOM_3__)
+#if defined(__RV_EXTENSION_C__)
 
     template<>
     Instruction16 *dyn_cast<Instruction16 *, Instruction *>(Instruction *self) {
@@ -366,11 +409,11 @@ namespace risc_v_isa {
             return nullptr;
     }
 
-#endif
+#endif // defined(__RV_EXTENSION_C__)
 
     template<>
     Instruction32 *dyn_cast<Instruction32 *, Instruction *>(Instruction *self) {
-#ifdef __RVC__
+#if defined(__RV_EXTENSION_C__)
         if (dyn_cast<Instruction16>(self) == nullptr &&
             (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>)
 #else

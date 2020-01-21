@@ -5,7 +5,7 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV_ZICSR_EXTENSION__)
+#if defined(__RV_EXTENSION_ZICSR__)
 namespace risc_v_isa {
     class CSRRWInst : public InstructionSystemSet {
     public:
@@ -79,7 +79,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV_ZICSR_EXTENSION__)
+#endif // defined(__RV_EXTENSION_ZICSR__)
 
 
 #endif //RISC_V_ISA_ZICSR_HPP

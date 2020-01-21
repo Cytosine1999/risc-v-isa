@@ -2,11 +2,9 @@
 #define RISC_V_ISA_HART_HPP
 
 
-#include "utility.hpp"
-#include "instruction/instruction.hpp"
-#include "instruction/rv32i.hpp"
 #include "instruction/instruction_visitor.hpp"
 #include "register/register_file.hpp"
+#include "memory/memory.hpp"
 
 
 namespace risc_v_isa {
@@ -75,7 +73,7 @@ namespace risc_v_isa {
             return ILLEGAL_INSTRUCTION_EXCEPTION;
         }
 
-#if defined(__RV32I__) || defined(__RV64I__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 
         RetT visit_lui_inst(LUIInst *inst) {
             (*inst)(reg);
@@ -245,8 +243,8 @@ namespace risc_v_isa {
             return ECALL;
         }
 
-#endif // defined(__RV32I__) || defined(__RV64I__)
-#if defined(__RV32M__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if defined(__RV_EXTENSION_M__)
 
         RetT visit_ebreak_inst(EBREAKInst *inst) {
             return EBREAK;
@@ -292,7 +290,7 @@ namespace risc_v_isa {
             return NONE;
         }
 
-#endif // defined(__RV32M__)
+#endif // defined(__RV_EXTENSION_M__)
     };
 }
 
