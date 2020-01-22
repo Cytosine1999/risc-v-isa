@@ -99,10 +99,8 @@ namespace risc_v_isa {
     constexpr usize XLEN = XLEN_BYTE * 8;
 
     template<typename T, usize end, usize begin>
-    constexpr T BITS_MASK = ((static_cast<typename std::enable_if<(std::is_unsigned<T>::value &&
-                                                                   sizeof(T) * 8 >= end &&
-                                                                   end > begin), T>::type>(1u) << end - begin) -
-                             static_cast<T>(1u)) << begin;
+    constexpr typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) * 8 >= end && end > begin), T>::type
+            BITS_MASK = ((static_cast<T>(1u) << end - begin) - static_cast<T>(1u)) << begin;
 
     template<typename T, usize end, usize begin, isize offset = 0>
     constexpr inline T get_slice(T val) {
@@ -117,7 +115,23 @@ namespace risc_v_isa {
     }
 
     template<typename T, typename U>
-    T dyn_cast(U self);
+    bool is_type(U *self);
+
+    template<typename T, typename U>
+    bool is_type(U *self) {
+        using BaseT = typename T::BaseT;
+
+        if constexpr (std::is_same<BaseT, U>::value)
+            return T::is_self_type(self);
+        else
+            return is_type<BaseT>(self) && T::is_self_type(reinterpret_cast<BaseT *>(self));
+    }
+
+    template<typename T, typename U>
+    T *dyn_cast(U *self);
+
+    template<typename T, typename U>
+    T *dyn_cast(U *self) { return is_type<T>(self) ? reinterpret_cast<T *>(self) : nullptr; }
 }
 
 

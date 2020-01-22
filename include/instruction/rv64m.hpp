@@ -9,7 +9,7 @@
 namespace risc_v_isa {
     class InstructionMulDivWSet : public InstructionArithRegWSet {
     public:
-        static constexpr InnerT FUNC_7 = 0b0000001;
+        static constexpr InnerT FUNCT7 = 0b0000001;
     };
 
     class MULWInst : public InstructionMulDivWSet {

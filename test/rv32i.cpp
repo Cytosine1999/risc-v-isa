@@ -56,6 +56,10 @@ int main() {
             3, 6, 7, 8
     };
 
+    InstructionBranchSet inst{0, 0, 0, 0};
+
+    std::cout << (dyn_cast<Instruction32>(static_cast<Instruction *>(&inst)) != nullptr) << std::endl;
+
     RegisterFile reg{};
     reg.set_pc(0);
     reg.set_x(RegisterFile::SP, 4092);

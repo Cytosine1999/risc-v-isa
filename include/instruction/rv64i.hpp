@@ -15,22 +15,22 @@ namespace risc_v_isa {
 
     class InstructionShiftRightImmWSet : public InstructionShiftImmWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
     };
 
     class InstructionIntegerRegWSet : public InstructionArithRegWSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0000000;
+        static constexpr UInnerT FUNCT7 = 0b0000000;
     };
 
     class InstructionIntegerRegModWSet : public InstructionArithRegWSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0100000;
+        static constexpr UInnerT FUNCT7 = 0b0100000;
     };
 
     class LDInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i64>(reg, mem); }
@@ -43,7 +43,7 @@ namespace risc_v_isa {
 
     class LWUInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<u32>(reg, mem); }
@@ -56,7 +56,7 @@ namespace risc_v_isa {
 
     class SDInst : public InstructionStoreSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i64>(reg, mem); }
@@ -69,7 +69,7 @@ namespace risc_v_isa {
 
     class ADDIWInst : public InstructionArithImmWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<ADD>(reg); }
@@ -82,8 +82,8 @@ namespace risc_v_isa {
 
     class SLLIWInst : public InstructionShiftImmWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
-        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
+        static constexpr UInnerT FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SLLW>(this, reg); }
@@ -96,7 +96,7 @@ namespace risc_v_isa {
 
     class SRLIWInst : public InstructionShiftRightImmWSet {
     public:
-        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
+        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRLW>(this, reg); }
@@ -109,7 +109,7 @@ namespace risc_v_isa {
 
     class SRAIWInst : public InstructionShiftRightImmWSet {
     public:
-        static constexpr UInnerT FUNC_SHIFT = 0b010000000000;
+        static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRAW>(this, reg); }
@@ -122,7 +122,7 @@ namespace risc_v_isa {
 
     class ADDWInst : public InstructionIntegerRegWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<ADDW>(reg); }
@@ -135,7 +135,7 @@ namespace risc_v_isa {
 
     class SUBWInst : public InstructionIntegerRegModWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SUBW>(reg); }
@@ -148,7 +148,7 @@ namespace risc_v_isa {
 
     class SLLWInst : public InstructionIntegerRegWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLLW>(reg); }
@@ -161,7 +161,7 @@ namespace risc_v_isa {
 
     class SRLWInst : public InstructionIntegerRegWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRLW>(reg); }
@@ -174,7 +174,7 @@ namespace risc_v_isa {
 
     class SRAWInst : public InstructionIntegerRegModWSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRAW>(reg); }

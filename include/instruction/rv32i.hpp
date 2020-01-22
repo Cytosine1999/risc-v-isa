@@ -12,28 +12,42 @@
 namespace risc_v_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     public:
+        InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : InstructionArithImmSet{rd, funct3, rs1, imm} {}
+
         usize get_shift_amount() const { return slice_shift_amount(inner); }
+
         usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
     class InstructionShiftRightImmSet : public InstructionShiftImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
+
+        InstructionShiftRightImmSet(usize rd, usize rs1, UXLenT imm) : InstructionShiftImmSet{rd, FUNCT3, rs1, imm} {}
     };
 
     class InstructionIntegerRegSet : public InstructionArithRegSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0000000;
+        static constexpr UInnerT FUNCT7 = 0b0000000;
+
+        InstructionIntegerRegSet(usize rd, usize funct3, usize rs1, usize rs2)
+                : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
     };
 
     class InstructionIntegerRegModSet : public InstructionArithRegSet {
     public:
-        static constexpr UInnerT FUNC_7 = 0b0100000;
+        static constexpr UInnerT FUNCT7 = 0b0100000;
+
+        InstructionIntegerRegModSet(usize rd, usize funct3, usize rs1, usize rs2)
+                : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
     };
 
     class InstructionEnvironmentSet : public InstructionSystemSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        InstructionEnvironmentSet(usize rd, usize rs1, UXLenT imm) : InstructionSystemSet{rd, FUNCT3, rs1, imm} {}
 
         usize get_funct_environment() const { return inner & BITS_MASK<UInnerT, 32, 20>; }
 
@@ -42,7 +56,13 @@ namespace risc_v_isa {
 
     class LUIInst : public Instruction32U {
     public:
-        static constexpr UInnerT OP_CODE = 0b0110111;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b01101;
+
+        LUIInst(usize rd, UXLenT imm) : Instruction32U{OP_CODE, rd, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const {
@@ -64,7 +84,13 @@ namespace risc_v_isa {
 
     class AUIPCInst : public Instruction32U {
     public:
-        static constexpr UInnerT OP_CODE = 0b0010111;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00101;
+
+        AUIPCInst(usize rd, UXLenT imm) : Instruction32U{OP_CODE, rd, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const {
@@ -86,7 +112,13 @@ namespace risc_v_isa {
 
     class JALInst : public Instruction32J {
     public:
-        static constexpr UInnerT OP_CODE = 0b1101111;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b11011;
+
+        JALInst(usize rd, UXLenT imm) : Instruction32J{OP_CODE, rd, imm} {}
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
@@ -98,7 +130,7 @@ namespace risc_v_isa {
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
             UXLenT target = pc + imm;
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT , 2, 1>(target) != 0) return false;
+            if (get_slice<UXLenT, 2, 1>(target) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             reg.set_pc(target);
             return true;
@@ -112,8 +144,14 @@ namespace risc_v_isa {
 
     class JALRInst : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0b1100111;
-        static constexpr UInnerT FUNC_3 = 0b000;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b11001;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        JALRInst(usize rd, usize rs1, UXLenT imm) : Instruction32I{OP_CODE, rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
@@ -125,7 +163,7 @@ namespace risc_v_isa {
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT , 2, 1>(target) != 0) return false;
+            if (get_slice<UXLenT, 2, 1>(target) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             reg.set_pc(target);
             return true;
@@ -139,7 +177,9 @@ namespace risc_v_isa {
 
     class BEQInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        BEQInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<EQ>(reg); }
@@ -152,7 +192,9 @@ namespace risc_v_isa {
 
     class BNEInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
+
+        BNEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<NE>(reg); }
@@ -165,7 +207,9 @@ namespace risc_v_isa {
 
     class BLTInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b100;
+        static constexpr UInnerT FUNCT3 = 0b100;
+
+        BLTInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<LT>(reg); }
@@ -178,7 +222,9 @@ namespace risc_v_isa {
 
     class BGEInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
+
+        BGEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<GE>(reg); }
@@ -191,7 +237,9 @@ namespace risc_v_isa {
 
     class BLTUInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
+
+        BLTUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<LTU>(reg); }
@@ -204,7 +252,9 @@ namespace risc_v_isa {
 
     class BGEUInst : public InstructionBranchSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
+
+        BGEUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<LTU>(reg); }
@@ -217,7 +267,9 @@ namespace risc_v_isa {
 
     class LBInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        LBInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i8>(reg, mem); }
@@ -230,7 +282,9 @@ namespace risc_v_isa {
 
     class LHInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
+
+        LHInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i16>(reg, mem); }
@@ -243,7 +297,9 @@ namespace risc_v_isa {
 
     class LWInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
+
+        LWInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i32>(reg, mem); }
@@ -256,7 +312,9 @@ namespace risc_v_isa {
 
     class LBUInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b100;
+        static constexpr UInnerT FUNCT3 = 0b100;
+
+        LBUInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<u8>(reg, mem); }
@@ -269,7 +327,9 @@ namespace risc_v_isa {
 
     class LHUInst : public InstructionLoadSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
+
+        LHUInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<u16>(reg, mem); }
@@ -282,7 +342,9 @@ namespace risc_v_isa {
 
     class SBInst : public InstructionStoreSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        SBInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i8>(reg, mem); }
@@ -295,7 +357,9 @@ namespace risc_v_isa {
 
     class SHInst : public InstructionStoreSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
+
+        SHInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i16>(reg, mem); }
@@ -308,7 +372,9 @@ namespace risc_v_isa {
 
     class SWInst : public InstructionStoreSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
+
+        SWInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT, typename MemT>
         bool operator()(RegT &reg, MemT &mem) const { return operate_on<i32>(reg, mem); }
@@ -321,7 +387,9 @@ namespace risc_v_isa {
 
     class ADDIInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        ADDIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<ADD>(reg); }
@@ -334,7 +402,9 @@ namespace risc_v_isa {
 
     class SLTIInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
+
+        SLTIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLT>(reg); }
@@ -347,7 +417,9 @@ namespace risc_v_isa {
 
     class SLTIUInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
+
+        SLTIUInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLTU>(reg); }
@@ -360,7 +432,9 @@ namespace risc_v_isa {
 
     class XORIInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b100;
+        static constexpr UInnerT FUNCT3 = 0b100;
+
+        XORIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<XOR>(reg); }
@@ -373,7 +447,9 @@ namespace risc_v_isa {
 
     class ORIInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
+
+        ORIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<OR>(reg); }
@@ -386,7 +462,9 @@ namespace risc_v_isa {
 
     class ANDIInst : public InstructionArithImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
+
+        ANDIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<AND>(reg); }
@@ -399,8 +477,12 @@ namespace risc_v_isa {
 
     class SLLIInst : public InstructionShiftImmSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
-        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
+        static constexpr UInnerT FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
+
+        SLLIInst(usize rd, usize rs1, UXLenT imm)
+                : InstructionShiftImmSet{rd, FUNCT3, rs1,
+                                         (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SLL>(this, reg); }
@@ -413,7 +495,11 @@ namespace risc_v_isa {
 
     class SRLIInst : public InstructionShiftRightImmSet {
     public:
-        static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
+        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
+
+        SRLIInst(usize rd, usize rs1, UXLenT imm)
+                : InstructionShiftRightImmSet{rd, rs1,
+                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRL>(this, reg); }
@@ -426,7 +512,11 @@ namespace risc_v_isa {
 
     class SRAIInst : public InstructionShiftRightImmSet {
     public:
-        static constexpr UInnerT FUNC_SHIFT = 0b010000000000;
+        static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
+
+        SRAIInst(usize rd, usize rs1, UXLenT imm)
+                : InstructionShiftRightImmSet{rd, rs1,
+                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRA>(this, reg); }
@@ -439,7 +529,9 @@ namespace risc_v_isa {
 
     class ADDInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        ADDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<ADD>(reg); }
@@ -452,7 +544,9 @@ namespace risc_v_isa {
 
     class SUBInst : public InstructionIntegerRegModSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        SUBInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SUB>(reg); }
@@ -465,7 +559,9 @@ namespace risc_v_isa {
 
     class SLLInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
+
+        SLLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLL>(reg); }
@@ -478,7 +574,9 @@ namespace risc_v_isa {
 
     class SLTInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
+
+        SLTInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLT>(reg); }
@@ -491,7 +589,9 @@ namespace risc_v_isa {
 
     class SLTUInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
+
+        SLTUInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SLTU>(reg); }
@@ -504,7 +604,9 @@ namespace risc_v_isa {
 
     class XORInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b100;
+        static constexpr UInnerT FUNCT3 = 0b100;
+
+        XORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<XOR>(reg); }
@@ -517,7 +619,9 @@ namespace risc_v_isa {
 
     class SRLInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
+
+        SRLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRL>(reg); }
@@ -530,7 +634,9 @@ namespace risc_v_isa {
 
     class SRAInst : public InstructionIntegerRegModSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
+
+        SRAInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<SRA>(reg); }
@@ -543,7 +649,9 @@ namespace risc_v_isa {
 
     class ORInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
+
+        ORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<OR>(reg); }
@@ -556,7 +664,9 @@ namespace risc_v_isa {
 
     class ANDInst : public InstructionIntegerRegSet {
     public:
-        static constexpr UInnerT FUNC_3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
+
+        ANDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_on<AND>(reg); }
@@ -567,9 +677,11 @@ namespace risc_v_isa {
         }
     };
 
-    class FENCEInst : public InstructionFenceSet {
+    class FENCEInst : public InstructionFenceSet { // todo
     public:
-        static constexpr UInnerT FUNC_3 = 0b000;
+        static constexpr UInnerT FUNCT3 = 0b000;
+
+        FENCEInst(usize rd, usize rs1, UXLenT imm) : InstructionFenceSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const FENCEInst &inst) {
             stream << "\tfence";
@@ -581,6 +693,8 @@ namespace risc_v_isa {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
 
+        ECALLInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
+
         friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const ECALLInst &inst) {
             stream << "\tecall";
             return stream;
@@ -590,6 +704,8 @@ namespace risc_v_isa {
     class EBREAKInst : public InstructionEnvironmentSet {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
+
+        EBREAKInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const EBREAKInst &inst) {
             stream << "\tebreak";

@@ -20,12 +20,19 @@ namespace risc_v_isa {
 #if defined(__RV_EXTENSION_C__)
 
     class Instruction16 : public Instruction {
+    protected:
         using InnerT = i16;
         using UInnerT = u16;
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
         InnerT inner;
+    public:
+        using BaseT = Instruction;
+
+        static bool is_self_type(BaseT *self) {
+            return (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>;
+        }
     };
 
 #endif // defined(__RV_EXTENSION_C__)
@@ -262,7 +269,7 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_M__)
 #endif // defined(__RV_64_BIT__)
 
-        static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 0>(val); }
+        static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 2>(val); }
 
         static UInnerT slice_rd(UInnerT val) { return get_slice<UInnerT, 12, 7>(val); }
 
@@ -283,6 +290,13 @@ namespace risc_v_isa {
         InnerT inner;
 
     public:
+        using BaseT = Instruction;
+
+        static bool is_self_type(BaseT *self) {
+            return (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 2, 0>) == BITS_MASK<u16, 2, 0> &&
+                   (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>;
+        }
+
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
         explicit Instruction32(InnerT val) : inner{val} {}
@@ -308,11 +322,12 @@ namespace risc_v_isa {
     public:
         Instruction32R(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 5, 0, 7>(rd) &
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) &
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) &
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(rd) |
+                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
+                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
+                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
                                         get_slice<UInnerT, 7, 0, 25>(funct7))} {}
 
         usize get_rd() const { return slice_rd(inner); }
@@ -357,10 +372,11 @@ namespace risc_v_isa {
     public:
         Instruction32I(usize op, usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 5, 0, 7>(rd) &
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) &
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(rd) |
+                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
+                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
                                         get_slice<UInnerT, 12, 0, 20>(imm))} {}
 
         usize get_rd() const { return slice_rd(inner); }
@@ -379,11 +395,12 @@ namespace risc_v_isa {
     public:
         Instruction32S(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 5, 0, 7>(imm) &
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) &
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) &
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(imm) |
+                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
+                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
+                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
                                         get_slice<UInnerT, 12, 5, 25>(imm))} {}
 
         usize get_funct3() const { return slice_funct3(inner); }
@@ -403,13 +420,14 @@ namespace risc_v_isa {
     public:
         Instruction32B(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 12, 11, 7>(imm) &
-                                        get_slice<UInnerT, 5, 1, 8>(imm) &
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) &
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) &
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) &
-                                        get_slice<UInnerT, 11, 5, 25>(imm) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 12, 11, 7>(imm) |
+                                        get_slice<UInnerT, 5, 1, 8>(imm) |
+                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
+                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
+                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
+                                        get_slice<UInnerT, 11, 5, 25>(imm) |
                                         get_slice<UInnerT, 13, 12, 31>(imm))} {}
 
         usize get_funct3() const { return slice_funct3(inner); }
@@ -430,8 +448,9 @@ namespace risc_v_isa {
     public:
         Instruction32U(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 5, 0, 7>(rd) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 32, 12, 12>(imm))} {}
 
         usize get_rd() const { return slice_rd(inner); }
@@ -446,11 +465,12 @@ namespace risc_v_isa {
     public:
         Instruction32J(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        get_slice<UInnerT, 7, 0, 0>(op) &
-                                        get_slice<UInnerT, 5, 0, 7>(rd) &
-                                        get_slice<UInnerT, 20, 12, 12>(imm) &
-                                        get_slice<UInnerT, 12, 11, 20>(imm) &
-                                        get_slice<UInnerT, 11, 1, 21>(imm) &
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(rd) |
+                                        get_slice<UInnerT, 20, 12, 12>(imm) |
+                                        get_slice<UInnerT, 12, 11, 20>(imm) |
+                                        get_slice<UInnerT, 11, 1, 21>(imm) |
                                         get_slice<UInnerT, 21, 20, 31>(imm))} {}
 
         usize get_rd() const { return slice_rd(inner); }
@@ -476,7 +496,11 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0b1100011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b11000;
 
         InstructionBranchSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32B{OP_CODE, funct3, rs1, rs2, imm} {}
@@ -500,7 +524,11 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0b0000011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00000;
 
         InstructionLoadSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
@@ -524,7 +552,11 @@ namespace risc_v_isa {
         }
 
     public:
-        static constexpr UInnerT OP_CODE = 0b0100011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b01000;
 
         InstructionStoreSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32S{OP_CODE, funct3, rs1, rs2, imm} {}
@@ -532,7 +564,11 @@ namespace risc_v_isa {
 
     class InstructionArithImmSet : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0b0010011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00100;
 
         InstructionArithImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
@@ -540,7 +576,11 @@ namespace risc_v_isa {
 
     class InstructionArithRegSet : public Instruction32R {
     public:
-        static constexpr UInnerT OP_CODE = 0b0110011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b01100;
 
         InstructionArithRegSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
                 : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
@@ -548,7 +588,11 @@ namespace risc_v_isa {
 
     class InstructionFenceSet : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0b0001111;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00011;
 
         InstructionFenceSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
@@ -556,7 +600,11 @@ namespace risc_v_isa {
 
     class InstructionSystemSet : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0b1110011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b11100;
 
         InstructionSystemSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
@@ -566,7 +614,11 @@ namespace risc_v_isa {
 
     class InstructionArithImmWSet : public Instruction32I {
     public:
-        static constexpr UInnerT OP_CODE = 0b0011011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00110;
 
         InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
@@ -574,7 +626,11 @@ namespace risc_v_isa {
 
     class InstructionArithRegWSet : public Instruction32R {
     public:
-        static constexpr UInnerT OP_CODE = 0b0111011;
+        using BaseT = Instruction32;
+
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b01110;
 
         InstructionArithRegWSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
                 : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
@@ -584,61 +640,51 @@ namespace risc_v_isa {
 #if defined(__RV_CUSTOM_0__)
     class InstructionCustome0 : public Instruction32 {
     public:
-        explicit InstructionCustome0(InnerT val) : Instruction32{val} {}
+        using BaseT = Instruction32;
 
-        static constexpr UInnerT OP_CODE = 0b0001011;
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b00010;
+
+        explicit InstructionCustome0(InnerT val) : Instruction32{val} {}
     };
 #endif // defined(__RV_CUSTOM_0__)
 #if defined(__RV_CUSTOM_1__)
     class InstructionCustome1 : public Instruction32 {
     public:
-        explicit InstructionCustome1(InnerT val) : Instruction32{val} {}
+        using BaseT = Instruction32;
 
-        static constexpr UInnerT OP_CODE = 0b0101011;
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b01010;
+
+        explicit InstructionCustome1(InnerT val) : Instruction32{val} {}
     };
 #endif // defined(__RV_CUSTOM_1__)
 #if defined(__RV_CUSTOM_2__)
     class InstructionCustome2 : public Instruction32 {
     public:
-        explicit InstructionCustome2(InnerT val) : Instruction32{val} {}
+        using BaseT = Instruction32;
 
-        static constexpr UInnerT OP_CODE = 0b1011011;
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b10110;
+
+        explicit InstructionCustome2(InnerT val) : Instruction32{val} {}
     };
 #endif // defined(__RV_CUSTOM_2__)
 #if defined(__RV_CUSTOM_3__)
     class InstructionCustome3 : public Instruction32 {
     public:
-        explicit InstructionCustome3(InnerT val) : Instruction32{val} {}
+        using BaseT = Instruction32;
 
-        static constexpr UInnerT OP_CODE = 0b1111011;
+        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+
+        static constexpr UInnerT OP_CODE = 0b11110;
+
+        explicit InstructionCustome3(InnerT val) : Instruction32{val} {}
     };
 #endif // defined(__RV_CUSTOM_3__)
-#if defined(__RV_EXTENSION_C__)
-
-    template<>
-    Instruction16 *dyn_cast<Instruction16 *, Instruction *>(Instruction *self) {
-        if ((*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>)
-            return reinterpret_cast<Instruction16 *>(self);
-        else
-            return nullptr;
-    }
-
-#endif // defined(__RV_EXTENSION_C__)
-
-    template<>
-    Instruction32 *dyn_cast<Instruction32 *, Instruction *>(Instruction *self) {
-#if defined(__RV_EXTENSION_C__)
-        if (dyn_cast<Instruction16>(self) == nullptr &&
-            (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>)
-#else
-        if ((*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>)
-#endif
-            return reinterpret_cast<Instruction32 *>(self);
-        else
-            return nullptr;
-    }
-
-    // todo: more dyn_cast
 }
 
 

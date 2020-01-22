@@ -56,7 +56,7 @@ namespace risc_v_isa {
                 case JALInst::OP_CODE:
                     return sub_type()->visit_jal_inst(reinterpret_cast<JALInst *>(inst));
                 case JALRInst::OP_CODE:
-                    if (reinterpret_cast<JALRInst *>(inst)->get_funct3() != JALRInst::FUNC_3)
+                    if (reinterpret_cast<JALRInst *>(inst)->get_funct3() != JALRInst::FUNCT3)
                         return sub_type()->illegal_instruction(inst);
                     return sub_type()->visit_jalr_inst(reinterpret_cast<JALRInst *>(inst));
                 case InstructionBranchSet::OP_CODE:
@@ -102,17 +102,17 @@ namespace risc_v_isa {
 
         RetT visit_branch_set(InstructionBranchSet *inst) {
             switch (inst->get_funct3()) {
-                case BEQInst::FUNC_3:
+                case BEQInst::FUNCT3:
                     return sub_type()->visit_beq_inst(reinterpret_cast<BEQInst *>(inst));
-                case BNEInst::FUNC_3:
+                case BNEInst::FUNCT3:
                     return sub_type()->visit_bne_inst(reinterpret_cast<BNEInst *>(inst));
-                case BLTInst::FUNC_3:
+                case BLTInst::FUNCT3:
                     return sub_type()->visit_blt_inst(reinterpret_cast<BLTInst *>(inst));
-                case BGEInst::FUNC_3:
+                case BGEInst::FUNCT3:
                     return sub_type()->visit_bge_inst(reinterpret_cast<BGEInst *>(inst));
-                case BLTUInst::FUNC_3:
+                case BLTUInst::FUNCT3:
                     return sub_type()->visit_bltu_inst(reinterpret_cast<BLTUInst *>(inst));
-                case BGEUInst::FUNC_3:
+                case BGEUInst::FUNCT3:
                     return sub_type()->visit_bgeu_inst(reinterpret_cast<BGEUInst *>(inst));
                 default:
                     return sub_type()->illegal_instruction(inst);
@@ -121,19 +121,19 @@ namespace risc_v_isa {
 
         RetT visit_load_set(InstructionLoadSet *inst) {
             switch (inst->get_funct3()) {
-                case LBInst::FUNC_3:
+                case LBInst::FUNCT3:
                     return sub_type()->visit_lb_inst(reinterpret_cast<LBInst *>(inst));
-                case LHInst::FUNC_3:
+                case LHInst::FUNCT3:
                     return sub_type()->visit_lh_inst(reinterpret_cast<LHInst *>(inst));
-                case LWInst::FUNC_3:
-                case LBUInst::FUNC_3:
+                case LWInst::FUNCT3:
+                case LBUInst::FUNCT3:
                     return sub_type()->visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
-                case LHUInst::FUNC_3:
+                case LHUInst::FUNCT3:
                     return sub_type()->visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
 #if defined(__RV_64_BIT__)
-                case LDInst::FUNC_3:
+                case LDInst::FUNCT3:
                     return sub_type()->visit_ld_inst(reinterpret_cast<LDInst *>(inst));
-                case LWUInst::FUNC_3:
+                case LWUInst::FUNCT3:
                     return sub_type()->visit_lwu_inst(reinterpret_cast<LWUInst *>(inst));
 #endif // defined(__RV_64_BIT__)
                 default:
@@ -143,14 +143,14 @@ namespace risc_v_isa {
 
         RetT visit_store_set(InstructionStoreSet *inst) {
             switch (inst->get_funct3()) {
-                case SBInst::FUNC_3:
+                case SBInst::FUNCT3:
                     return sub_type()->visit_sb_inst(reinterpret_cast<SBInst *>(inst));
-                case SHInst::FUNC_3:
+                case SHInst::FUNCT3:
                     return sub_type()->visit_sh_inst(reinterpret_cast<SHInst *>(inst));
-                case SWInst::FUNC_3:
+                case SWInst::FUNCT3:
                     return sub_type()->visit_sw_inst(reinterpret_cast<SWInst *>(inst));
 #if defined(__RV_64_BIT__)
-                case SDInst::FUNC_3:
+                case SDInst::FUNCT3:
                     return sub_type()->visit_sd_inst(reinterpret_cast<SDInst *>(inst));
 #endif // defined(__RV_64_BIT__)
                 default:
@@ -160,30 +160,30 @@ namespace risc_v_isa {
 
         RetT visit_arith_imm_set(InstructionArithImmSet *inst) {
             switch (inst->get_funct3()) {
-                case ADDIInst::FUNC_3:
+                case ADDIInst::FUNCT3:
                     return sub_type()->visit_addi_inst(reinterpret_cast<ADDIInst *>(inst));
-                case SLTIInst::FUNC_3:
+                case SLTIInst::FUNCT3:
                     return sub_type()->visit_slti_inst(reinterpret_cast<SLTIInst *>(inst));
-                case SLTIUInst::FUNC_3:
+                case SLTIUInst::FUNCT3:
                     return sub_type()->visit_sltiu_inst(reinterpret_cast<SLTIUInst *>(inst));
-                case XORIInst::FUNC_3:
+                case XORIInst::FUNCT3:
                     return sub_type()->visit_xori_inst(reinterpret_cast<XORIInst *>(inst));
-                case ORIInst::FUNC_3:
+                case ORIInst::FUNCT3:
                     return sub_type()->visit_ori_inst(reinterpret_cast<ORIInst *>(inst));
-                case ANDIInst::FUNC_3:
+                case ANDIInst::FUNCT3:
                     return sub_type()->visit_andi_inst(reinterpret_cast<ANDIInst *>(inst));
-                case SLLIInst::FUNC_3:
+                case SLLIInst::FUNCT3:
                     switch (reinterpret_cast<SLLIInst *>(inst)->get_funct_shift()) {
-                        case SLLIInst::FUNC_SHIFT:
+                        case SLLIInst::FUNCT_SHIFT:
                             return sub_type()->visit_slli_inst(reinterpret_cast<SLLIInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionShiftRightImmSet::FUNC_3:
+                case InstructionShiftRightImmSet::FUNCT3:
                     switch (reinterpret_cast<InstructionShiftRightImmSet *>(inst)->get_funct_shift()) {
-                        case SRLIInst::FUNC_SHIFT:
+                        case SRLIInst::FUNCT_SHIFT:
                             return sub_type()->visit_srli_inst(reinterpret_cast<SRLIInst *>(inst));
-                        case SRAIInst::FUNC_SHIFT:
+                        case SRAIInst::FUNCT_SHIFT:
                             return sub_type()->visit_srai_inst(reinterpret_cast<SRAIInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
@@ -195,38 +195,38 @@ namespace risc_v_isa {
 
         RetT visit_arith_reg_set(InstructionArithRegSet *inst) {
             switch (inst->get_funct7()) {
-                case InstructionIntegerRegSet::FUNC_7:
+                case InstructionIntegerRegSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case ADDInst::FUNC_3:
+                        case ADDInst::FUNCT3:
                             return sub_type()->visit_add_inst(reinterpret_cast<ADDInst *>(inst));
-                        case SLLInst::FUNC_3:
+                        case SLLInst::FUNCT3:
                             return sub_type()->visit_sll_inst(reinterpret_cast<SLLInst *>(inst));
-                        case SLTInst::FUNC_3:
+                        case SLTInst::FUNCT3:
                             return sub_type()->visit_slt_inst(reinterpret_cast<SLTInst *>(inst));
-                        case SLTUInst::FUNC_3:
+                        case SLTUInst::FUNCT3:
                             return sub_type()->visit_sltu_inst(reinterpret_cast<SLTUInst *>(inst));
-                        case XORInst::FUNC_3:
+                        case XORInst::FUNCT3:
                             return sub_type()->visit_xor_inst(reinterpret_cast<XORInst *>(inst));
-                        case SRLInst::FUNC_3:
+                        case SRLInst::FUNCT3:
                             return sub_type()->visit_srl_inst(reinterpret_cast<SRLInst *>(inst));
-                        case ORInst::FUNC_3:
+                        case ORInst::FUNCT3:
                             return sub_type()->visit_or_inst(reinterpret_cast<ORInst *>(inst));
-                        case ANDInst::FUNC_3:
+                        case ANDInst::FUNCT3:
                             return sub_type()->visit_and_inst(reinterpret_cast<ANDInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionIntegerRegModSet::FUNC_7:
+                case InstructionIntegerRegModSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case SUBInst::FUNC_3:
+                        case SUBInst::FUNCT3:
                             return sub_type()->visit_sub_inst(reinterpret_cast<SUBInst *>(inst));
-                        case SRAInst::FUNC_3:
+                        case SRAInst::FUNCT3:
                             return sub_type()->visit_sra_inst(reinterpret_cast<SRAInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
 #if defined(__RV_EXTENSION_M__)
-                case InstructionMulDivSet::FUNC_7:
+                case InstructionMulDivSet::FUNCT7:
                     switch (inst->get_funct3()) {
                         case MULInst::FUNCT_3:
                             return sub_type()->visit_mul_inst(reinterpret_cast<MULInst *>(inst));
@@ -255,10 +255,10 @@ namespace risc_v_isa {
 
         RetT visit_fence_set(InstructionFenceSet *inst) {
             switch (inst->get_funct3()) {
-                case FENCEInst::FUNC_3:
+                case FENCEInst::FUNCT3:
                     return sub_type()->visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
 #if defined(__RV_EXTENSION_ZIFENCEI__)
-                case FENCEIInst::FUNC_3:
+                case FENCEIInst::FUNCT3:
                     return sub_type()->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
 #endif // defined(__RV_EXTENSION_ZIFENCEI__)
                 default:
@@ -268,7 +268,7 @@ namespace risc_v_isa {
 
         RetT visit_system_set(InstructionSystemSet *inst) {
             switch (inst->get_funct3()) {
-                case InstructionEnvironmentSet::FUNC_3:
+                case InstructionEnvironmentSet::FUNCT3:
                     if (reinterpret_cast<InstructionEnvironmentSet *>(inst)->get_unused() != 0)
                         return sub_type()->illegal_instruction(inst);
                     switch (reinterpret_cast<InstructionEnvironmentSet *>(inst)->get_funct_environment()) {
@@ -280,17 +280,17 @@ namespace risc_v_isa {
                             return sub_type()->illegal_instruction(inst);
                     }
 #if defined(__RV_EXTENSION_ZICSR__)
-                case CSRRWInst::FUNC_3:
+                case CSRRWInst::FUNCT3:
                     return sub_type()->visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
-                case CSRRSInst::FUNC_3:
+                case CSRRSInst::FUNCT3:
                     return sub_type()->visit_csrrs_inst(reinterpret_cast<CSRRSInst *>(inst));
-                case CSRRCInst::FUNC_3:
+                case CSRRCInst::FUNCT3:
                     return sub_type()->visit_csrrc_inst(reinterpret_cast<CSRRCInst *>(inst));
-                case CSRRWIInst::FUNC_3:
+                case CSRRWIInst::FUNCT3:
                     return sub_type()->visit_csrrwi_inst(reinterpret_cast<CSRRWIInst *>(inst));
-                case CSRRSIInst::FUNC_3:
+                case CSRRSIInst::FUNCT3:
                     return sub_type()->visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(inst));
-                case CSRRCIInst::FUNC_3:
+                case CSRRCIInst::FUNCT3:
                     return sub_type()->visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
 #endif // defined(__RV_EXTENSION_ZICSR__)
                 default:
@@ -302,20 +302,20 @@ namespace risc_v_isa {
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
             switch (inst->get_funct3()) {
-                case ADDIWInst::FUNC_3:
+                case ADDIWInst::FUNCT3:
                     return sub_type()->visit_addiw_inst(reinterpret_cast<ADDIWInst *>(inst));
-                case SLLIWInst::FUNC_3:
+                case SLLIWInst::FUNCT3:
                     switch (reinterpret_cast<SLLIWInst *>(inst)->get_funct_shift()) {
-                        case SLLIWInst::FUNC_SHIFT:
+                        case SLLIWInst::FUNCT_SHIFT:
                             return sub_type()->visit_slliw_inst(reinterpret_cast<SLLIWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionShiftRightImmWSet::FUNC_3:
+                case InstructionShiftRightImmWSet::FUNCT3:
                     switch (reinterpret_cast<InstructionShiftRightImmWSet *>(inst)->get_funct_shift()) {
-                        case SRLIWInst::FUNC_SHIFT:
+                        case SRLIWInst::FUNCT_SHIFT:
                             return sub_type()->visit_srliw_inst(reinterpret_cast<SRLIWInst *>(inst));
-                        case SRAIWInst::FUNC_SHIFT:
+                        case SRAIWInst::FUNCT_SHIFT:
                             return sub_type()->visit_sraiw_inst(reinterpret_cast<SRAIWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
@@ -327,28 +327,28 @@ namespace risc_v_isa {
 
         RetT visit_arith_reg_w_set(InstructionArithRegWSet *inst) {
             switch (inst->get_funct7()) {
-                case InstructionIntegerRegWSet::FUNC_7:
+                case InstructionIntegerRegWSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case ADDWInst::FUNC_3:
+                        case ADDWInst::FUNCT3:
                             return sub_type()->visit_addw_inst(reinterpret_cast<ADDWInst *>(inst));
-                        case SLLWInst::FUNC_3:
+                        case SLLWInst::FUNCT3:
                             return sub_type()->visit_sllw_inst(reinterpret_cast<SLLWInst *>(inst));
-                        case SRLWInst::FUNC_3:
+                        case SRLWInst::FUNCT3:
                             return sub_type()->visit_srlw_inst(reinterpret_cast<SRLWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionIntegerRegModWSet::FUNC_7:
+                case InstructionIntegerRegModWSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case SUBWInst::FUNC_3:
+                        case SUBWInst::FUNCT3:
                             return sub_type()->visit_subw_inst(reinterpret_cast<SUBWInst *>(inst));
-                        case SRAWInst::FUNC_3:
+                        case SRAWInst::FUNCT3:
                             return sub_type()->visit_sraw_inst(reinterpret_cast<SRAWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
 #if defined(__RV_EXTENSION_M__)
-                case InstructionMulDivWSet::FUNC_7:
+                case InstructionMulDivWSet::FUNCT7:
                     switch (inst->get_funct3()) {
                         case MULWInst::FUNCT_3:
                             return sub_type()->visit_mulw_inst(reinterpret_cast<MULWInst *>(inst));
@@ -387,39 +387,27 @@ namespace risc_v_isa {
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
-        RetT visit_branch_set_inst(InstructionBranchSet *inst) { return sub_type()->visit_32b_inst(inst); }
+        RetT visit_branch_set_inst(InstructionBranchSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_load_set_inst(InstructionLoadSet *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_load_set_inst(InstructionLoadSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_store_set_inst(InstructionStoreSet *inst) { return sub_type()->visit_32s_inst(inst); }
+        RetT visit_store_set_inst(InstructionStoreSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_arith_imm_set_inst(InstructionArithImmSet *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_arith_imm_set_inst(InstructionArithImmSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_arith_reg_set_inst(InstructionArithRegSet *inst) { return sub_type()->visit_32r_inst(inst); }
+        RetT visit_arith_reg_set_inst(InstructionArithRegSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_fence_set_inst(InstructionFenceSet *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_fence_set_inst(InstructionFenceSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_system_set_inst(InstructionSystemSet *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_system_set_inst(InstructionSystemSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_32r_inst(Instruction32R *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_lui_inst(LUIInst *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_32i_inst(Instruction32I *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_auipc_inst(AUIPCInst *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_32s_inst(Instruction32S *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_jal_inst(JALInst *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_32b_inst(Instruction32B *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_32u_inst(Instruction32U *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_32j_inst(Instruction32J *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_lui_inst(LUIInst *inst) { return sub_type()->visit_32u_inst(inst); }
-
-        RetT visit_auipc_inst(AUIPCInst *inst) { return sub_type()->visit_32u_inst(inst); }
-
-        RetT visit_jal_inst(JALInst *inst) { return sub_type()->visit_32j_inst(inst); }
-
-        RetT visit_jalr_inst(JALRInst *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_jalr_inst(JALRInst *inst) { return sub_type()->visit_32_inst(inst); }
 
         RetT visit_beq_inst(BEQInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
 
@@ -514,9 +502,9 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_M__)
 #if defined(__RV_64_BIT__)
 
-        RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32i_inst(inst); }
+        RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32_inst(inst); }
 
-        RetT visit_arith_reg_w_set_inst(InstructionArithRegWSet *inst) { return sub_type()->visit_32r_inst(inst); }
+        RetT visit_arith_reg_w_set_inst(InstructionArithRegWSet *inst) { return sub_type()->visit_32_inst(inst); }
 
         RetT visit_ld_inst(LDInst *inst) { return sub_type()->visit_load_set_inst(inst); }
 
