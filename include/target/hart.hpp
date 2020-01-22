@@ -94,33 +94,27 @@ namespace risc_v_isa {
         }
 
         RetT visit_beq_inst(BEQInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_bne_inst(BNEInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_blt_inst(BLTInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_bge_inst(BGEInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_bltu_inst(BLTUInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_bgeu_inst(BGEUInst *inst) {
-            (*inst)(reg);
-            return NONE;
+            return (*inst)(reg) ? NONE : INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
         }
 
         RetT visit_lb_inst(LBInst *inst) { return (*inst)(reg, mem) ? NONE : MEMORY_ERROR; }
@@ -215,7 +209,6 @@ namespace risc_v_isa {
         }
 
         RetT visit_srl_inst(SRLInst *inst) {
-            std::cout << *inst << std::endl;
             (*inst)(reg);
             return NONE;
         }

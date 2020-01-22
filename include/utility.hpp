@@ -9,6 +9,10 @@
 #include <type_traits>
 
 
+#if !defined(__RV_32_BIT__) && !defined(__RV_64_BIT__)
+#error "Bit width not defined!"
+#endif
+
 //#if defined(__RV128I__) && !defined(__x86_64__)
 //#error "`RV128I` is not available for 32 bit architecture!"
 //#endif

@@ -8,46 +8,51 @@
 #include "memory/memory.hpp"
 
 
-#if defined(__RV_64_BIT__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 namespace risc_v_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
-    public:
+    protected:
         InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
                 : InstructionArithImmSet{rd, funct3, rs1, imm} {}
 
+    public:
         usize get_shift_amount() const { return slice_shift_amount(inner); }
 
         usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
     class InstructionShiftRightImmSet : public InstructionShiftImmSet {
+    protected:
+        InstructionShiftRightImmSet(usize rd, usize rs1, UXLenT imm) : InstructionShiftImmSet{rd, FUNCT3, rs1, imm} {}
+
     public:
         static constexpr UInnerT FUNCT3 = 0b101;
-
-        InstructionShiftRightImmSet(usize rd, usize rs1, UXLenT imm) : InstructionShiftImmSet{rd, FUNCT3, rs1, imm} {}
     };
 
     class InstructionIntegerRegSet : public InstructionArithRegSet {
-    public:
-        static constexpr UInnerT FUNCT7 = 0b0000000;
-
+    protected:
         InstructionIntegerRegSet(usize rd, usize funct3, usize rs1, usize rs2)
                 : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
+
+    public:
+        static constexpr UInnerT FUNCT7 = 0b0000000;
     };
 
     class InstructionIntegerRegModSet : public InstructionArithRegSet {
-    public:
-        static constexpr UInnerT FUNCT7 = 0b0100000;
-
+    protected:
         InstructionIntegerRegModSet(usize rd, usize funct3, usize rs1, usize rs2)
                 : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
+
+    public:
+        static constexpr UInnerT FUNCT7 = 0b0100000;
     };
 
     class InstructionEnvironmentSet : public InstructionSystemSet {
+    protected:
+        InstructionEnvironmentSet(usize rd, usize rs1, UXLenT imm) : InstructionSystemSet{rd, FUNCT3, rs1, imm} {}
+
     public:
         static constexpr UInnerT FUNCT3 = 0b000;
-
-        InstructionEnvironmentSet(usize rd, usize rs1, UXLenT imm) : InstructionSystemSet{rd, FUNCT3, rs1, imm} {}
 
         usize get_funct_environment() const { return inner & BITS_MASK<UInnerT, 32, 20>; }
 
@@ -126,13 +131,12 @@ namespace risc_v_isa {
 
             usize rd = get_rd();
             XLenT imm = get_imm();
+#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if (get_slice<UXLenT, 2, 1>(imm) != 0) return false;
+#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
-            UXLenT target = pc + imm;
-#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT, 2, 1>(target) != 0) return false;
-#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            reg.set_pc(target);
+            reg.set_pc(pc + imm);
             return true;
         }
 
@@ -160,11 +164,11 @@ namespace risc_v_isa {
             usize rd = get_rd();
             usize rs1 = get_rs1();
             XLenT imm = get_slice<UInnerT, 32, 21, 1>(inner);
-            if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             if (get_slice<UXLenT, 2, 1>(target) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             reg.set_pc(target);
             return true;
         }
@@ -177,12 +181,16 @@ namespace risc_v_isa {
 
     class BEQInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         BEQInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<EQ>(reg); }
+        bool operator()(RegT &reg) const { operate_on<EQ>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BEQInst &inst) {
             stream << "\tbeq\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -192,12 +200,16 @@ namespace risc_v_isa {
 
     class BNEInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b001;
 
         BNEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<NE>(reg); }
+        bool operator()(RegT &reg) const { operate_on<NE>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BNEInst &inst) {
             stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -207,12 +219,16 @@ namespace risc_v_isa {
 
     class BLTInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b100;
 
         BLTInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<LT>(reg); }
+        bool operator()(RegT &reg) const { operate_on<LT>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTInst &inst) {
             stream << "\tblt\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -222,12 +238,16 @@ namespace risc_v_isa {
 
     class BGEInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b101;
 
         BGEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<GE>(reg); }
+        bool operator()(RegT &reg) const { operate_on<GE>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEInst &inst) {
             stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -237,12 +257,16 @@ namespace risc_v_isa {
 
     class BLTUInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b110;
 
         BLTUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<LTU>(reg); }
+        bool operator()(RegT &reg) const { operate_on<LTU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTUInst &inst) {
             stream << "\tbltu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -252,12 +276,16 @@ namespace risc_v_isa {
 
     class BGEUInst : public InstructionBranchSet {
     public:
+        using BaseT = InstructionBranchSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b111;
 
         BGEUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<LTU>(reg); }
+        bool operator()(RegT &reg) const { operate_on<LTU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEUInst &inst) {
             stream << "\tbgeu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -267,6 +295,10 @@ namespace risc_v_isa {
 
     class LBInst : public InstructionLoadSet {
     public:
+        using BaseT = InstructionLoadSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         LBInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
@@ -282,6 +314,10 @@ namespace risc_v_isa {
 
     class LHInst : public InstructionLoadSet {
     public:
+        using BaseT = InstructionLoadSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b001;
 
         LHInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
@@ -297,6 +333,10 @@ namespace risc_v_isa {
 
     class LWInst : public InstructionLoadSet {
     public:
+        using BaseT = InstructionLoadSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b010;
 
         LWInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
@@ -312,6 +352,10 @@ namespace risc_v_isa {
 
     class LBUInst : public InstructionLoadSet {
     public:
+        using BaseT = InstructionLoadSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b100;
 
         LBUInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
@@ -327,6 +371,10 @@ namespace risc_v_isa {
 
     class LHUInst : public InstructionLoadSet {
     public:
+        using BaseT = InstructionLoadSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b101;
 
         LHUInst(usize rd, usize rs1, UXLenT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
@@ -342,6 +390,10 @@ namespace risc_v_isa {
 
     class SBInst : public InstructionStoreSet {
     public:
+        using BaseT = InstructionStoreSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         SBInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
@@ -357,6 +409,10 @@ namespace risc_v_isa {
 
     class SHInst : public InstructionStoreSet {
     public:
+        using BaseT = InstructionStoreSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b001;
 
         SHInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
@@ -372,6 +428,10 @@ namespace risc_v_isa {
 
     class SWInst : public InstructionStoreSet {
     public:
+        using BaseT = InstructionStoreSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b010;
 
         SWInst(usize rs1, usize rs2, UXLenT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
@@ -387,6 +447,10 @@ namespace risc_v_isa {
 
     class ADDIInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         ADDIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -402,6 +466,10 @@ namespace risc_v_isa {
 
     class SLTIInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b010;
 
         SLTIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -417,6 +485,10 @@ namespace risc_v_isa {
 
     class SLTIUInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b011;
 
         SLTIUInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -432,6 +504,10 @@ namespace risc_v_isa {
 
     class XORIInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b100;
 
         XORIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -447,6 +523,10 @@ namespace risc_v_isa {
 
     class ORIInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b110;
 
         ORIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -462,6 +542,10 @@ namespace risc_v_isa {
 
     class ANDIInst : public InstructionArithImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b111;
 
         ANDIInst(usize rd, usize rs1, UXLenT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
@@ -477,6 +561,13 @@ namespace risc_v_isa {
 
     class SLLIInst : public InstructionShiftImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) {
+            return self->get_funct3() == FUNCT3 &&
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+        }
+
         static constexpr UInnerT FUNCT3 = 0b001;
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
@@ -495,6 +586,13 @@ namespace risc_v_isa {
 
     class SRLIInst : public InstructionShiftRightImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) {
+            return self->get_funct3() == FUNCT3 &&
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+        }
+
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         SRLIInst(usize rd, usize rs1, UXLenT imm)
@@ -512,6 +610,13 @@ namespace risc_v_isa {
 
     class SRAIInst : public InstructionShiftRightImmSet {
     public:
+        using BaseT = InstructionArithImmSet;
+
+        static bool is_self_type(BaseT *self) {
+            return self->get_funct3() == FUNCT3 &&
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+        }
+
         static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         SRAIInst(usize rd, usize rs1, UXLenT imm)
@@ -529,6 +634,10 @@ namespace risc_v_isa {
 
     class ADDInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         ADDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -544,6 +653,10 @@ namespace risc_v_isa {
 
     class SUBInst : public InstructionIntegerRegModSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         SUBInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
@@ -559,6 +672,10 @@ namespace risc_v_isa {
 
     class SLLInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b001;
 
         SLLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -574,6 +691,10 @@ namespace risc_v_isa {
 
     class SLTInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b010;
 
         SLTInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -589,6 +710,10 @@ namespace risc_v_isa {
 
     class SLTUInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b011;
 
         SLTUInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -604,6 +729,10 @@ namespace risc_v_isa {
 
     class XORInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b100;
 
         XORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -619,6 +748,10 @@ namespace risc_v_isa {
 
     class SRLInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b101;
 
         SRLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -634,6 +767,10 @@ namespace risc_v_isa {
 
     class SRAInst : public InstructionIntegerRegModSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b101;
 
         SRAInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
@@ -649,6 +786,10 @@ namespace risc_v_isa {
 
     class ORInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b110;
 
         ORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -664,6 +805,10 @@ namespace risc_v_isa {
 
     class ANDInst : public InstructionIntegerRegSet {
     public:
+        using BaseT = InstructionArithRegSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+
         static constexpr UInnerT FUNCT3 = 0b111;
 
         ANDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
@@ -679,6 +824,10 @@ namespace risc_v_isa {
 
     class FENCEInst : public InstructionFenceSet { // todo
     public:
+        using BaseT = InstructionFenceSet;
+
+        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+
         static constexpr UInnerT FUNCT3 = 0b000;
 
         FENCEInst(usize rd, usize rs1, UXLenT imm) : InstructionFenceSet{rd, FUNCT3, rs1, imm} {}
@@ -691,6 +840,13 @@ namespace risc_v_isa {
 
     class ECALLInst : public InstructionEnvironmentSet {
     public:
+        using BaseT = InstructionSystemSet;
+
+        static bool is_self_type(BaseT *_self) {
+            InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
+            return self->get_funct_environment() == FUNCT_ENVIRONMENT && self->get_unused() == 0;
+        }
+
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
 
         ECALLInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
@@ -703,6 +859,13 @@ namespace risc_v_isa {
 
     class EBREAKInst : public InstructionEnvironmentSet {
     public:
+        using BaseT = InstructionSystemSet;
+
+        static bool is_self_type(BaseT *_self) {
+            InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
+            return self->get_funct_environment() == FUNCT_ENVIRONMENT && self->get_unused() == 0;
+        }
+
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
 
         EBREAKInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
@@ -713,7 +876,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV_64_BIT__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 
 
 #endif //RISC_V_ISA_RV32I_HPP

@@ -1,4 +1,3 @@
-#include "utility.hpp"
 #include "target/hart.hpp"
 
 using namespace risc_v_isa;

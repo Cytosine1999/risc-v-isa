@@ -14,7 +14,8 @@
 
 namespace risc_v_isa {
     class Instruction {
-
+    protected:
+        Instruction() = default;
     };
 
 #if defined(__RV_EXTENSION_C__)
@@ -36,6 +37,7 @@ namespace risc_v_isa {
     };
 
 #endif // defined(__RV_EXTENSION_C__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 
     class Instruction32 : public Instruction {
     protected:
@@ -289,6 +291,8 @@ namespace risc_v_isa {
 
         InnerT inner;
 
+        explicit Instruction32(InnerT val) : inner{val} {}
+
     public:
         using BaseT = Instruction;
 
@@ -299,13 +303,21 @@ namespace risc_v_isa {
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
-        explicit Instruction32(InnerT val) : inner{val} {}
-
         usize get_op_code() const { return slice_op_code(inner); }
     };
 
     class Instruction32R : public Instruction32 {
     protected:
+        Instruction32R(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+                : Instruction32{static_cast<InnerT>(
+                                        BITS_MASK<UInnerT, 2, 0> |
+                                        get_slice<UInnerT, 5, 0, 2>(op) |
+                                        get_slice<UInnerT, 5, 0, 7>(rd) |
+                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
+                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
+                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
+                                        get_slice<UInnerT, 7, 0, 25>(funct7))} {}
+
         template<typename OP, typename RegT>
         void operate_on(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
@@ -320,16 +332,6 @@ namespace risc_v_isa {
         }
 
     public:
-        Instruction32R(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
-                : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(rd) |
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
-                                        get_slice<UInnerT, 7, 0, 25>(funct7))} {}
-
         usize get_rd() const { return slice_rd(inner); }
 
         usize get_funct3() const { return slice_funct3(inner); }
@@ -343,19 +345,6 @@ namespace risc_v_isa {
 
     class Instruction32I : public Instruction32 {
     protected:
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                XLenT imm = get_imm();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
-
         template<typename OP, typename Self, typename RegT>
         static void operate_shift(Self *self, RegT &reg) {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
@@ -369,7 +358,6 @@ namespace risc_v_isa {
             reg.inc_pc(INST_WIDTH);
         }
 
-    public:
         Instruction32I(usize op, usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
                                         BITS_MASK<UInnerT, 2, 0> |
@@ -379,6 +367,20 @@ namespace risc_v_isa {
                                         get_slice<UInnerT, 5, 0, 15>(rs1) |
                                         get_slice<UInnerT, 12, 0, 20>(imm))} {}
 
+        template<typename OP, typename RegT>
+        void operate_on(RegT &reg) const {
+            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+
+            usize rd = get_rd();
+            if (rd != 0) {
+                usize rs1 = get_rs1();
+                XLenT imm = get_imm();
+                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
+            }
+            reg.inc_pc(INST_WIDTH);
+        }
+
+    public:
         usize get_rd() const { return slice_rd(inner); }
 
         usize get_funct3() const { return slice_funct3(inner); }
@@ -392,7 +394,7 @@ namespace risc_v_isa {
     };
 
     class Instruction32S : public Instruction32 {
-    public:
+    protected:
         Instruction32S(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
                                         BITS_MASK<UInnerT, 2, 0> |
@@ -403,6 +405,7 @@ namespace risc_v_isa {
                                         get_slice<UInnerT, 5, 0, 20>(rs2) |
                                         get_slice<UInnerT, 12, 5, 25>(imm))} {}
 
+    public:
         usize get_funct3() const { return slice_funct3(inner); }
 
         usize get_rs1() const { return slice_rs1(inner); }
@@ -417,7 +420,7 @@ namespace risc_v_isa {
     };
 
     class Instruction32B : public Instruction32 {
-    public:
+    protected:
         Instruction32B(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
                                         BITS_MASK<UInnerT, 2, 0> |
@@ -430,6 +433,7 @@ namespace risc_v_isa {
                                         get_slice<UInnerT, 11, 5, 25>(imm) |
                                         get_slice<UInnerT, 13, 12, 31>(imm))} {}
 
+    public:
         usize get_funct3() const { return slice_funct3(inner); }
 
         usize get_rs1() const { return slice_rs1(inner); }
@@ -445,7 +449,7 @@ namespace risc_v_isa {
     };
 
     class Instruction32U : public Instruction32 {
-    public:
+    protected:
         Instruction32U(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
                                         BITS_MASK<UInnerT, 2, 0> |
@@ -453,6 +457,7 @@ namespace risc_v_isa {
                                         get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 32, 12, 12>(imm))} {}
 
+    public:
         usize get_rd() const { return slice_rd(inner); }
 
         XLenT get_imm() const {
@@ -462,7 +467,7 @@ namespace risc_v_isa {
     };
 
     class Instruction32J : public Instruction32 {
-    public:
+    protected:
         Instruction32J(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
                                         BITS_MASK<UInnerT, 2, 0> |
@@ -473,6 +478,7 @@ namespace risc_v_isa {
                                         get_slice<UInnerT, 11, 1, 21>(imm) |
                                         get_slice<UInnerT, 21, 20, 31>(imm))} {}
 
+    public:
         usize get_rd() const { return slice_rd(inner); }
 
         XLenT get_imm() const {
@@ -485,14 +491,27 @@ namespace risc_v_isa {
 
     class InstructionBranchSet : public Instruction32B {
     protected:
+        InstructionBranchSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
+                : Instruction32B{OP_CODE, funct3, rs1, rs2, imm} {}
+
         template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
+        bool operate_on(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
 
             usize rs1 = get_rs1();
             usize rs2 = get_rs2();
-            XLenT imm = get_imm();
-            reg.inc_pc(OP::op(reg.get_x(rs1), reg.get_x(rs2)) ? imm : INST_WIDTH);
+
+            if (OP::op(reg.get_x(rs1), reg.get_x(rs2)) {
+                XLenT imm = get_imm();
+#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+                if (get_slice<UXLenT, 2, 1>(imm) != 0) return false;
+#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+                reg.inc_pc(imm);
+            }
+
+            reg.inc_pc(INST_WIDTH);
+
+            return true;
         }
 
     public:
@@ -501,13 +520,13 @@ namespace risc_v_isa {
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11000;
-
-        InstructionBranchSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
-                : Instruction32B{OP_CODE, funct3, rs1, rs2, imm} {}
     };
 
     class InstructionLoadSet : public Instruction32I {
     protected:
+        InstructionLoadSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
@@ -518,7 +537,7 @@ namespace risc_v_isa {
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
-            if (rd != 0) reg.set_x(rd, *ptr);
+            if (rd != 0) reg.set_x(rd, *ptr);  // todo: this may fail from interrupt
             reg.inc_pc(INST_WIDTH);
             return true;
         }
@@ -529,13 +548,13 @@ namespace risc_v_isa {
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00000;
-
-        InstructionLoadSet(usize rd, usize funct3, usize rs1, UXLenT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
     class InstructionStoreSet : public Instruction32S {
     protected:
+        InstructionStoreSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
+                : Instruction32S{OP_CODE, funct3, rs1, rs2, imm} {}
+
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value);
@@ -546,7 +565,7 @@ namespace risc_v_isa {
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
-            *ptr = static_cast<ValT>(reg.get_x(rs2));
+            *ptr = static_cast<ValT>(reg.get_x(rs2)); // todo: this may fail from interrupt
             reg.inc_pc(INST_WIDTH);
             return true;
         }
@@ -557,83 +576,87 @@ namespace risc_v_isa {
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01000;
-
-        InstructionStoreSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
-                : Instruction32S{OP_CODE, funct3, rs1, rs2, imm} {}
     };
 
     class InstructionArithImmSet : public Instruction32I {
+    protected:
+        InstructionArithImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00100;
-
-        InstructionArithImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
     class InstructionArithRegSet : public Instruction32R {
+    protected:
+        InstructionArithRegSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01100;
-
-        InstructionArithRegSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
-                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
     };
 
     class InstructionFenceSet : public Instruction32I {
+    protected:
+        InstructionFenceSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00011;
-
-        InstructionFenceSet(usize rd, usize funct3, usize rs1, UXLenT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
     class InstructionSystemSet : public Instruction32I {
+    protected:
+        InstructionSystemSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11100;
-
-        InstructionSystemSet(usize rd, usize funct3, usize rs1, UXLenT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 #if defined(__RV_64_BIT__)
 
     class InstructionArithImmWSet : public Instruction32I {
+    protected:
+        InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00110;
-
-        InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UXLenT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
     };
 
     class InstructionArithRegWSet : public Instruction32R {
+    protected:
+        InstructionArithRegWSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
+
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01110;
-
-        InstructionArithRegWSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
-                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
     };
 
 #endif // defined(__RV_64_BIT__)

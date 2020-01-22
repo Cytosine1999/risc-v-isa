@@ -9,8 +9,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
-add_library(risc_v_isa src/instruction.cpp)
-target_compile_definitions(risc_v_isa PRIVATE __RV_EXTENSION_M__)
+add_executable(test_unit_rv32i test/unit/rv32i_test.cpp)
+target_compile_definitions(test_unit_rv32i PRIVATE __RV_32_BIT__)
 
-add_executable(rv32i_test test/rv32i.cpp)
-target_compile_definitions(rv32i_test PRIVATE __RV_64_BIT__ __RV_EXTENSION_M__)
+add_executable(test_inter_factorial test/intergration/factorial_test.cpp)
+target_compile_definitions(test_inter_factorial PRIVATE __RV_64_BIT__ __RV_EXTENSION_M__)

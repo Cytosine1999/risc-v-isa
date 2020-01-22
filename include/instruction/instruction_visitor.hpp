@@ -17,7 +17,7 @@ namespace risc_v_isa {
     class InstructionVisitor {
     private:
         SubT *sub_type() { return static_cast<SubT *>(this); }
-        
+
     public:
         using RetT = _RetT;
 
@@ -32,9 +32,11 @@ namespace risc_v_isa {
                     return visit_16(reinterpret_cast<Instruction16 *>(inst));
                 }
 #endif
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
                 if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
                     return visit_32(reinterpret_cast<Instruction32 *>(inst));
                 }
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
                 return sub_type()->illegal_instruction(inst);
             }
         }
@@ -46,6 +48,7 @@ namespace risc_v_isa {
         }
 
 #endif // defined(__RV_EXTENSION_C__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 
         RetT visit_32(Instruction32 *inst) {
             switch (inst->get_op_code()) {
@@ -298,6 +301,7 @@ namespace risc_v_isa {
             }
         }
 
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 #if defined(__RV_64_BIT__)
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
@@ -384,6 +388,7 @@ namespace risc_v_isa {
         RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(); }
 
 #endif // defined(__RV_EXTENSION_C__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
@@ -500,6 +505,7 @@ namespace risc_v_isa {
         RetT visit_remu_inst(REMUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 #if defined(__RV_64_BIT__)
 
         RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32_inst(inst); }
