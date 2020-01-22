@@ -69,7 +69,7 @@ namespace risc_v_isa {
             }
         }
 
-        RetT illegal_instruction(Instruction *inst) {
+        RetT illegal_instruction(risc_v_isa_unused Instruction *inst) {
             return ILLEGAL_INSTRUCTION_EXCEPTION;
         }
 
@@ -235,18 +235,18 @@ namespace risc_v_isa {
             return NONE;
         }
 
-        RetT visit_fence_inst(FENCEInst *inst) {
+        RetT visit_fence_inst(risc_v_isa_unused FENCEInst *inst) {
             return NONE; // todo
         }
 
-        RetT visit_ecall_inst(ECALLInst *inst) {
+        RetT visit_ecall_inst(risc_v_isa_unused ECALLInst *inst) {
             return ECALL;
         }
 
 #endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
 #if defined(__RV_EXTENSION_M__)
 
-        RetT visit_ebreak_inst(EBREAKInst *inst) {
+        RetT visit_ebreak_inst(risc_v_isa_unused EBREAKInst *inst) {
             return EBREAK;
         }
 

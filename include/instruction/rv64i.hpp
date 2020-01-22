@@ -7,33 +7,7 @@
 
 #if defined(__RV_64_BIT__)
 namespace risc_v_isa {
-    namespace {
-        struct ADDW { static i32 op(i32 a, i32 b) { return a + b; } };
-
-        struct SUBW { static i32 op(i32 a, i32 b) { return a - b; } };
-
-        struct SLLW { static i32 op(u32 a, u32 b) { return a << b; } };
-
-        struct SRLW { static i32 op(u32 a, u32 b) { return a >> b; } };
-
-        struct SRAW { static i32 op(i32 a, u32 b) { return a >> b; } };
-    }
-
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
-    protected:
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                XLenT imm = get_shift_amount();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
-
     public:
         usize get_shift_amount() const { return slice_shift_amount(inner); }
         usize get_funct_shift() const { return slice_funct_shift(inner); }
@@ -112,7 +86,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SLLW>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SLLW>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIWInst &inst) {
             stream << "\tslliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -125,7 +99,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRLW>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SRLW>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIWInst &inst) {
             stream << "\tsrliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -138,7 +112,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b010000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRAW>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SRAW>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIWInst &inst) {
             stream << "\tsraiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();

@@ -10,55 +10,7 @@
 
 #if defined(__RV_64_BIT__)
 namespace risc_v_isa {
-    namespace {
-        constexpr UXLenT PTR_MASK = BITS_MASK<UXLenT, XLEN, 1>;
-
-        struct EQ { static bool op(XLenT a, XLenT b) { return a == b; } };
-
-        struct NE { static bool op(XLenT a, XLenT b) { return a != b; } };
-
-        struct LT { static bool op(XLenT a, XLenT b) { return a < b; } };
-
-        struct GE { static bool op(XLenT a, XLenT b) { return a >= b; } };
-
-        struct LTU { static bool op(UXLenT a, UXLenT b) { return a < b; } };
-
-        struct ADD { static XLenT op(XLenT a, XLenT b) { return a + b; } };
-
-        struct SUB { static XLenT op(XLenT a, XLenT b) { return a - b; } };
-
-        struct SLT { static XLenT op(XLenT a, XLenT b) { return a < b; } };
-
-        struct SLTU { static XLenT op(UXLenT a, UXLenT b) { return a < b; } };
-
-        struct XOR { static XLenT op(UXLenT a, UXLenT b) { return a ^ b; } };
-
-        struct OR { static XLenT op(UXLenT a, UXLenT b) { return a | b; } };
-
-        struct AND { static XLenT op(UXLenT a, UXLenT b) { return a & b; } };
-
-        struct SLL { static XLenT op(UXLenT a, UXLenT b) { return a << b; } };
-
-        struct SRL { static XLenT op(UXLenT a, UXLenT b) { return a >> b; } };
-
-        struct SRA { static XLenT op(XLenT a, UXLenT b) { return a >> b; } };
-    }
-
     class InstructionShiftImmSet : public InstructionArithImmSet {
-    protected:
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                XLenT imm = get_shift_amount();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
-
     public:
         usize get_shift_amount() const { return slice_shift_amount(inner); }
         usize get_funct_shift() const { return slice_funct_shift(inner); }
@@ -451,7 +403,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SLL>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SLL>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIInst &inst) {
             stream << "\tslli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -464,7 +416,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b000000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRL>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SRL>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIInst &inst) {
             stream << "\tsrli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -477,7 +429,7 @@ namespace risc_v_isa {
         static constexpr UInnerT FUNC_SHIFT = 0b010000000000;
 
         template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRA>(reg); }
+        void operator()(RegT &reg) const { operate_shift<SRA>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIInst &inst) {
             stream << "\tsrai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -619,7 +571,7 @@ namespace risc_v_isa {
     public:
         static constexpr UInnerT FUNC_3 = 0b000;
 
-        friend std::ostream &operator<<(std::ostream &stream, const FENCEInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const FENCEInst &inst) {
             stream << "\tfence";
             return stream;
         }
@@ -629,7 +581,7 @@ namespace risc_v_isa {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
 
-        friend std::ostream &operator<<(std::ostream &stream, const ECALLInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const ECALLInst &inst) {
             stream << "\tecall";
             return stream;
         }
@@ -639,7 +591,7 @@ namespace risc_v_isa {
     public:
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
 
-        friend std::ostream &operator<<(std::ostream &stream, const EBREAKInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const EBREAKInst &inst) {
             stream << "\tebreak";
             return stream;
         }

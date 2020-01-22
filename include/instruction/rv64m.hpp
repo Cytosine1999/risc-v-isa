@@ -7,30 +7,6 @@
 
 #if defined(__RV_EXTENSION_M__) && defined(__RV_64_BIT__)
 namespace risc_v_isa {
-    namespace {
-        struct MULW { static i32 op(i32 a, i32 b) { return a * b; } };
-
-        struct DIVW {
-            static i32 op(i32 a, i32 b) {
-                if (b == 0) return -1;
-                else if (a == XLenTMin && b == -1) return XLenTMin;
-                return a / b;
-            }
-        };
-
-        struct DIVUW { static i32 op(u32 a, u32 b) { return b == 0 ? -1 : a / b; } };
-
-        struct REMW {
-            static i32 op(i32 a, i32 b) {
-                if (b == 0) return a;
-                else if (a == XLenTMin && b == -1) return 0;
-                return a % b;
-            }
-        };
-
-        struct REMUW { static i32 op(u32 a, u32 b) { return b == 0 ? a : a % b; } };
-    }
-
     class InstructionMulDivWSet : public InstructionArithRegWSet {
     public:
         static constexpr InnerT FUNC_7 = 0b0000001;

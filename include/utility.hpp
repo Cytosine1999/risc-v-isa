@@ -45,6 +45,8 @@ namespace risc_v_isa {
 
 #define risc_v_isa_unreachable(msg) risc_v_isa::_unreachable(__FILE__, __LINE__, msg)
 
+#define risc_v_isa_unused __attribute__((unused))
+
     using i8 = int8_t;
     using u8 = u_int8_t;
     using i16 = int16_t;
@@ -96,15 +98,11 @@ namespace risc_v_isa {
     constexpr usize XLEN_BYTE = sizeof(XLenT);
     constexpr usize XLEN = XLEN_BYTE * 8;
 
-    namespace {
-        template<typename T, usize end>
-        constexpr T _BITS_MASK = (static_cast<T>(1u) << end) - static_cast<T>(1u);
-    }
-
     template<typename T, usize end, usize begin>
-    constexpr T BITS_MASK = _BITS_MASK<typename std::enable_if<(
-            std::is_unsigned<T>::value && sizeof(T) * 8 >= end && end > begin), T>::type,
-            end - begin> << begin;
+    constexpr T BITS_MASK = ((static_cast<typename std::enable_if<(std::is_unsigned<T>::value &&
+                                                                   sizeof(T) * 8 >= end &&
+                                                                   end > begin), T>::type>(1u) << end - begin) -
+                             static_cast<T>(1u)) << begin;
 
     template<typename T, usize end, usize begin, isize offset = 0>
     constexpr inline T get_slice(T val) {
