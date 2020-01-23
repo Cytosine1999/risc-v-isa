@@ -501,16 +501,16 @@ namespace risc_v_isa {
             usize rs1 = get_rs1();
             usize rs2 = get_rs2();
 
-            if (OP::op(reg.get_x(rs1), reg.get_x(rs2)) {
+            if (OP::op(reg.get_x(rs1), reg.get_x(rs2))) {
                 XLenT imm = get_imm();
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-                if (get_slice<UXLenT, 2, 1>(imm) != 0) return false;
+                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
                 reg.inc_pc(imm);
+            } else {
+                reg.inc_pc(INST_WIDTH);
             }
-
-            reg.inc_pc(INST_WIDTH);
-
+            
             return true;
         }
 

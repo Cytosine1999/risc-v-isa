@@ -132,7 +132,7 @@ namespace risc_v_isa {
             usize rd = get_rd();
             XLenT imm = get_imm();
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT, 2, 1>(imm) != 0) return false;
+            if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
@@ -163,10 +163,10 @@ namespace risc_v_isa {
 
             usize rd = get_rd();
             usize rs1 = get_rs1();
-            XLenT imm = get_slice<UInnerT, 32, 21, 1>(inner);
+            XLenT imm = get_imm();
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
 #if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT, 2, 1>(target) != 0) return false;
+            if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
 #endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             reg.set_pc(target);
@@ -190,7 +190,7 @@ namespace risc_v_isa {
         BEQInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<EQ>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<EQ>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BEQInst &inst) {
             stream << "\tbeq\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -209,7 +209,7 @@ namespace risc_v_isa {
         BNEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<NE>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<NE>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BNEInst &inst) {
             stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -228,7 +228,7 @@ namespace risc_v_isa {
         BLTInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<LT>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<LT>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTInst &inst) {
             stream << "\tblt\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -247,7 +247,7 @@ namespace risc_v_isa {
         BGEInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<GE>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<GE>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEInst &inst) {
             stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -266,7 +266,7 @@ namespace risc_v_isa {
         BLTUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<LTU>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<LTU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTUInst &inst) {
             stream << "\tbltu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
@@ -285,7 +285,7 @@ namespace risc_v_isa {
         BGEUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { operate_on<LTU>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<LTU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEUInst &inst) {
             stream << "\tbgeu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
