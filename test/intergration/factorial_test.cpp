@@ -63,7 +63,7 @@ int main() {
     reg.set_pc(0);
     reg.set_x(RegisterFile::SP, 4092);
 
-    Memory mem{1};
+    Memory mem{4096};
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));
 

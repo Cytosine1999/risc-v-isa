@@ -11,17 +11,26 @@
 namespace risc_v_isa {
     class Memory {
     private:
+        usize page_size;
         usize memory_size;
         u8 *memory_offset;
 
     public:
-        Memory(usize page_num) : memory_size{page_num * page_size()} {
-            memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size + page_size(), PROT_READ | PROT_WRITE,
+        Memory(usize _memory_size) {
+            isize _page_size = sysconf(_SC_PAGESIZE);
+
+            if (_page_size <= 0) risc_v_isa_abort("Unable to get page size or improper page size!");
+
+            page_size = _page_size;
+
+            memory_size = ((_memory_size + page_size - 1) / page_size) * page_size;
+
+            memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size + page_size, PROT_READ | PROT_WRITE,
                                                    MAP_ANONYMOUS | MAP_SHARED, -1, 0));
             if (memory_offset == MAP_FAILED) risc_v_isa_abort("Memory map failed!");
 
             // todo: memory wrap around through interrupt
-            if(mprotect(memory_offset + memory_size, page_size(), PROT_NONE) != 0)
+            if(mprotect(memory_offset + memory_size, page_size, PROT_NONE) != 0)
                 risc_v_isa_abort("Guard page set failed!");
         }
 

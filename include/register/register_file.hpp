@@ -7,14 +7,14 @@ namespace risc_v_isa {
     private:
 #if defined(__RV_EXTENSION_C__)
         static constexpr usize GENERAL_PURPOSE_NUM = 16;
-#elif defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__)
+#elif defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
         static constexpr usize GENERAL_PURPOSE_NUM = 32;
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
         XLenT pc;
         XLenT x[GENERAL_PURPOSE_NUM];
 
     public:
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__) || defined(__RV_EXTENSION_C__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
         static constexpr usize ZERO = 0;
         static constexpr usize RA = 1;
         static constexpr usize SP = 2;
@@ -32,8 +32,8 @@ namespace risc_v_isa {
         static constexpr usize A3 = 13;
         static constexpr usize A4 = 14;
         static constexpr usize A5 = 15;
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__) || defined(__RV_EXTENSION_C__)
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__) && !defined(__RV_EXTENSION_C__)
         static constexpr usize A6 = 16;
         static constexpr usize A7 = 17;
         static constexpr usize S2 = 18;
@@ -50,7 +50,7 @@ namespace risc_v_isa {
         static constexpr usize T4 = 29;
         static constexpr usize T5 = 30;
         static constexpr usize T6 = 31;
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__) || defined(__RV128I__)
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__) && !defined(__RV_EXTENSION_C__)
 
         RegisterFile() : pc{}, x{} {}
 

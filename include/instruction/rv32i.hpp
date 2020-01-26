@@ -131,9 +131,8 @@ namespace risc_v_isa {
 
             usize rd = get_rd();
             XLenT imm = get_imm();
-#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
-#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if constexpr (IALIGN == 32)
+                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
             reg.set_pc(pc + imm);
@@ -165,9 +164,8 @@ namespace risc_v_isa {
             usize rs1 = get_rs1();
             XLenT imm = get_imm();
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
-#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-            if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
-#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+            if constexpr (IALIGN == 32)
+                if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             reg.set_pc(target);
             return true;

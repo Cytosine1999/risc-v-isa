@@ -13,19 +13,6 @@
 #error "Bit width not defined!"
 #endif
 
-//#if defined(__RV128I__) && !defined(__x86_64__)
-//#error "`RV128I` is not available for 32 bit architecture!"
-//#endif
-//
-//#if defined(__RV128I__) && (defined(__RV_CUSTOM_2__) || defined(__RV_CUSTOM_3__))
-//#error "`RV128I` conflicts with custom-2 and custon-3!"
-//#endif
-
-/// if this macro is defined, the alignment of instruction is loosen to 16
-#if defined(__RV_EXTENSION_C__)
-#define INSTRUCTION_ADDRESS_MISALIGNED
-#endif
-
 namespace risc_v_isa {
     void _warn(const char *file, int line, const char *msg) {
         std::cerr << "Warn at file " << file << ", line " << line << ": " << msg << std::endl;
@@ -59,10 +46,6 @@ namespace risc_v_isa {
     using u32 = u_int32_t;
     using i64 = int64_t;
     using u64 = u_int64_t;
-//#ifdef __x86_64__
-//    using i128 = __int128;
-//    using u128 = unsigned __int128;
-//#endif
 #if defined(__x86_64__)
     using isize = int64_t;
     using usize = u_int64_t;
@@ -70,17 +53,6 @@ namespace risc_v_isa {
     using isize = int32_t;
     using usize = u_int32_t;
 #endif
-
-    namespace {
-        usize _PAGE_SIZE = 0;
-    }
-
-    usize page_size() { return _PAGE_SIZE; }
-
-    // todo: move to initialize of hart?
-    __attribute__((constructor)) void __initial_sys_config() {
-        _PAGE_SIZE = sysconf(_SC_PAGESIZE);
-    }
 
 #if defined(__RV_32_BIT__)
     using XLenT = i32;
@@ -90,10 +62,6 @@ namespace risc_v_isa {
     using XLenT = i64;
     using UXLenT = u64;
     constexpr usize XLEN_INDEX = 6;
-//#elif defined(__RV128I__)
-//    using XLenT = i128;
-//    using UXLenT = u128;
-//    constexpr usize XLEN_INDEX = 7;
 #else
     using XLenT = void;
     using UXLenT = void;
@@ -101,6 +69,27 @@ namespace risc_v_isa {
 
     constexpr usize XLEN_BYTE = sizeof(XLenT);
     constexpr usize XLEN = XLEN_BYTE * 8;
+
+    /// @cite: RVISM - Volume I - V20191213 - P8
+    ///
+    /// "We use the term IALIGN (measured in bits) to refer to the instruction-address alignment constraint the
+    /// implementation enforces. IALIGN is 32 bits in the base ISA, but some ISA extensions, including the compressed
+    /// ISA extension, relax IALIGN to 16 bits. IALIGN may not take on any value other than 16 or 32."
+    ///
+#if defined(__RV_EXTENSION_C__)
+    constexpr usize IALIGN = 16;
+#else
+    constexpr usize IALIGN = 32;
+#endif
+
+    ///  @cite: RVISM - Volume I - V20191213 - P8
+    ///
+    /// We use the term ILEN (measured in bits) to refer to the maximum instruction length supported by an
+    /// implementation, and which is always a multiple of IALIGN. For implementations supporting only a base
+    /// instruction set, ILEN is 32 bits. Implementations supporting longer instructions have larger values of ILEN.
+
+    constexpr usize ILEN = 32;
+    using ILenT = u32;
 
     template<typename T, usize end, usize begin>
     constexpr typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) * 8 >= end && end > begin), T>::type
@@ -128,7 +117,7 @@ namespace risc_v_isa {
         if constexpr (std::is_same<BaseT, U>::value)
             return T::is_self_type(self);
         else
-            return is_type<BaseT>(self) && T::is_self_type(reinterpret_cast<BaseT *>(self));
+            return is_type < BaseT > (self) && T::is_self_type(reinterpret_cast<BaseT *>(self));
     }
 
     template<typename T, typename U>

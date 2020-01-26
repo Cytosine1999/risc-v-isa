@@ -503,14 +503,13 @@ namespace risc_v_isa {
 
             if (OP::op(reg.get_x(rs1), reg.get_x(rs2))) {
                 XLenT imm = get_imm();
-#if !defined(INSTRUCTION_ADDRESS_MISALIGNED)
-                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
-#endif // !defined(INSTRUCTION_ADDRESS_MISALIGNED)
+                if constexpr (IALIGN == 32)
+                    if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
                 reg.inc_pc(imm);
             } else {
                 reg.inc_pc(INST_WIDTH);
             }
-            
+
             return true;
         }
 

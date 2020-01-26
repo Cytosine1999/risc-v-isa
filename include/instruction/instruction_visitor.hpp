@@ -16,6 +16,8 @@ namespace risc_v_isa {
     template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
     private:
+        ILenT buffer;
+
         SubT *sub_type() { return static_cast<SubT *>(this); }
 
     public:
@@ -26,19 +28,19 @@ namespace risc_v_isa {
 
             usize leading_16 = *reinterpret_cast<u16 *>(inst);
 
-            while (true) {
 #if defined(__RV_EXTENSION_C__)
-                if ((val & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>) {
-                    return visit_16(reinterpret_cast<Instruction16 *>(inst));
-                }
+            if ((val & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>) {
+                buffer = *reinterpret_cast<u16 *>(inst);
+                return visit_16(reinterpret_cast<Instruction16 *>(&inst));
+            }
 #endif
 #if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
-                if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
-                    return visit_32(reinterpret_cast<Instruction32 *>(inst));
-                }
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
-                return sub_type()->illegal_instruction(inst);
+            if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
+                buffer = *reinterpret_cast<u32 *>(inst); // todo: handle misaligned
+                return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
             }
+#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+            return sub_type()->illegal_instruction(inst);
         }
 
 #if defined(__RV_EXTENSION_C__)
@@ -129,6 +131,7 @@ namespace risc_v_isa {
                 case LHInst::FUNCT3:
                     return sub_type()->visit_lh_inst(reinterpret_cast<LHInst *>(inst));
                 case LWInst::FUNCT3:
+                    return sub_type()->visit_lw_inst(reinterpret_cast<LWInst *>(inst));
                 case LBUInst::FUNCT3:
                     return sub_type()->visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
                 case LHUInst::FUNCT3:
