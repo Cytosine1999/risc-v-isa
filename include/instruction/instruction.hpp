@@ -287,7 +287,7 @@ namespace risc_v_isa {
             return get_slice<UInnerT, 32, 20 + XLEN_INDEX, XLEN_INDEX>(val);
         }
 
-        static UInnerT slice_shift_amount(UInnerT val) { return static_cast<UInnerT>(val) >> 20u; }
+        static UInnerT slice_shift_amount(UInnerT val) { return get_slice<UInnerT, 20 + XLEN_INDEX, 20>(val); }
 
         InnerT inner;
 

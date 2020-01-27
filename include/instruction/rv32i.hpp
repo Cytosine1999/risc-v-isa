@@ -571,7 +571,7 @@ namespace risc_v_isa {
 
         SLLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftImmSet{rd, FUNCT3, rs1,
-                                         (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                         (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SLL>(this, reg); }
@@ -595,7 +595,7 @@ namespace risc_v_isa {
 
         SRLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                              (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRL>(this, reg); }
@@ -619,7 +619,7 @@ namespace risc_v_isa {
 
         SRAIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                              (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRA>(this, reg); }
@@ -820,7 +820,7 @@ namespace risc_v_isa {
         }
     };
 
-    class FENCEInst : public InstructionFenceSet { // todo
+    class FENCEInst : public InstructionFenceSet {
     public:
         using BaseT = InstructionFenceSet;
 
@@ -828,7 +828,35 @@ namespace risc_v_isa {
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
-        FENCEInst(usize rd, usize rs1, UXLenT imm) : InstructionFenceSet{rd, FUNCT3, rs1, imm} {}
+        FENCEInst(usize sw, usize sr, usize so, usize si, usize pw, usize pr, usize po, usize pi, usize fm) :
+                InstructionFenceSet{0, FUNCT3, 0,
+                                    get_slice<UXLenT, 1, 0, 0>(sw) |
+                                    get_slice<UXLenT, 1, 0, 1>(sr) |
+                                    get_slice<UXLenT, 1, 0, 2>(so) |
+                                    get_slice<UXLenT, 1, 0, 3>(si) |
+                                    get_slice<UXLenT, 1, 0, 4>(pw) |
+                                    get_slice<UXLenT, 1, 0, 5>(pr) |
+                                    get_slice<UXLenT, 1, 0, 6>(po) |
+                                    get_slice<UXLenT, 1, 0, 7>(pi) |
+                                    get_slice<UXLenT, 4, 0, 8>(fm)} {}
+
+        bool get_sw() const { return get_slice<UXLenT, 21, 20>(inner); }
+
+        bool get_sr() const { return get_slice<UXLenT, 22, 21>(inner); }
+
+        bool get_so() const { return get_slice<UXLenT, 23, 22>(inner); }
+
+        bool get_si() const { return get_slice<UXLenT, 24, 23>(inner); }
+
+        bool get_pw() const { return get_slice<UXLenT, 25, 24>(inner); }
+
+        bool get_pr() const { return get_slice<UXLenT, 26, 25>(inner); }
+
+        bool get_po() const { return get_slice<UXLenT, 27, 26>(inner); }
+
+        bool get_pi() const { return get_slice<UXLenT, 28, 27>(inner); }
+
+        usize get_fm() const { return get_slice<UXLenT, 32, 28>(inner); }
 
         friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const FENCEInst &inst) {
             stream << "\tfence";
