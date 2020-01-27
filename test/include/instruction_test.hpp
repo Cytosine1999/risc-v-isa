@@ -179,7 +179,8 @@ namespace risc_v_isa {
 
     template<typename T, typename U>
     void check_dyn_cast(Instruction *inst) {
-        if constexpr (std::is_same<T, U>::value) ASSERT_NE(dyn_cast<U>(inst), static_cast<U *>(nullptr));
+        if constexpr (std::is_same<T, U>::value)
+            ASSERT_NE(dyn_cast<U>(inst), static_cast<U *>(nullptr));
         else
             ASSERT_EQ(dyn_cast<U>(inst), static_cast<U *>(nullptr));
     }

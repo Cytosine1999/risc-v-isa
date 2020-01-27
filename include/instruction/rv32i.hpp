@@ -149,7 +149,10 @@ namespace risc_v_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(BaseT *_self) {
+            JALRInst *self = reinterpret_cast<JALRInst *>(_self);
+            return self->get_op_code() == OP_CODE && self->get_funct3() == FUNCT3;
+        }
 
         static constexpr UInnerT OP_CODE = 0b11001;
         static constexpr UInnerT FUNCT3 = 0b000;
