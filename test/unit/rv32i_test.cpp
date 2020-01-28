@@ -88,6 +88,31 @@ void check_s_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1,
     check_all_dyn_cast<void>(_inst);
 }
 
+template<typename T, usize op_code, usize funct3>
+void check_b_type_inst(usize imm_s_1, usize rs1, usize rs2, usize imm_s_2) {
+    u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
+              (imm_s_2 << IMM_S_2);
+    auto _inst = reinterpret_cast<Instruction *>(&val);
+    CheckVisitor<T>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T>(_inst);
+
+    ASSERT_EQ(inst->get_op_code(), op_code);
+    ASSERT_EQ(inst->get_funct3(), funct3);
+    ASSERT_EQ(inst->get_rs1(), rs1);
+    ASSERT_EQ(inst->get_rs2(), rs2);
+    ASSERT_EQ(inst->get_imm(), static_cast<i32>(
+            ((imm_s_1 & 0b11110u) | ((imm_s_1 & 0b00001u) << 11u) | ((imm_s_2 & 0b0111111u) << 5u) |
+             ((imm_s_2 & 0b1000000u) << 6u)) << 19u) >> 19u);
+}
+
+void check_b_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1, usize rs2, usize imm_s_2) {
+    u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
+              (imm_s_2 << IMM_S_2);
+    auto _inst = reinterpret_cast<Instruction *>(&val);
+    CheckVisitor<void>{}.visit(_inst);
+    check_all_dyn_cast<void>(_inst);
+}
+
 template<typename T, usize op_code, usize funct3, usize funct7>
 void check_r_type_inst(usize rd, usize rs1, usize rs2) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
@@ -165,15 +190,30 @@ void check_fence_inst(usize rd, usize rs1, usize sw, usize sr, usize so, usize s
 }
 
 template<typename T, usize op_code>
-void check_j_type_inst(usize rd, UXLenT imm_u) {
-    u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (imm_u << IMM_U);
+void check_u_type_inst(usize rd, UXLenT imm_j) {
+    u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (imm_j << IMM_U);
     auto _inst = reinterpret_cast<Instruction *>(&val);
     CheckVisitor<T>{}.visit(_inst);
     auto inst = check_all_dyn_cast<T>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
-    ASSERT_EQ(inst->get_imm(), static_cast<XLenT>(imm_u << IMM_U));
+    ASSERT_EQ(inst->get_imm(), static_cast<XLenT>(imm_j << IMM_U));
+}
+
+void check_jal_inst(usize rd, UXLenT imm_u) {
+    constexpr usize op_code = 0b11011;
+
+    u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | ((imm_u & 0b1111111111u) << 21u) |
+              ((imm_u & 0b10000000000u) << 10u) | ((imm_u & 0b1111111100000000000u) << 1u) |
+              ((imm_u & 0b10000000000000000000u) << 12u);
+    auto _inst = reinterpret_cast<Instruction *>(&val);
+    CheckVisitor<JALInst>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<JALInst>(_inst);
+
+    ASSERT_EQ(inst->get_op_code(), op_code);
+    ASSERT_EQ(inst->get_rd(), rd);
+    ASSERT_EQ(inst->get_imm(), static_cast<XLenT>(imm_u << 12u) >> 11u);
 }
 
 int main() {
@@ -267,7 +307,7 @@ int main() {
 
     for (u32 rd = 0; rd < R_MAX; rd += R_INR)
         for (u32 imm_u = 0; imm_u < IMM_U_MAX; imm_u += IMM_U_INR)
-            check_j_type_inst<AUIPCInst, 0b00101>(rd, imm_u);
+            check_u_type_inst<AUIPCInst, 0b00101>(rd, imm_u);
 
     check_invalid_op_code(0b00110);
     check_invalid_op_code(0b00111);
@@ -359,7 +399,7 @@ int main() {
 
     for (u32 rd = 0; rd < R_MAX; rd += R_INR)
         for (u32 imm_u = 0; imm_u < IMM_U_MAX; imm_u += IMM_U_INR)
-            check_j_type_inst<LUIInst, 0b01101>(rd, imm_u);
+            check_u_type_inst<LUIInst, 0b01101>(rd, imm_u);
 
     check_invalid_op_code(0b01110);
     check_invalid_op_code(0b01111);
@@ -373,7 +413,40 @@ int main() {
     check_invalid_op_code(0b10110);
     check_invalid_op_code(0b10111);
 
-    // todo
+    for (u32 imm_s_1 = 0; imm_s_1 < IMM_S_1_MAX; imm_s_1 += IMM_S_1_INR) {
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BEQInst, 0b11000, 0b000>(imm_s_1, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BNEInst, 0b11000, 0b001>(imm_s_1, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_invalid(0b11000, imm_s_1, 0b010, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_invalid(0b11000, imm_s_1, 0b011, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BLTInst, 0b11000, 0b100>(imm_s_1, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BGEInst, 0b11000, 0b101>(imm_s_1, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BLTUInst, 0b11000, 0b110>(imm_s_1, rs1, rs2, imm_s_2);
+        for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
+            for (u32 rs2 = 0; rs2 < R_MAX; rs2 += R_INR)
+                for (u32 imm_s_2 = 0; imm_s_2 < IMM_S_2_MAX; imm_s_2 += IMM_S_2_INR)
+                    check_b_type_inst<BGEUInst, 0b11000, 0b111>(imm_s_1, rs1, rs2, imm_s_2);
+    }
 
     for (u32 rd = 0; rd < R_MAX; rd += R_INR) {
         for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
@@ -387,7 +460,9 @@ int main() {
 
     check_invalid_op_code(0b11010);
 
-    // todo
+    for (u32 rd = 0; rd < R_MAX; rd += R_INR)
+        for (u32 imm_j = 0; imm_j < IMM_U_MAX; imm_j += IMM_U_INR)
+            check_jal_inst(rd, imm_j);
 
     check_i_type_inst<ECALLInst, 0b11100, 0b000>(0b00000, 0b00000, 0b000000000000);
     check_i_type_inst<EBREAKInst, 0b11100, 0b000>(0b00000, 0b00000, 0b000000000001);
