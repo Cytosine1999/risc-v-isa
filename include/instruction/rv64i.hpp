@@ -5,7 +5,7 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 64
 namespace risc_v_isa {
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
@@ -185,7 +185,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 
 
 #endif //RISC_V_ISA_RV64I_HPP

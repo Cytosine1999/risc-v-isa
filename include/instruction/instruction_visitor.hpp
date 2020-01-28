@@ -34,12 +34,12 @@ namespace risc_v_isa {
                 return visit_16(reinterpret_cast<Instruction16 *>(&inst));
             }
 #endif
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
             if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
                 buffer = *reinterpret_cast<u32 *>(inst); // todo: handle misaligned
                 return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
             }
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
             return sub_type()->illegal_instruction(inst);
         }
 
@@ -50,7 +50,7 @@ namespace risc_v_isa {
         }
 
 #endif // defined(__RV_EXTENSION_C__)
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_32(Instruction32 *inst) {
             switch (inst->get_op_code()) {
@@ -78,12 +78,12 @@ namespace risc_v_isa {
                     return visit_fence_set(reinterpret_cast<InstructionFenceSet *>(inst));
                 case InstructionSystemSet::OP_CODE:
                     return visit_system_set(reinterpret_cast<InstructionSystemSet *>(inst));
-#if defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 64
                 case InstructionArithImmWSet::OP_CODE:
                     return visit_arith_imm_w_set(reinterpret_cast<InstructionArithImmWSet *>(inst));
                 case InstructionArithRegWSet::OP_CODE:
                     return visit_arith_reg_w_set(reinterpret_cast<InstructionArithRegWSet *>(inst));
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_CUSTOM_0__)
                 case InstructionCustome0::OP_CODE:
                     return sub_type()->visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
@@ -136,12 +136,12 @@ namespace risc_v_isa {
                     return sub_type()->visit_lbu_inst(reinterpret_cast<LBUInst *>(inst));
                 case LHUInst::FUNCT3:
                     return sub_type()->visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
-#if defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 64
                 case LDInst::FUNCT3:
                     return sub_type()->visit_ld_inst(reinterpret_cast<LDInst *>(inst));
                 case LWUInst::FUNCT3:
                     return sub_type()->visit_lwu_inst(reinterpret_cast<LWUInst *>(inst));
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
@@ -155,10 +155,10 @@ namespace risc_v_isa {
                     return sub_type()->visit_sh_inst(reinterpret_cast<SHInst *>(inst));
                 case SWInst::FUNCT3:
                     return sub_type()->visit_sw_inst(reinterpret_cast<SWInst *>(inst));
-#if defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 64
                 case SDInst::FUNCT3:
                     return sub_type()->visit_sd_inst(reinterpret_cast<SDInst *>(inst));
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
@@ -304,8 +304,8 @@ namespace risc_v_isa {
             }
         }
 
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
-#if defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if __RV_BIT_WIDTH__ == 64
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
             switch (inst->get_funct3()) {
@@ -376,7 +376,7 @@ namespace risc_v_isa {
             }
         }
 
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 
         RetT illegal_instruction(risc_v_isa_unused Instruction *inst) {
             risc_v_isa_unreachable("Illegal instruction met!");
@@ -391,7 +391,7 @@ namespace risc_v_isa {
         RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(); }
 
 #endif // defined(__RV_EXTENSION_C__)
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
@@ -508,8 +508,8 @@ namespace risc_v_isa {
         RetT visit_remu_inst(REMUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
-#if defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if __RV_BIT_WIDTH__ == 64
 
         RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32_inst(inst); }
 
@@ -552,7 +552,7 @@ namespace risc_v_isa {
         RetT visit_remuw_inst(REMUWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_EXTENSION_ZIFENCEI__)
 
         RetT visit_fencei_inst(FENCEIInst *inst) { return sub_type()->visit_fence_set_inst(inst); }

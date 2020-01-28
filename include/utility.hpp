@@ -9,7 +9,7 @@
 #include <type_traits>
 
 
-#if !defined(__RV_32_BIT__) && !defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ != 32 && __RV_BIT_WIDTH__ != 64
 #error "Bit width not defined!"
 #endif
 
@@ -54,11 +54,11 @@ namespace risc_v_isa {
     using usize = u_int32_t;
 #endif
 
-#if defined(__RV_32_BIT__)
+#if __RV_BIT_WIDTH__ == 32
     using XLenT = i32;
     using UXLenT = u32;
     constexpr usize XLEN_INDEX = 5;
-#elif defined(__RV_64_BIT__)
+#elif __RV_BIT_WIDTH__ == 64
     using XLenT = i64;
     using UXLenT = u64;
     constexpr usize XLEN_INDEX = 6;

@@ -37,7 +37,7 @@ namespace risc_v_isa {
     };
 
 #endif // defined(__RV_EXTENSION_C__)
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
     class Instruction32 : public Instruction {
     protected:
@@ -216,7 +216,7 @@ namespace risc_v_isa {
         };
 
 #endif // defined(__RV_EXTENSION_M__)
-#if defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 64
 
         struct ADDW {
             static i32 op(i32 a, i32 b) { return a + b; }
@@ -269,7 +269,7 @@ namespace risc_v_isa {
         };
 
 #endif // defined(__RV_EXTENSION_M__)
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 
         static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 2>(val); }
 
@@ -629,8 +629,8 @@ namespace risc_v_isa {
         static constexpr UInnerT OP_CODE = 0b11100;
     };
 
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
-#if defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if __RV_BIT_WIDTH__ == 64
 
     class InstructionArithImmWSet : public Instruction32I {
     protected:
@@ -658,7 +658,7 @@ namespace risc_v_isa {
         static constexpr UInnerT OP_CODE = 0b01110;
     };
 
-#endif // defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_CUSTOM_0__)
     class InstructionCustome0 : public Instruction32 {
     public:

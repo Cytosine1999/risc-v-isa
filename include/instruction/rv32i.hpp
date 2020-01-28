@@ -8,7 +8,7 @@
 #include "memory/memory.hpp"
 
 
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 namespace risc_v_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
@@ -54,7 +54,7 @@ namespace risc_v_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b000;
 
-        usize get_funct_environment() const { return inner & BITS_MASK<UInnerT, 32, 20>; }
+        usize get_funct_environment() const { return get_slice<usize, 32, 20>(inner); }
 
         usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
     };
@@ -150,7 +150,7 @@ namespace risc_v_isa {
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *_self) {
-            JALRInst *self = reinterpret_cast<JALRInst *>(_self);
+            Instruction32I *self = reinterpret_cast<Instruction32I *>(_self);
             return self->get_op_code() == OP_CODE && self->get_funct3() == FUNCT3;
         }
 
@@ -574,7 +574,7 @@ namespace risc_v_isa {
 
         SLLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftImmSet{rd, FUNCT3, rs1,
-                                         (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
+                                         (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SLL>(this, reg); }
@@ -598,7 +598,7 @@ namespace risc_v_isa {
 
         SRLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
+                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRL>(this, reg); }
@@ -622,7 +622,7 @@ namespace risc_v_isa {
 
         SRAIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK<UInnerT, XLEN_INDEX, 0>) | FUNCT_SHIFT} {}
+                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRA>(this, reg); }
@@ -873,7 +873,8 @@ namespace risc_v_isa {
 
         static bool is_self_type(BaseT *_self) {
             InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
-            return self->get_funct_environment() == FUNCT_ENVIRONMENT && self->get_unused() == 0;
+            return self->get_funct3() == FUNCT3 && self->get_funct_environment() == FUNCT_ENVIRONMENT &&
+                   self->get_unused() == 0;
         }
 
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
@@ -892,7 +893,8 @@ namespace risc_v_isa {
 
         static bool is_self_type(BaseT *_self) {
             InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
-            return self->get_funct_environment() == FUNCT_ENVIRONMENT && self->get_unused() == 0;
+            return self->get_funct3() == FUNCT3 && self->get_funct_environment() == FUNCT_ENVIRONMENT &&
+                   self->get_unused() == 0;
         }
 
         static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
@@ -905,7 +907,7 @@ namespace risc_v_isa {
         }
     };
 }
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
 
 #endif //RISC_V_ISA_RV32I_HPP

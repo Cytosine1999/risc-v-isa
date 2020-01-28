@@ -5,7 +5,7 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV_EXTENSION_M__) && defined(__RV_64_BIT__)
+#if defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
 namespace risc_v_isa {
     class InstructionMulDivWSet : public InstructionArithRegWSet {
     public:
@@ -79,7 +79,7 @@ namespace risc_v_isa {
 
 
 }
-#endif // defined(__RV_EXTENSION_M__) && defined(__RV_64_BIT__)
+#endif // defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
 
 
 #endif //RISC_V_ISA_RV64M_HPP

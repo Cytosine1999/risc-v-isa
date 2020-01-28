@@ -73,7 +73,7 @@ namespace risc_v_isa {
             return ILLEGAL_INSTRUCTION_EXCEPTION;
         }
 
-#if defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_lui_inst(LUIInst *inst) {
             (*inst)(reg);
@@ -236,7 +236,7 @@ namespace risc_v_isa {
             return ECALL;
         }
 
-#endif // defined(__RV_32_BIT__) || defined(__RV_64_BIT__)
+#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if defined(__RV_EXTENSION_M__)
 
         RetT visit_ebreak_inst(risc_v_isa_unused EBREAKInst *inst) {
