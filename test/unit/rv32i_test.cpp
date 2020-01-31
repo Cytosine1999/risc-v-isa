@@ -5,7 +5,7 @@
 #include "instruction/rv32i.hpp"
 #include "instruction/instruction_visitor.hpp"
 
-using namespace risc_v_isa;
+using namespace riscv_isa;
 
 
 constexpr usize R_INR = 13;

@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_MEMORY_HPP
-#define RISC_V_ISA_MEMORY_HPP
+#ifndef RISCV_ISA_MEMORY_HPP
+#define RISCV_ISA_MEMORY_HPP
 
 
 #include <cstring>
@@ -8,7 +8,7 @@
 #include <sys/mman.h>
 
 
-namespace risc_v_isa {
+namespace riscv_isa {
     class Memory {
     private:
         usize page_size;
@@ -19,7 +19,7 @@ namespace risc_v_isa {
         Memory(usize _memory_size) {
             isize _page_size = sysconf(_SC_PAGESIZE);
 
-            if (_page_size <= 0) risc_v_isa_abort("Unable to get page size or improper page size!");
+            if (_page_size <= 0) riscv_isa_abort("Unable to get page size or improper page size!");
 
             page_size = _page_size;
 
@@ -27,11 +27,11 @@ namespace risc_v_isa {
 
             memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size + page_size, PROT_READ | PROT_WRITE,
                                                    MAP_ANONYMOUS | MAP_SHARED, -1, 0));
-            if (memory_offset == MAP_FAILED) risc_v_isa_abort("Memory map failed!");
+            if (memory_offset == MAP_FAILED) riscv_isa_abort("Memory map failed!");
 
             // todo: memory wrap around through interrupt
             if(mprotect(memory_offset + memory_size, page_size, PROT_NONE) != 0)
-                risc_v_isa_abort("Guard page set failed!");
+                riscv_isa_abort("Guard page set failed!");
         }
 
         Memory(const Memory &other) = delete;
@@ -57,4 +57,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_MEMORY_HPP
+#endif //RISCV_ISA_MEMORY_HPP

@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_ZIFENCEI_HPP
-#define RISC_V_ISA_ZIFENCEI_HPP
+#ifndef RISCV_ISA_ZIFENCEI_HPP
+#define RISCV_ISA_ZIFENCEI_HPP
 
 
 #include "instruction.hpp"
@@ -7,7 +7,7 @@
 
 #if defined(__RV_EXTENSION_ZIFENCEI__)
 
-namespace risc_v_isa {
+namespace riscv_isa {
     class FENCEIInst : public InstructionFenceSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b001;
@@ -24,4 +24,4 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_ZIFENCEI__)
 
 
-#endif //RISC_V_ISA_ZIFENCEI_HPP
+#endif //RISCV_ISA_ZIFENCEI_HPP

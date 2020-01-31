@@ -1,12 +1,12 @@
-#ifndef RISC_V_ISA_RV64I_HPP
-#define RISC_V_ISA_RV64I_HPP
+#ifndef RISCV_ISA_RV64I_HPP
+#define RISCV_ISA_RV64I_HPP
 
 
 #include "instruction.hpp"
 
 
 #if __RV_BIT_WIDTH__ == 64
-namespace risc_v_isa {
+namespace riscv_isa {
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
         usize get_shift_amount() const { return slice_shift_amount(inner); }
@@ -188,4 +188,4 @@ namespace risc_v_isa {
 #endif // __RV_BIT_WIDTH__ == 64
 
 
-#endif //RISC_V_ISA_RV64I_HPP
+#endif //RISCV_ISA_RV64I_HPP

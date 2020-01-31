@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_RV32I_HPP
-#define RISC_V_ISA_RV32I_HPP
+#ifndef RISCV_ISA_RV32I_HPP
+#define RISCV_ISA_RV32I_HPP
 
 
 #include "utility.hpp"
@@ -9,7 +9,7 @@
 
 
 #if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-namespace risc_v_isa {
+namespace riscv_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
         InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
@@ -861,7 +861,7 @@ namespace risc_v_isa {
 
         usize get_fm() const { return get_slice<UXLenT, 32, 28>(inner); }
 
-        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const FENCEInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const FENCEInst &inst) {
             stream << "\tfence";
             return stream;
         }
@@ -881,7 +881,7 @@ namespace risc_v_isa {
 
         ECALLInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
 
-        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const ECALLInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const ECALLInst &inst) {
             stream << "\tecall";
             return stream;
         }
@@ -901,7 +901,7 @@ namespace risc_v_isa {
 
         EBREAKInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
 
-        friend std::ostream &operator<<(std::ostream &stream, risc_v_isa_unused const EBREAKInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const EBREAKInst &inst) {
             stream << "\tebreak";
             return stream;
         }
@@ -910,4 +910,4 @@ namespace risc_v_isa {
 #endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
 
-#endif //RISC_V_ISA_RV32I_HPP
+#endif //RISCV_ISA_RV32I_HPP

@@ -1,12 +1,12 @@
-#ifndef RISC_V_ISA_RV64M_HPP
-#define RISC_V_ISA_RV64M_HPP
+#ifndef RISCV_ISA_RV64M_HPP
+#define RISCV_ISA_RV64M_HPP
 
 
 #include "instruction.hpp"
 
 
 #if defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
-namespace risc_v_isa {
+namespace riscv_isa {
     class InstructionMulDivWSet : public InstructionArithRegWSet {
     public:
         static constexpr InnerT FUNCT7 = 0b0000001;
@@ -82,4 +82,4 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
 
 
-#endif //RISC_V_ISA_RV64M_HPP
+#endif //RISCV_ISA_RV64M_HPP

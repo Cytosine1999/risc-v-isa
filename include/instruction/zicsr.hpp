@@ -1,12 +1,12 @@
-#ifndef RISC_V_ISA_ZICSR_HPP
-#define RISC_V_ISA_ZICSR_HPP
+#ifndef RISCV_ISA_ZICSR_HPP
+#define RISCV_ISA_ZICSR_HPP
 
 
 #include "instruction.hpp"
 
 
 #if defined(__RV_EXTENSION_ZICSR__)
-namespace risc_v_isa {
+namespace riscv_isa {
     class CSRRWInst : public InstructionSystemSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b001;
@@ -82,4 +82,4 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_ZICSR__)
 
 
-#endif //RISC_V_ISA_ZICSR_HPP
+#endif //RISCV_ISA_ZICSR_HPP

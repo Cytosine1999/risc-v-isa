@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_INSTRUCTION_VISITOR_HPP
-#define RISC_V_ISA_INSTRUCTION_VISITOR_HPP
+#ifndef RISCV_ISA_INSTRUCTION_VISITOR_HPP
+#define RISCV_ISA_INSTRUCTION_VISITOR_HPP
 
 
 #include "utility.hpp"
@@ -12,7 +12,7 @@
 #include "rv64m.hpp"
 
 
-namespace risc_v_isa {
+namespace riscv_isa {
     template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
     private:
@@ -33,7 +33,7 @@ namespace risc_v_isa {
                 buffer = *reinterpret_cast<u16 *>(inst);
                 return visit_16(reinterpret_cast<Instruction16 *>(&inst));
             }
-#endif
+#endif // defined(__RV_EXTENSION_C__)
 #if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
             if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
                 buffer = *reinterpret_cast<u32 *>(inst); // todo: handle misaligned
@@ -378,12 +378,12 @@ namespace risc_v_isa {
 
 #endif // __RV_BIT_WIDTH__ == 64
 
-        RetT illegal_instruction(risc_v_isa_unused Instruction *inst) {
-            risc_v_isa_unreachable("Illegal instruction met!");
+        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
+            riscv_isa_unreachable("Illegal instruction met!");
         }
 
-        RetT visit_inst(risc_v_isa_unused Instruction *inst) {
-            risc_v_isa_unreachable("Uncaught instruction in visitor definition!");
+        RetT visit_inst(riscv_isa_unused Instruction *inst) {
+            riscv_isa_unreachable("Uncaught instruction in visitor definition!");
         }
 
 #if defined(__RV_EXTENSION_C__)
@@ -597,4 +597,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_INSTRUCTION_VISITOR_HPP
+#endif //RISCV_ISA_INSTRUCTION_VISITOR_HPP

@@ -1,8 +1,8 @@
-#ifndef RISC_V_ISA_REGISTER_FILE_HPP
-#define RISC_V_ISA_REGISTER_FILE_HPP
+#ifndef RISCV_ISA_REGISTER_FILE_HPP
+#define RISCV_ISA_REGISTER_FILE_HPP
 
 
-namespace risc_v_isa {
+namespace riscv_isa {
     class RegisterFile {
     private:
 #if defined(__RV_EXTENSION_C__)
@@ -68,4 +68,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_REGISTER_FILE_HPP
+#endif //RISCV_ISA_REGISTER_FILE_HPP

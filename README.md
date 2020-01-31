@@ -1,2 +1,2 @@
-# risc-v-isa
+# riscv-isa
  

@@ -1,12 +1,12 @@
-#ifndef RISC_V_ISA_RV32M_HPP
-#define RISC_V_ISA_RV32M_HPP
+#ifndef RISCV_ISA_RV32M_HPP
+#define RISCV_ISA_RV32M_HPP
 
 
 #include "instruction.hpp"
 
 
 #if defined(__RV_EXTENSION_M__)
-namespace risc_v_isa {
+namespace riscv_isa {
     class InstructionMulDivSet : public InstructionArithRegSet {
     public:
         static constexpr InnerT FUNCT7 = 0b0000001;
@@ -119,4 +119,4 @@ namespace risc_v_isa {
 #endif // defined(__RV_EXTENSION_M__)
 
 
-#endif //RISC_V_ISA_RV32M_HPP
+#endif //RISCV_ISA_RV32M_HPP

@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_UTILITY_HPP
-#define RISC_V_ISA_UTILITY_HPP
+#ifndef RISCV_ISA_UTILITY_HPP
+#define RISCV_ISA_UTILITY_HPP
 
 
 #include <iostream>
@@ -13,12 +13,12 @@
 #error "Bit width not defined!"
 #endif
 
-namespace risc_v_isa {
+namespace riscv_isa {
     void _warn(const char *file, int line, const char *msg) {
         std::cerr << "Warn at file " << file << ", line " << line << ": " << msg << std::endl;
     }
 
-#define risc_v_isa_warn(msg) risc_v_isa::_warn(__FILE__, __LINE__, msg)
+#define riscv_isa_warn(msg) riscv_isa::_warn(__FILE__, __LINE__, msg)
 
     __attribute__((noreturn)) void _abort(const char *file, int line, const char *msg) {
         std::cerr << "Abort at file " << file << ", line " << line << ": " << msg << std::endl;
@@ -26,7 +26,7 @@ namespace risc_v_isa {
         abort();
     }
 
-#define risc_v_isa_abort(msg) risc_v_isa::_abort(__FILE__, __LINE__, msg)
+#define riscv_isa_abort(msg) riscv_isa::_abort(__FILE__, __LINE__, msg)
 
     __attribute__((noreturn)) void _unreachable(const char *file, int line, const char *msg) {
         std::cerr << "Unreachable at file " << file << ", line " << line << ": " << msg << std::endl;
@@ -34,9 +34,9 @@ namespace risc_v_isa {
         abort();
     }
 
-#define risc_v_isa_unreachable(msg) risc_v_isa::_unreachable(__FILE__, __LINE__, msg)
+#define riscv_isa_unreachable(msg) riscv_isa::_unreachable(__FILE__, __LINE__, msg)
 
-#define risc_v_isa_unused __attribute__((unused))
+#define riscv_isa_unused __attribute__((unused))
 
     using i8 = int8_t;
     using u8 = u_int8_t;
@@ -128,4 +128,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_UTILITY_HPP
+#endif //RISCV_ISA_UTILITY_HPP

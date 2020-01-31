@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_INSTRUCTION_HPP
-#define RISC_V_ISA_INSTRUCTION_HPP
+#ifndef RISCV_ISA_INSTRUCTION_HPP
+#define RISCV_ISA_INSTRUCTION_HPP
 
 
 #include "utility.hpp"
@@ -12,7 +12,7 @@
 //      2. unify signature of all instruction?
 //      3. use bool as return type?
 
-namespace risc_v_isa {
+namespace riscv_isa {
     class Instruction {
     protected:
         Instruction() = default;
@@ -710,4 +710,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_INSTRUCTION_HPP
+#endif //RISCV_ISA_INSTRUCTION_HPP

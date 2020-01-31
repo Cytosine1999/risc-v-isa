@@ -1,6 +1,6 @@
 #include "target/hart.hpp"
 
-using namespace risc_v_isa;
+using namespace riscv_isa;
 
 
 int main() {

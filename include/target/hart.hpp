@@ -1,5 +1,5 @@
-#ifndef RISC_V_ISA_HART_HPP
-#define RISC_V_ISA_HART_HPP
+#ifndef RISCV_ISA_HART_HPP
+#define RISCV_ISA_HART_HPP
 
 
 #include "instruction/instruction_visitor.hpp"
@@ -7,7 +7,7 @@
 #include "memory/memory.hpp"
 
 
-namespace risc_v_isa {
+namespace riscv_isa {
     enum InternalInterrupt {
         NONE,
         INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION,
@@ -69,7 +69,7 @@ namespace risc_v_isa {
             }
         }
 
-        RetT illegal_instruction(risc_v_isa_unused Instruction *inst) {
+        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
             return ILLEGAL_INSTRUCTION_EXCEPTION;
         }
 
@@ -228,18 +228,18 @@ namespace risc_v_isa {
             return NONE;
         }
 
-        RetT visit_fence_inst(risc_v_isa_unused FENCEInst *inst) {
+        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
             return NONE; // todo
         }
 
-        RetT visit_ecall_inst(risc_v_isa_unused ECALLInst *inst) {
+        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
             return ECALL;
         }
 
 #endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if defined(__RV_EXTENSION_M__)
 
-        RetT visit_ebreak_inst(risc_v_isa_unused EBREAKInst *inst) {
+        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
             return EBREAK;
         }
 
@@ -288,4 +288,4 @@ namespace risc_v_isa {
 }
 
 
-#endif //RISC_V_ISA_HART_HPP
+#endif //RISCV_ISA_HART_HPP
