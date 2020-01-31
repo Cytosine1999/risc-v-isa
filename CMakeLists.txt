@@ -15,7 +15,7 @@ target_include_directories(test_unit_rv32i PRIVATE test/include)
 
 add_executable(exec_test test/intergration/exec.cpp)
 target_compile_definitions(exec_test PRIVATE __RV_BIT_WIDTH__=32)
-target_include_directories(exec_test PRIVATE test/include)
+target_include_directories(exec_test PRIVATE test/include elf/include)
 
 add_executable(test_inter_factorial test/intergration/factorial_test.cpp)
 target_compile_definitions(test_inter_factorial PRIVATE __RV_BIT_WIDTH__=64 __RV_EXTENSION_M__)
