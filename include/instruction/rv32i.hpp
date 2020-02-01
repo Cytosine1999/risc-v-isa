@@ -286,7 +286,7 @@ namespace riscv_isa {
         BGEUInst(usize rs1, usize rs2, UXLenT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         template<typename RegT>
-        bool operator()(RegT &reg) const { return operate_on<LTU>(reg); }
+        bool operator()(RegT &reg) const { return operate_on<GEU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEUInst &inst) {
             stream << "\tbgeu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();

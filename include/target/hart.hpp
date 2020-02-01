@@ -18,56 +18,12 @@ namespace riscv_isa {
     };
 
     class Hart : public InstructionVisitor<Hart, InternalInterrupt> {
-    private:
+    protected:
         RegisterFile reg;
         Memory &mem;
 
     public:
         Hart(RegisterFile &reg, Memory &mem) : reg{reg}, mem{mem} {}
-
-        void start() {
-            while (true) {
-                Instruction *inst = mem.address<Instruction>(reg.get_pc());
-
-                switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
-                    case ILLEGAL_INSTRUCTION_EXCEPTION:
-                        std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' '
-                                  << *reinterpret_cast<u32 *>(inst) << std::endl;
-
-                        return;
-                    case MEMORY_ERROR:
-                        std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
-
-                        return;
-                    case ECALL:
-                        switch (reg.get_x(RegisterFile::A0)) {
-                            case 1:
-                                std::cout << std::dec << reg.get_x(RegisterFile::A1);
-                                break;
-                            case 11:
-                                std::cout << static_cast<char>(reg.get_x(RegisterFile::A1));
-                                break;
-                            case 10:
-                                std::cout << std::endl << "[exit]" << std::endl;
-
-                                return;
-                            default:
-                                std::cerr << "Invalid ecall number at " << std::hex << reg.get_pc() << ' '
-                                          << *reinterpret_cast<u32 *>(inst) << std::endl;
-
-                                return;
-                        }
-                        reg.inc_pc(ECALLInst::INST_WIDTH);
-
-                        break;
-                    case EBREAK:
-                        reg.inc_pc(EBREAKInst::INST_WIDTH);
-
-                        break;
-                    default:;
-                }
-            }
-        }
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
             return ILLEGAL_INSTRUCTION_EXCEPTION;

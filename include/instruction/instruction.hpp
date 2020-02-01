@@ -66,6 +66,10 @@ namespace riscv_isa {
             static bool op(UXLenT a, UXLenT b) { return a < b; }
         };
 
+        struct GEU {
+            static bool op(UXLenT a, UXLenT b) { return a >= b; }
+        };
+
         struct ADD {
             static XLenT op(XLenT a, XLenT b) { return a + b; }
         };

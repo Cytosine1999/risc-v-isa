@@ -3,28 +3,117 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#include "target/hart.hpp"
+
+using namespace riscv_isa;
+
+#include "utility.hpp"
 #include "elf_header.hpp"
 
 using namespace elf;
 
 
+class LinuxHart : public Hart {
+public:
+    LinuxHart(RegisterFile &reg, Memory &mem) : Hart{reg, mem} {}
+
+    void start() {
+        while (true) {
+            Instruction *inst = mem.address<Instruction>(reg.get_pc());
+
+            switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
+                case ILLEGAL_INSTRUCTION_EXCEPTION:
+                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' '
+                              << *reinterpret_cast<u32 *>(inst) << std::endl;
+
+                    return;
+                case MEMORY_ERROR:
+                    std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
+
+                    return;
+                case ECALL:
+                    switch (reg.get_x(RegisterFile::A7)) {
+                        case 57:
+                            std::cout << std::endl << "[close]" << std::endl;
+
+                            break;
+                        case 64:
+                            std::cout << *mem.address<char>(reg.get_x(RegisterFile::A1));
+
+//                            std::cout << std::endl << "[write]" << std::endl;
+
+                            break;
+                        case 80:
+                            std::cout << std::endl << "[fstat]" << std::endl;
+
+                            break;
+                        case 93:
+                            std::cout << std::endl << "[exit]" << std::endl;
+
+                            return;
+                        case 214:
+                            std::cout << std::endl << "[brk]" << std::endl;
+
+                            break;
+                        default:
+                            std::cerr << "Invalid ecall number at " << std::hex << reg.get_pc()
+                                      << ", call number " << std::dec << reg.get_x(RegisterFile::A7) << std::endl;
+
+                            return;
+                    }
+                    reg.inc_pc(ECALLInst::INST_WIDTH);
+
+                    break;
+                case EBREAK:
+                    reg.inc_pc(EBREAKInst::INST_WIDTH);
+
+                    break;
+                default:;
+            }
+        }
+    }
+};
+
+
 int main(int argc, char **argv) {
-    if (argc != 2) std::cout << "receive one file name!" << std::endl;
+    if (argc != 2) riscv_isa_abort("receive one file name!");
 
     int fd = open(argv[1], O_RDONLY);
-
-    if (fd == -1) std::cout << "open file fail!" << std::endl;
+    if (fd == -1) riscv_isa_abort("open file failed!");
 
     struct stat file_stat{};
-
-    if (fstat(fd, &file_stat) != 0) std::cout << "fstat file fail!" << std::endl;
+    if (fstat(fd, &file_stat) != 0) riscv_isa_abort("fstat file failed!");
 
     void *file = mmap(nullptr, file_stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    if (file == MAP_FAILED) riscv_isa_abort("Memory mapped io failed!");
 
     MappedIOVisitor visitor{file};
 
-    ELF32Header *elf_header = reinterpret_cast<ELF32Header *>(file);
+    ELF32Header *elf_header = elf::dyn_cast<ELF32Header>(file);
+    if (elf_header == nullptr) riscv_isa_abort("Incompatible format or broken file!");
 
-    for (auto &sector: elf_header->sectors(visitor))
-        std::cout << sector << std::endl;
+    std::cout << *elf_header << std::endl;
+
+    ELF32StringTableSectionHeader *string_table_header = elf::dyn_cast<ELF32StringTableSectionHeader>(
+            &elf_header->sections(visitor)[elf_header->string_table_index]);
+    if (string_table_header == nullptr) riscv_isa_abort("Broken string table!");
+//    auto string_table = string_table_header->get_string_table(visitor);
+
+    RegisterFile reg{};
+    reg.set_pc(elf_header->entry_point);
+    reg.set_x(RegisterFile::SP, 0xfffff000);
+
+    Memory mem{0x100000000};
+
+    for (auto &program: elf_header->programs(visitor)) {
+//        std::cout << program << std::endl;
+
+        mem.memory_copy(program.virtual_address, static_cast<u8 *>(file) + program.offset, program.file_size);
+    }
+
+//    for (auto &section: elf_header->sections(visitor))
+//        std::cout << string_table.get_str(section.name) << ": " << section << std::endl;
+
+    LinuxHart core{reg, mem};
+    core.start();
 }

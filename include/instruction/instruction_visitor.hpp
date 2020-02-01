@@ -379,7 +379,7 @@ namespace riscv_isa {
 #endif // __RV_BIT_WIDTH__ == 64
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
-            riscv_isa_unreachable("Illegal instruction met!");
+            riscv_isa_abort("Illegal instruction met!");
         }
 
         RetT visit_inst(riscv_isa_unused Instruction *inst) {
