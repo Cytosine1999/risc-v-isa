@@ -8,7 +8,6 @@
 #include "memory/memory.hpp"
 
 
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 namespace riscv_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
@@ -907,7 +906,6 @@ namespace riscv_isa {
         }
     };
 }
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
 
 #endif //RISCV_ISA_RV32I_HPP

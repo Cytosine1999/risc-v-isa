@@ -5,16 +5,15 @@
 namespace riscv_isa {
     class RegisterFile {
     private:
-#if defined(__RV_EXTENSION_C__)
+#if defined(__RV_EXTENSION_E__)
         static constexpr usize GENERAL_PURPOSE_NUM = 16;
-#elif __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#else
         static constexpr usize GENERAL_PURPOSE_NUM = 32;
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#endif
         XLenT pc;
         XLenT x[GENERAL_PURPOSE_NUM];
 
     public:
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
         static constexpr usize ZERO = 0;
         static constexpr usize RA = 1;
         static constexpr usize SP = 2;
@@ -32,8 +31,7 @@ namespace riscv_isa {
         static constexpr usize A3 = 13;
         static constexpr usize A4 = 14;
         static constexpr usize A5 = 15;
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64 && !defined(__RV_EXTENSION_C__)
+#if !defined(__RV_EXTENSION_E__)
         static constexpr usize A6 = 16;
         static constexpr usize A7 = 17;
         static constexpr usize S2 = 18;
@@ -50,7 +48,7 @@ namespace riscv_isa {
         static constexpr usize T4 = 29;
         static constexpr usize T5 = 30;
         static constexpr usize T6 = 31;
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64 && !defined(__RV_EXTENSION_C__)
+#endif // !defined(__RV_EXTENSION_E__)
 
         RegisterFile() : pc{}, x{} {}
 
@@ -63,7 +61,6 @@ namespace riscv_isa {
         void set_x(usize index, XLenT val) { if (index != 0) x[index] = val; }
 
         XLenT get_x(usize index) const { return x[index]; }
-
     };
 }
 

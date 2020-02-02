@@ -12,167 +12,169 @@ namespace riscv_isa {
     template<typename InputT>
     class CheckVisitor : public InstructionVisitor<CheckVisitor<InputT>> {
     public:
-        void illegal_instruction(riscv_isa_unused Instruction *inst) {
+        using RetT = void;
+
+        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
             ASSERT((std::is_same<void, InputT>::value));
         }
 
-        void visit_lui_inst(riscv_isa_unused LUIInst *inst) {
+        RetT visit_lui_inst(riscv_isa_unused LUIInst *inst) {
             ASSERT((std::is_same<LUIInst, InputT>::value));
         }
 
-        void visit_auipc_inst(riscv_isa_unused AUIPCInst *inst) {
+        RetT visit_auipc_inst(riscv_isa_unused AUIPCInst *inst) {
             ASSERT((std::is_same<AUIPCInst, InputT>::value));
         }
 
-        void visit_jal_inst(riscv_isa_unused JALInst *inst) {
+        RetT visit_jal_inst(riscv_isa_unused JALInst *inst) {
             ASSERT((std::is_same<JALInst, InputT>::value));
         }
 
-        void visit_jalr_inst(riscv_isa_unused JALRInst *inst) {
+        RetT visit_jalr_inst(riscv_isa_unused JALRInst *inst) {
             ASSERT((std::is_same<JALRInst, InputT>::value));
         }
 
-        void visit_beq_inst(riscv_isa_unused BEQInst *inst) {
+        RetT visit_beq_inst(riscv_isa_unused BEQInst *inst) {
             ASSERT((std::is_same<BEQInst, InputT>::value));
         }
 
-        void visit_bne_inst(riscv_isa_unused BNEInst *inst) {
+        RetT visit_bne_inst(riscv_isa_unused BNEInst *inst) {
             ASSERT((std::is_same<BNEInst, InputT>::value));
         }
 
-        void visit_blt_inst(riscv_isa_unused BLTInst *inst) {
+        RetT visit_blt_inst(riscv_isa_unused BLTInst *inst) {
             ASSERT((std::is_same<BLTInst, InputT>::value));
         }
 
-        void visit_bge_inst(riscv_isa_unused BGEInst *inst) {
+        RetT visit_bge_inst(riscv_isa_unused BGEInst *inst) {
             ASSERT((std::is_same<BGEInst, InputT>::value));
         }
 
-        void visit_bltu_inst(riscv_isa_unused BLTUInst *inst) {
+        RetT visit_bltu_inst(riscv_isa_unused BLTUInst *inst) {
             ASSERT((std::is_same<BLTUInst, InputT>::value));
         }
 
-        void visit_bgeu_inst(riscv_isa_unused BGEUInst *inst) {
+        RetT visit_bgeu_inst(riscv_isa_unused BGEUInst *inst) {
             ASSERT((std::is_same<BGEUInst, InputT>::value));
         }
 
-        void visit_lb_inst(riscv_isa_unused LBInst *inst) {
+        RetT visit_lb_inst(riscv_isa_unused LBInst *inst) {
             ASSERT((std::is_same<LBInst, InputT>::value));
         }
 
-        void visit_lh_inst(riscv_isa_unused LHInst *inst) {
+        RetT visit_lh_inst(riscv_isa_unused LHInst *inst) {
             ASSERT((std::is_same<LHInst, InputT>::value));
         }
 
-        void visit_lw_inst(riscv_isa_unused LWInst *inst) {
+        RetT visit_lw_inst(riscv_isa_unused LWInst *inst) {
             ASSERT((std::is_same<LWInst, InputT>::value));
         }
 
-        void visit_lbu_inst(riscv_isa_unused LBUInst *inst) {
+        RetT visit_lbu_inst(riscv_isa_unused LBUInst *inst) {
             ASSERT((std::is_same<LBUInst, InputT>::value));
         }
 
-        void visit_lhu_inst(riscv_isa_unused LHUInst *inst) {
+        RetT visit_lhu_inst(riscv_isa_unused LHUInst *inst) {
             ASSERT((std::is_same<LHUInst, InputT>::value));
         }
 
-        void visit_sb_inst(riscv_isa_unused SBInst *inst) {
+        RetT visit_sb_inst(riscv_isa_unused SBInst *inst) {
             ASSERT((std::is_same<SBInst, InputT>::value));
         }
 
-        void visit_sh_inst(riscv_isa_unused SHInst *inst) {
+        RetT visit_sh_inst(riscv_isa_unused SHInst *inst) {
             ASSERT((std::is_same<SHInst, InputT>::value));
         }
 
-        void visit_sw_inst(riscv_isa_unused SWInst *inst) {
+        RetT visit_sw_inst(riscv_isa_unused SWInst *inst) {
             ASSERT((std::is_same<SWInst, InputT>::value));
         }
 
-        void visit_addi_inst(riscv_isa_unused ADDIInst *inst) {
+        RetT visit_addi_inst(riscv_isa_unused ADDIInst *inst) {
             ASSERT((std::is_same<ADDIInst, InputT>::value));
         }
 
-        void visit_slti_inst(riscv_isa_unused SLTIInst *inst) {
+        RetT visit_slti_inst(riscv_isa_unused SLTIInst *inst) {
             ASSERT((std::is_same<SLTIInst, InputT>::value));
         }
 
-        void visit_sltiu_inst(riscv_isa_unused SLTIUInst *inst) {
+        RetT visit_sltiu_inst(riscv_isa_unused SLTIUInst *inst) {
             ASSERT((std::is_same<SLTIUInst, InputT>::value));
         }
 
-        void visit_xori_inst(riscv_isa_unused XORIInst *inst) {
+        RetT visit_xori_inst(riscv_isa_unused XORIInst *inst) {
             ASSERT((std::is_same<XORIInst, InputT>::value));
         }
 
-        void visit_ori_inst(riscv_isa_unused ORIInst *inst) {
+        RetT visit_ori_inst(riscv_isa_unused ORIInst *inst) {
             ASSERT((std::is_same<ORIInst, InputT>::value));
         }
 
-        void visit_andi_inst(riscv_isa_unused ANDIInst *inst) {
+        RetT visit_andi_inst(riscv_isa_unused ANDIInst *inst) {
             ASSERT((std::is_same<ANDIInst, InputT>::value));
         }
 
-        void visit_slli_inst(riscv_isa_unused SLLIInst *inst) {
+        RetT visit_slli_inst(riscv_isa_unused SLLIInst *inst) {
             ASSERT((std::is_same<SLLIInst, InputT>::value));
         }
 
-        void visit_srli_inst(riscv_isa_unused SRLIInst *inst) {
+        RetT visit_srli_inst(riscv_isa_unused SRLIInst *inst) {
             ASSERT((std::is_same<SRLIInst, InputT>::value));
         }
 
-        void visit_srai_inst(riscv_isa_unused SRAIInst *inst) {
+        RetT visit_srai_inst(riscv_isa_unused SRAIInst *inst) {
             ASSERT((std::is_same<SRAIInst, InputT>::value));
         }
 
-        void visit_add_inst(riscv_isa_unused ADDInst *inst) {
+        RetT visit_add_inst(riscv_isa_unused ADDInst *inst) {
             ASSERT((std::is_same<ADDInst, InputT>::value));
         }
 
-        void visit_sub_inst(riscv_isa_unused SUBInst *inst) {
+        RetT visit_sub_inst(riscv_isa_unused SUBInst *inst) {
             ASSERT((std::is_same<SUBInst, InputT>::value));
         }
 
-        void visit_sll_inst(riscv_isa_unused SLLInst *inst) {
+        RetT visit_sll_inst(riscv_isa_unused SLLInst *inst) {
             ASSERT((std::is_same<SLLInst, InputT>::value));
         }
 
-        void visit_slt_inst(riscv_isa_unused SLTInst *inst) {
+        RetT visit_slt_inst(riscv_isa_unused SLTInst *inst) {
             ASSERT((std::is_same<SLTInst, InputT>::value));
         }
 
-        void visit_sltu_inst(riscv_isa_unused SLTUInst *inst) {
+        RetT visit_sltu_inst(riscv_isa_unused SLTUInst *inst) {
             ASSERT((std::is_same<SLTUInst, InputT>::value));
         }
 
-        void visit_xor_inst(riscv_isa_unused XORInst *inst) {
+        RetT visit_xor_inst(riscv_isa_unused XORInst *inst) {
             ASSERT((std::is_same<XORInst, InputT>::value));
         }
 
-        void visit_srl_inst(riscv_isa_unused SRLInst *inst) {
+        RetT visit_srl_inst(riscv_isa_unused SRLInst *inst) {
             ASSERT((std::is_same<SRLInst, InputT>::value));
         }
 
-        void visit_sra_inst(riscv_isa_unused SRAInst *inst) {
+        RetT visit_sra_inst(riscv_isa_unused SRAInst *inst) {
             ASSERT((std::is_same<SRAInst, InputT>::value));
         }
 
-        void visit_or_inst(riscv_isa_unused ORInst *inst) {
+        RetT visit_or_inst(riscv_isa_unused ORInst *inst) {
             ASSERT((std::is_same<ORInst, InputT>::value));
         }
 
-        void visit_and_inst(riscv_isa_unused ANDInst *inst) {
+        RetT visit_and_inst(riscv_isa_unused ANDInst *inst) {
             ASSERT((std::is_same<ANDInst, InputT>::value));
         }
 
-        void visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
+        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
             ASSERT((std::is_same<FENCEInst, InputT>::value));
         }
 
-        void visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
+        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
             ASSERT((std::is_same<ECALLInst, InputT>::value));
         }
 
-        void visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
+        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
             ASSERT((std::is_same<EBREAKInst, InputT>::value));
         }
     };

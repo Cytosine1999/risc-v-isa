@@ -13,7 +13,7 @@ using namespace riscv_isa;
 using namespace elf;
 
 
-class LinuxHart : public Hart {
+class LinuxHart : public Hart<LinuxHart> {
 public:
     LinuxHart(RegisterFile &reg, Memory &mem) : Hart{reg, mem} {}
 
@@ -33,26 +33,27 @@ public:
                     return;
                 case ECALL:
                     switch (reg.get_x(RegisterFile::A7)) {
-                        case 57:
-                            std::cout << std::endl << "[close]" << std::endl;
+                        case 57: {
+                            int fd = reg.get_x(RegisterFile::A0);
+                            reg.set_x(RegisterFile::A0, fd > 2 ? close(fd) : 0); // todo: stdin, stdout, stderr
 
                             break;
+                        }
                         case 64:
-                            std::cout << *mem.address<char>(reg.get_x(RegisterFile::A1));
-
-//                            std::cout << std::endl << "[write]" << std::endl;
+                            reg.set_x(RegisterFile::A0, write(reg.get_x(RegisterFile::A0),
+                                                              mem.address<char>(reg.get_x(RegisterFile::A1)),
+                                                              RegisterFile::A3));
 
                             break;
                         case 80:
-                            std::cout << std::endl << "[fstat]" << std::endl;
+                            reg.set_x(RegisterFile::A0, -1); // todo: need convert
 
                             break;
                         case 93:
-                            std::cout << std::endl << "[exit]" << std::endl;
+                            std::cout << std::endl << "[exit " << reg.get_x(RegisterFile::A0) << ']' << std::endl;
 
                             return;
                         case 214:
-                            std::cout << std::endl << "[brk]" << std::endl;
 
                             break;
                         default:
@@ -92,12 +93,14 @@ int main(int argc, char **argv) {
     ELF32Header *elf_header = elf::dyn_cast<ELF32Header>(file);
     if (elf_header == nullptr) riscv_isa_abort("Incompatible format or broken file!");
 
-    std::cout << *elf_header << std::endl;
+//    std::cout << *elf_header << std::endl;
 
     ELF32StringTableSectionHeader *string_table_header = elf::dyn_cast<ELF32StringTableSectionHeader>(
             &elf_header->sections(visitor)[elf_header->string_table_index]);
     if (string_table_header == nullptr) riscv_isa_abort("Broken string table!");
 //    auto string_table = string_table_header->get_string_table(visitor);
+
+    if (elf_header->file_type != ELF32Header::Executable) riscv_isa_abort("Not an executable file!");
 
     RegisterFile reg{};
     reg.set_pc(elf_header->entry_point);
@@ -108,11 +111,12 @@ int main(int argc, char **argv) {
     for (auto &program: elf_header->programs(visitor)) {
 //        std::cout << program << std::endl;
 
-        mem.memory_copy(program.virtual_address, static_cast<u8 *>(file) + program.offset, program.file_size);
+        if (program.type == ELF32ProgramHeader::Loadable)
+            mem.memory_copy(program.virtual_address, static_cast<u8 *>(file) + program.offset, program.file_size);
     }
 
 //    for (auto &section: elf_header->sections(visitor))
-//        std::cout << string_table.get_str(section.name) << ": " << section << std::endl;
+//        std::cout << string_table.get_str(section.name) << std::endl;
 
     LinuxHart core{reg, mem};
     core.start();

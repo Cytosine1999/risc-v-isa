@@ -17,19 +17,20 @@ namespace riscv_isa {
         EBREAK,
     };
 
-    class Hart : public InstructionVisitor<Hart, InternalInterrupt> {
+    template<typename SubT>
+    class Hart : public InstructionVisitor<SubT, InternalInterrupt> {
     protected:
         RegisterFile reg;
         Memory &mem;
 
     public:
+        using RetT = InternalInterrupt;
+
         Hart(RegisterFile &reg, Memory &mem) : reg{reg}, mem{mem} {}
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
             return ILLEGAL_INSTRUCTION_EXCEPTION;
         }
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_lui_inst(LUIInst *inst) {
             (*inst)(reg);
@@ -192,7 +193,6 @@ namespace riscv_isa {
             return ECALL;
         }
 
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if defined(__RV_EXTENSION_M__)
 
         RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {

@@ -37,7 +37,6 @@ namespace riscv_isa {
     };
 
 #endif // defined(__RV_EXTENSION_C__)
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
     class Instruction32 : public Instruction {
     protected:
@@ -633,7 +632,6 @@ namespace riscv_isa {
         static constexpr UInnerT OP_CODE = 0b11100;
     };
 
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if __RV_BIT_WIDTH__ == 64
 
     class InstructionArithImmWSet : public Instruction32I {

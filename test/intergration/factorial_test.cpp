@@ -3,7 +3,7 @@
 using namespace riscv_isa;
 
 
-class NoneHart : public Hart {
+class NoneHart : public Hart<NoneHart> {
 public:
     NoneHart(RegisterFile &reg, Memory &mem) : Hart{reg, mem} {}
 

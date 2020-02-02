@@ -34,12 +34,18 @@ namespace riscv_isa {
                 return visit_16(reinterpret_cast<Instruction16 *>(&inst));
             }
 #endif // defined(__RV_EXTENSION_C__)
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
             if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
-                buffer = *reinterpret_cast<u32 *>(inst); // todo: handle misaligned
+                if constexpr (IALIGN == 32) {
+                    buffer = *reinterpret_cast<u32 *>(inst);
+                } else if constexpr (IALIGN == 16) {
+                    *(reinterpret_cast<u16 *>(&buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
+                    *(reinterpret_cast<u16 *>(&buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
+                } else {
+                    riscv_isa_unreachable("IALIGN should be 32 or 16.");
+                }
                 return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
             }
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+
             return sub_type()->illegal_instruction(inst);
         }
 
@@ -50,7 +56,6 @@ namespace riscv_isa {
         }
 
 #endif // defined(__RV_EXTENSION_C__)
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_32(Instruction32 *inst) {
             switch (inst->get_op_code()) {
@@ -304,7 +309,6 @@ namespace riscv_isa {
             }
         }
 
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if __RV_BIT_WIDTH__ == 64
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
@@ -391,7 +395,6 @@ namespace riscv_isa {
         RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(); }
 
 #endif // defined(__RV_EXTENSION_C__)
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
@@ -508,7 +511,6 @@ namespace riscv_isa {
         RetT visit_remu_inst(REMUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
-#endif // __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
 #if __RV_BIT_WIDTH__ == 64
 
         RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32_inst(inst); }
