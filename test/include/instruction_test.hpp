@@ -179,13 +179,32 @@ namespace riscv_isa {
         }
     };
 
+    template<typename T, typename U, bool flag = std::is_same<T, U>::value>
+    struct _check_dyn_cast;
+
     template<typename T, typename U>
-    void check_dyn_cast(Instruction *inst) {
-        if constexpr (std::is_same<T, U>::value)
-            ASSERT_NE(dyn_cast<U>(inst), static_cast<U *>(nullptr));
-        else
-            ASSERT_EQ(dyn_cast<U>(inst), static_cast<U *>(nullptr));
-    }
+    struct _check_dyn_cast<T, U, true> {
+    public:
+        static void inner(Instruction *inst) { ASSERT_NE(dyn_cast<U>(inst), static_cast<U *>(nullptr)); }
+    };
+
+    template<typename T, typename U>
+    struct _check_dyn_cast<T, U, false> {
+    public:
+        static void inner(Instruction *inst) { ASSERT_EQ(dyn_cast<U>(inst), static_cast<U *>(nullptr)); }
+    };
+
+    template<typename T, typename U>
+    void check_dyn_cast(Instruction *inst) { _check_dyn_cast<T, U>::inner(inst); }
+
+    template<typename T>
+    T *_dyn_cast_with_void(Instruction *inst);
+
+    template<>
+    void *_dyn_cast_with_void<void>(riscv_isa_unused Instruction *inst) { return nullptr; }
+
+    template<typename T>
+    T *_dyn_cast_with_void(Instruction *inst) { return dyn_cast<T>(inst); }
 
     template<typename T>
     T *check_all_dyn_cast(Instruction *inst) {
@@ -230,8 +249,7 @@ namespace riscv_isa {
         check_dyn_cast<T, ECALLInst>(inst);
         check_dyn_cast<T, EBREAKInst>(inst);
 
-        if constexpr (std::is_void<T>::value) return nullptr;
-        else return dyn_cast<T>(inst);
+        return _dyn_cast_with_void<T>(inst);
     }
 
 }

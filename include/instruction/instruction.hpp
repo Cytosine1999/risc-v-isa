@@ -43,7 +43,7 @@ namespace riscv_isa {
         using InnerT = i32;
         using UInnerT = u32;
 
-        static constexpr UXLenT PTR_MASK = BITS_MASK<UXLenT, XLEN, 1>;
+        static constexpr UXLenT PTR_MASK = bits_mask<UXLenT, XLEN, 1>::val;
 
         struct EQ {
             static bool op(XLenT a, XLenT b) { return a == b; }
@@ -111,7 +111,7 @@ namespace riscv_isa {
 
 #if defined(__RV_EXTENSION_M__)
         static constexpr usize HALF_WIDTH = XLEN_BYTE / 2;
-        static constexpr UXLenT HALF_MASK = BITS_MASK<UXLenT, HALF_WIDTH, 0>;
+        static constexpr UXLenT HALF_MASK = bits_mask<UXLenT, HALF_WIDTH, 0>::val;
         static constexpr XLenT XLenTMin = (XLenT) (1u << (XLEN_BYTE - 1));
 
         struct MUL {
@@ -300,8 +300,8 @@ namespace riscv_isa {
         using BaseT = Instruction;
 
         static bool is_self_type(BaseT *self) {
-            return (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 2, 0>) == BITS_MASK<u16, 2, 0> &&
-                   (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>;
+            return (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 2, 0>::val) == bits_mask<u16, 2, 0>::val &&
+                   (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val;
         }
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
@@ -313,7 +313,7 @@ namespace riscv_isa {
     protected:
         Instruction32R(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 3, 0, 12>(funct3) |
@@ -323,7 +323,7 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rd = get_rd();
             if (rd != 0) {
@@ -350,7 +350,7 @@ namespace riscv_isa {
     protected:
         template<typename OP, typename Self, typename RegT>
         static void operate_shift(Self *self, RegT &reg) {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rd = self->get_rd();
             if (rd != 0) {
@@ -363,7 +363,7 @@ namespace riscv_isa {
 
         Instruction32I(usize op, usize rd, usize funct3, usize rs1, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 3, 0, 12>(funct3) |
@@ -372,7 +372,7 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rd = get_rd();
             if (rd != 0) {
@@ -400,7 +400,7 @@ namespace riscv_isa {
     protected:
         Instruction32S(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 5, 0, 7>(imm) |
                                         get_slice<UInnerT, 3, 0, 12>(funct3) |
@@ -417,7 +417,7 @@ namespace riscv_isa {
 
         XLenT get_imm() const {
             InnerT imm12_7 = get_slice<UInnerT, 12, 7, 0>(inner);
-            InnerT imm32_25 = inner >> 20 & BITS_MASK<UInnerT, 32, 5>;
+            InnerT imm32_25 = inner >> 20 & bits_mask<UInnerT, 32, 5>::val;
             return static_cast<XLenT>(imm32_25 | imm12_7);
         }
     };
@@ -426,7 +426,7 @@ namespace riscv_isa {
     protected:
         Instruction32B(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 12, 11, 7>(imm) |
                                         get_slice<UInnerT, 5, 1, 8>(imm) |
@@ -446,7 +446,7 @@ namespace riscv_isa {
         XLenT get_imm() const {
             InnerT imm8_7 = get_slice<UInnerT, 8, 7, 11>(inner);
             InnerT imm12_8 = get_slice<UInnerT, 12, 8, 1>(inner);
-            InnerT imm32_25 = inner >> 20 & (BITS_MASK<UInnerT, 32, 12> | BITS_MASK<UInnerT, 11, 5>);
+            InnerT imm32_25 = inner >> 20 & (bits_mask<UInnerT, 32, 12>::val | bits_mask<UInnerT, 11, 5>::val);
             return static_cast<XLenT>(imm32_25 | imm8_7 | imm12_8);
         }
     };
@@ -455,7 +455,7 @@ namespace riscv_isa {
     protected:
         Instruction32U(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 32, 12, 12>(imm))} {}
@@ -473,7 +473,7 @@ namespace riscv_isa {
     protected:
         Instruction32J(usize op, usize rd, UXLenT imm)
                 : Instruction32{static_cast<InnerT>(
-                                        BITS_MASK<UInnerT, 2, 0> |
+                                        bits_mask<UInnerT, 2, 0>::val |
                                         get_slice<UInnerT, 5, 0, 2>(op) |
                                         get_slice<UInnerT, 5, 0, 7>(rd) |
                                         get_slice<UInnerT, 20, 12, 12>(imm) |
@@ -487,7 +487,7 @@ namespace riscv_isa {
         XLenT get_imm() const {
             InnerT imm20_12 = get_slice<UInnerT, 20, 12, 12>(inner);
             InnerT imm21_20 = get_slice<UInnerT, 21, 20, 11>(inner);
-            InnerT imm32_21 = inner >> 20 & (BITS_MASK<UInnerT, 32, 20> | BITS_MASK<UInnerT, 11, 1>);
+            InnerT imm32_21 = inner >> 20 & (bits_mask<UInnerT, 32, 20>::val | bits_mask<UInnerT, 11, 1>::val);
             return static_cast<XLenT>(imm32_21 | imm20_12 | imm21_20);
         }
     };
@@ -499,15 +499,16 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         bool operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rs1 = get_rs1();
             usize rs2 = get_rs2();
 
             if (OP::op(reg.get_x(rs1), reg.get_x(rs2))) {
                 XLenT imm = get_imm();
-                if constexpr (IALIGN == 32)
+#if IALIGN == 32
                     if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
+#endif
                 reg.inc_pc(imm);
             } else {
                 reg.inc_pc(INST_WIDTH);
@@ -531,8 +532,8 @@ namespace riscv_isa {
 
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-            static_assert(std::is_base_of<Memory, MemT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
+            static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
 
             size_t rd = get_rd();
             size_t rs1 = get_rs1();
@@ -559,8 +560,8 @@ namespace riscv_isa {
 
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-            static_assert(std::is_base_of<Memory, MemT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
+            static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
 
             size_t rs1 = get_rs1();
             size_t rs2 = get_rs2();

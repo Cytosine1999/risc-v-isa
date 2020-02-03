@@ -24,7 +24,7 @@ namespace riscv_isa {
         using RetT = _RetT;
 
         RetT visit(Instruction *inst) {
-            static_assert(std::is_base_of<InstructionVisitor, SubT>::value);
+            static_assert(std::is_base_of<InstructionVisitor, SubT>::value, "not subtype of visitor");
 
             usize leading_16 = *reinterpret_cast<u16 *>(inst);
 
@@ -34,15 +34,15 @@ namespace riscv_isa {
                 return visit_16(reinterpret_cast<Instruction16 *>(&inst));
             }
 #endif // defined(__RV_EXTENSION_C__)
-            if ((leading_16 & BITS_MASK<u16, 5, 2>) != BITS_MASK<u16, 5, 2>) {
-                if constexpr (IALIGN == 32) {
+            if ((leading_16 & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+#if IALIGN == 32
                     buffer = *reinterpret_cast<u32 *>(inst);
-                } else if constexpr (IALIGN == 16) {
+#elif IALIGN == 16
                     *(reinterpret_cast<u16 *>(&buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
                     *(reinterpret_cast<u16 *>(&buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
-                } else {
+#else
                     riscv_isa_unreachable("IALIGN should be 32 or 16.");
-                }
+#endif
                 return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
             }
 

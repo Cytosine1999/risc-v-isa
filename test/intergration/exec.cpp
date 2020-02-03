@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
     void *file = mmap(nullptr, file_stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
     if (file == MAP_FAILED) riscv_isa_abort("Memory mapped io failed!");
 
+    if (close(fd) != 0) riscv_isa_abort("Close file failed!");
+
     MappedIOVisitor visitor{file};
 
     ELF32Header *elf_header = elf::dyn_cast<ELF32Header>(file);

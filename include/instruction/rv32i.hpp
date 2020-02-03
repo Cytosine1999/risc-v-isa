@@ -55,7 +55,7 @@ namespace riscv_isa {
 
         usize get_funct_environment() const { return get_slice<usize, 32, 20>(inner); }
 
-        usize get_unused() const { return inner & (BITS_MASK<UInnerT, 12, 7> | BITS_MASK<UInnerT, 20, 15>); }
+        usize get_unused() const { return inner & (bits_mask<UInnerT, 12, 7>::val | bits_mask<UInnerT, 20, 15>::val); }
     };
 
     class LUIInst : public Instruction32U {
@@ -70,7 +70,7 @@ namespace riscv_isa {
 
         template<typename RegT>
         void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             size_t rd = get_rd();
             if (rd != 0) {
@@ -98,7 +98,7 @@ namespace riscv_isa {
 
         template<typename RegT>
         void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             size_t rd = get_rd();
             if (rd != 0) {
@@ -126,12 +126,13 @@ namespace riscv_isa {
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rd = get_rd();
             XLenT imm = get_imm();
-            if constexpr (IALIGN == 32)
+#if IALIGN == 32
                 if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
+#endif
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
             reg.set_pc(pc + imm);
@@ -160,14 +161,15 @@ namespace riscv_isa {
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
+            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
             usize rd = get_rd();
             usize rs1 = get_rs1();
             XLenT imm = get_imm();
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
-            if constexpr (IALIGN == 32)
+#if IALIGN == 32
                 if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
+#endif
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             reg.set_pc(target);
             return true;
@@ -573,7 +575,7 @@ namespace riscv_isa {
 
         SLLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftImmSet{rd, FUNCT3, rs1,
-                                         (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                         (imm & bits_mask<UInnerT, XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SLL>(this, reg); }
@@ -597,7 +599,7 @@ namespace riscv_isa {
 
         SRLIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                              (imm & bits_mask<UInnerT, XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRL>(this, reg); }
@@ -621,7 +623,7 @@ namespace riscv_isa {
 
         SRAIInst(usize rd, usize rs1, UXLenT imm)
                 : InstructionShiftRightImmSet{rd, rs1,
-                                              (imm & BITS_MASK < UInnerT, XLEN_INDEX, 0 >) | FUNCT_SHIFT} {}
+                                              (imm & bits_mask<UInnerT, XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         template<typename RegT>
         void operator()(RegT &reg) const { operate_shift<SRA>(this, reg); }
