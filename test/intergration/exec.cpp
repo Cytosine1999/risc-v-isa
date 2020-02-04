@@ -31,6 +31,11 @@ public:
                     std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
 
                     return;
+                case INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION:
+                    std::cerr << "Instruction address misaligned at " << std::hex << reg.get_pc() << ' '
+                              << *reinterpret_cast<u32 *>(inst) << std::endl;
+
+                    return;
                 case ECALL:
                     switch (reg.get_x(RegisterFile::A7)) {
                         case 57: {
@@ -84,25 +89,25 @@ int main(int argc, char **argv) {
 
     struct stat file_stat{};
     if (fstat(fd, &file_stat) != 0) riscv_isa_abort("fstat file failed!");
+    size_t size = file_stat.st_size;
 
-    void *file = mmap(nullptr, file_stat.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    void *file = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
     if (file == MAP_FAILED) riscv_isa_abort("Memory mapped io failed!");
 
     if (close(fd) != 0) riscv_isa_abort("Close file failed!");
 
-    MappedIOVisitor visitor{file};
+    MappedFileVisitor visitor{file, size};
 
-    ELF32Header *elf_header = elf::dyn_cast<ELF32Header>(file);
+    ELF32Header *elf_header = ELF32Header::read(visitor);
     if (elf_header == nullptr) riscv_isa_abort("Incompatible format or broken file!");
+    if (elf_header->file_type != ELF32Header::Executable) riscv_isa_abort("Not an executable file!");
 
 //    std::cout << *elf_header << std::endl;
 
-    ELF32StringTableSectionHeader *string_table_header = elf::dyn_cast<ELF32StringTableSectionHeader>(
-            &elf_header->sections(visitor)[elf_header->string_table_index]);
+    ELF32StringTableSectionHeader *string_table_header = ELF32SectionHeader::cast<ELF32StringTableSectionHeader>(
+            &elf_header->sections(visitor)[elf_header->string_table_index], visitor);
     if (string_table_header == nullptr) riscv_isa_abort("Broken string table!");
 //    auto string_table = string_table_header->get_string_table(visitor);
-
-    if (elf_header->file_type != ELF32Header::Executable) riscv_isa_abort("Not an executable file!");
 
     RegisterFile reg{};
     reg.set_pc(elf_header->entry_point);
@@ -117,8 +122,12 @@ int main(int argc, char **argv) {
             mem.memory_copy(program.virtual_address, static_cast<u8 *>(file) + program.offset, program.file_size);
     }
 
-//    for (auto &section: elf_header->sections(visitor))
-//        std::cout << string_table.get_str(section.name) << std::endl;
+//    for (auto &section: elf_header->sections(visitor)) {
+//        char *main = string_table.get_str(section.name);
+//        if (main == nullptr) riscv_isa_abort("Broken string table!");
+//        std::cout << string_table.get_str(section.name) << ": " << section << std::endl;
+//    }
+
 
     LinuxHart core{reg, mem};
     core.start();

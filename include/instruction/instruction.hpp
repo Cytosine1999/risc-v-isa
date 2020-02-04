@@ -507,7 +507,7 @@ namespace riscv_isa {
             if (OP::op(reg.get_x(rs1), reg.get_x(rs2))) {
                 XLenT imm = get_imm();
 #if IALIGN == 32
-                    if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
+                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
 #endif
                 reg.inc_pc(imm);
             } else {
@@ -663,7 +663,8 @@ namespace riscv_isa {
 
 #endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_CUSTOM_0__)
-    class InstructionCustome0 : public Instruction32 {
+
+    class InstructionCustom0 : public Instruction32 {
     public:
         using BaseT = Instruction32;
 
@@ -671,11 +672,13 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b00010;
 
-        explicit InstructionCustome0(InnerT val) : Instruction32{val} {}
+        explicit InstructionCustom0(InnerT val) : Instruction32{val} {}
     };
+
 #endif // defined(__RV_CUSTOM_0__)
 #if defined(__RV_CUSTOM_1__)
-    class InstructionCustome1 : public Instruction32 {
+
+    class InstructionCustom1 : public Instruction32 {
     public:
         using BaseT = Instruction32;
 
@@ -683,11 +686,13 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b01010;
 
-        explicit InstructionCustome1(InnerT val) : Instruction32{val} {}
+        explicit InstructionCustom1(InnerT val) : Instruction32{val} {}
     };
+
 #endif // defined(__RV_CUSTOM_1__)
 #if defined(__RV_CUSTOM_2__)
-    class InstructionCustome2 : public Instruction32 {
+
+    class InstructionCustom2 : public Instruction32 {
     public:
         using BaseT = Instruction32;
 
@@ -695,11 +700,13 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b10110;
 
-        explicit InstructionCustome2(InnerT val) : Instruction32{val} {}
+        explicit InstructionCustom2(InnerT val) : Instruction32{val} {}
     };
+
 #endif // defined(__RV_CUSTOM_2__)
 #if defined(__RV_CUSTOM_3__)
-    class InstructionCustome3 : public Instruction32 {
+
+    class InstructionCustom3 : public Instruction32 {
     public:
         using BaseT = Instruction32;
 
@@ -707,8 +714,9 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b11110;
 
-        explicit InstructionCustome3(InnerT val) : Instruction32{val} {}
+        explicit InstructionCustom3(InnerT val) : Instruction32{val} {}
     };
+
 #endif // defined(__RV_CUSTOM_3__)
 }
 

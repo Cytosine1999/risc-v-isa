@@ -29,19 +29,19 @@ namespace riscv_isa {
             usize leading_16 = *reinterpret_cast<u16 *>(inst);
 
 #if defined(__RV_EXTENSION_C__)
-            if ((val & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>) {
+            if ((leading_16 & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
                 buffer = *reinterpret_cast<u16 *>(inst);
                 return visit_16(reinterpret_cast<Instruction16 *>(&inst));
             }
 #endif // defined(__RV_EXTENSION_C__)
             if ((leading_16 & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
 #if IALIGN == 32
-                    buffer = *reinterpret_cast<u32 *>(inst);
+                buffer = *reinterpret_cast<u32 *>(inst);
 #elif IALIGN == 16
-                    *(reinterpret_cast<u16 *>(&buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
-                    *(reinterpret_cast<u16 *>(&buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
+                *(reinterpret_cast<u16 *>(&buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
+                *(reinterpret_cast<u16 *>(&buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
 #else
-                    riscv_isa_unreachable("IALIGN should be 32 or 16.");
+                riscv_isa_unreachable("IALIGN should be 32 or 16.");
 #endif
                 return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
             }
@@ -386,9 +386,11 @@ namespace riscv_isa {
             riscv_isa_abort("Illegal instruction met!");
         }
 
-        RetT visit_inst(riscv_isa_unused Instruction *inst) {
-            riscv_isa_unreachable("Uncaught instruction in visitor definition!");
-        }
+///     All instruction should be caught in an instruction visitor.
+///
+///     RetT visit_inst(riscv_isa_unused Instruction *inst) {
+///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
+///     }
 
 #if defined(__RV_EXTENSION_C__)
 
@@ -577,22 +579,22 @@ namespace riscv_isa {
 #endif // defined(__RV_EXTENSION_ZICSR__)
 #if defined(__RV_CUSTOM_0__)
 
-        RetT visit_custom_0_inst(InstructionCustome0 *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_custom_0_inst(InstructionCustom0 *inst) { return sub_type()->visit_32_inst(inst); }
 
 #endif // defined(__RV_CUSTOM_0__)
 #if defined(__RV_CUSTOM_1__)
 
-        RetT visit_custom_1_inst(InstructionCustome1 *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_custom_1_inst(InstructionCustom1 *inst) { return sub_type()->visit_32_inst(inst); }
 
 #endif // defined(__RV_CUSTOM_1__)
 #if defined(__RV_CUSTOM_2__)
 
-        RetT visit_custom_2_inst(InstructionCustome2 *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_custom_2_inst(InstructionCustom2 *inst) { return sub_type()->visit_32_inst(inst); }
 
 #endif // defined(__RV_CUSTOM_2__)
 #if defined(__RV_CUSTOM_3__)
 
-        RetT visit_custom_3_inst(InstructionCustome3 *inst) { return sub_type()->visit_32_inst(inst); }
+        RetT visit_custom_3_inst(InstructionCustom3 *inst) { return sub_type()->visit_32_inst(inst); }
 
 #endif // defined(__RV_CUSTOM_3__)
     };

@@ -25,9 +25,11 @@ public:
                     switch (reg.get_x(RegisterFile::A0)) {
                         case 1:
                             std::cout << std::dec << reg.get_x(RegisterFile::A1);
+
                             break;
                         case 11:
                             std::cout << static_cast<char>(reg.get_x(RegisterFile::A1));
+
                             break;
                         case 10:
                             std::cout << std::endl << "[exit]" << std::endl;

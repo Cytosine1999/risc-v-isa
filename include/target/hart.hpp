@@ -20,7 +20,7 @@ namespace riscv_isa {
     template<typename SubT>
     class Hart : public InstructionVisitor<SubT, InternalInterrupt> {
     protected:
-        RegisterFile reg;
+        RegisterFile &reg;
         Memory &mem;
 
     public:

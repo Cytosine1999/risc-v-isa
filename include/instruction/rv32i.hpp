@@ -131,7 +131,7 @@ namespace riscv_isa {
             usize rd = get_rd();
             XLenT imm = get_imm();
 #if IALIGN == 32
-                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
+            if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
 #endif
             XLenT pc = reg.get_pc();
             if (rd != 0) reg.set_x(rd, pc + INST_WIDTH);
@@ -168,7 +168,7 @@ namespace riscv_isa {
             XLenT imm = get_imm();
             UXLenT target = (reg.get_x(rs1) + imm) & PTR_MASK;
 #if IALIGN == 32
-                if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
+            if (get_slice<UXLenT, 2, 0>(target) != 0) return false;
 #endif
             if (rd != 0) reg.set_x(rd, reg.get_pc() + INST_WIDTH);
             reg.set_pc(target);

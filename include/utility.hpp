@@ -88,7 +88,7 @@ namespace riscv_isa {
     /// implementation, and which is always a multiple of IALIGN. For implementations supporting only a base
     /// instruction set, ILEN is 32 bits. Implementations supporting longer instructions have larger values of ILEN.
 
-    constexpr usize ILEN = 32;
+#define ILEN 32
     using ILenT = u32;
 
     template<typename T, usize end, usize begin>
