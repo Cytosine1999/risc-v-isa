@@ -72,7 +72,7 @@ namespace riscv_isa {
         void operator()(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
-            size_t rd = get_rd();
+            usize rd = get_rd();
             if (rd != 0) {
                 XLenT imm = get_imm();
                 reg.set_x(rd, imm);
@@ -100,7 +100,7 @@ namespace riscv_isa {
         void operator()(RegT &reg) const {
             static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
 
-            size_t rd = get_rd();
+            usize rd = get_rd();
             if (rd != 0) {
                 XLenT imm = get_imm();
                 reg.set_x(rd, imm + reg.get_pc());

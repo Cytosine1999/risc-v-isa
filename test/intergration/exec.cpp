@@ -7,7 +7,6 @@
 
 using namespace riscv_isa;
 
-#include "utility.hpp"
 #include "elf_header.hpp"
 
 using namespace elf;
@@ -89,7 +88,7 @@ int main(int argc, char **argv) {
 
     struct stat file_stat{};
     if (fstat(fd, &file_stat) != 0) riscv_isa_abort("fstat file failed!");
-    size_t size = file_stat.st_size;
+    usize size = file_stat.st_size;
 
     void *file = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
     if (file == MAP_FAILED) riscv_isa_abort("Memory mapped io failed!");
@@ -98,16 +97,16 @@ int main(int argc, char **argv) {
 
     MappedFileVisitor visitor{file, size};
 
-    ELF32Header *elf_header = ELF32Header::read(visitor);
+    auto *elf_header = ELF32Header::read(visitor);
     if (elf_header == nullptr) riscv_isa_abort("Incompatible format or broken file!");
-    if (elf_header->file_type != ELF32Header::Executable) riscv_isa_abort("Not an executable file!");
+    if (elf_header->file_type != ELF32Header::EXECUTABLE) riscv_isa_abort("Not an executable file!");
 
 //    std::cout << *elf_header << std::endl;
 
-    ELF32StringTableSectionHeader *string_table_header = ELF32SectionHeader::cast<ELF32StringTableSectionHeader>(
+    auto *section_header_string_table_header = ELF32SectionHeader::cast<ELF32StringTableHeader>(
             &elf_header->sections(visitor)[elf_header->string_table_index], visitor);
-    if (string_table_header == nullptr) riscv_isa_abort("Broken string table!");
-//    auto string_table = string_table_header->get_string_table(visitor);
+    if (section_header_string_table_header == nullptr) riscv_isa_abort("Broken section header string table!");
+//    auto section_header_string_table = section_header_string_table_header->get_string_table(visitor);
 
     RegisterFile reg{};
     reg.set_pc(elf_header->entry_point);
@@ -118,16 +117,39 @@ int main(int argc, char **argv) {
     for (auto &program: elf_header->programs(visitor)) {
 //        std::cout << program << std::endl;
 
-        if (program.type == ELF32ProgramHeader::Loadable)
+        if (program.type == ELF32ProgramHeader::LOADABLE)
             mem.memory_copy(program.virtual_address, static_cast<u8 *>(file) + program.offset, program.file_size);
     }
 
+//    ELF32StringTableHeader *string_table_header = nullptr;
+//
 //    for (auto &section: elf_header->sections(visitor)) {
-//        char *main = string_table.get_str(section.name);
-//        if (main == nullptr) riscv_isa_abort("Broken string table!");
-//        std::cout << string_table.get_str(section.name) << ": " << section << std::endl;
+//        char *name = section_header_string_table.get_str(section.name);
+//        if (name == nullptr) riscv_isa_abort("Broken section header string table!");
+//        std::cout << section_header_string_table.get_str(section.name) << ": " << section.section_type
+//                  << ", " << section.size << std::endl;
+//
+//        if (strcmp(name, ".strtab") == 0) {
+//            if (string_table_header != nullptr) riscv_isa_abort("Multiple string table!");
+//            string_table_header = ELF32SectionHeader::cast<ELF32StringTableHeader>(&section, visitor);
+//            if (string_table_header == nullptr) riscv_isa_abort("Broken string table!");
+//        }
 //    }
-
+//
+//    if (string_table_header == nullptr) riscv_isa_abort("No string table!");
+//    auto shared_string_table = string_table_header->get_string_table(visitor);
+//
+//    for (auto &section: elf_header->sections(visitor)) {
+//        auto *symbol_table_header = ELF32SectionHeader::cast<ELF32SymbolTableHeader>(&section, visitor);
+//        if (symbol_table_header != nullptr) {
+//            for (auto &symbol: symbol_table_header->get_symbol_table(visitor)) {
+//                const char *name = symbol.name == 0 ? "[no name]" : shared_string_table.get_str(symbol.name);
+//                if (name == nullptr) riscv_isa_abort("Broken string table!");
+//                std::cout << symbol.get_type() << '\t' << symbol.get_bind() << '\t' << symbol.get_visibility()
+//                          << '\t' << name << std::endl;
+//            }
+//        }
+//    }
 
     LinuxHart core{reg, mem};
     core.start();

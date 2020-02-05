@@ -535,8 +535,8 @@ namespace riscv_isa {
             static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
             static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
 
-            size_t rd = get_rd();
-            size_t rs1 = get_rs1();
+            usize rd = get_rd();
+            usize rs1 = get_rs1();
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
@@ -563,8 +563,8 @@ namespace riscv_isa {
             static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
             static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
 
-            size_t rs1 = get_rs1();
-            size_t rs2 = get_rs2();
+            usize rs1 = get_rs1();
+            usize rs2 = get_rs2();
             XLenT imm = get_imm();
             ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
             if (ptr == nullptr) return false;
