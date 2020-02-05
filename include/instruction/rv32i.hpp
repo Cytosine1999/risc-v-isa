@@ -70,8 +70,6 @@ namespace riscv_isa {
 
         template<typename RegT>
         void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             if (rd != 0) {
                 XLenT imm = get_imm();
@@ -98,8 +96,6 @@ namespace riscv_isa {
 
         template<typename RegT>
         void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             if (rd != 0) {
                 XLenT imm = get_imm();
@@ -126,8 +122,6 @@ namespace riscv_isa {
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             XLenT imm = get_imm();
 #if IALIGN == 32
@@ -161,8 +155,6 @@ namespace riscv_isa {
 
         template<typename RegT>
         bool operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             usize rs1 = get_rs1();
             XLenT imm = get_imm();

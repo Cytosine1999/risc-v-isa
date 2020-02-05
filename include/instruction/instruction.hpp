@@ -323,8 +323,6 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             if (rd != 0) {
                 usize rs1 = get_rs1();
@@ -350,8 +348,6 @@ namespace riscv_isa {
     protected:
         template<typename OP, typename Self, typename RegT>
         static void operate_shift(Self *self, RegT &reg) {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = self->get_rd();
             if (rd != 0) {
                 usize rs1 = self->get_rs1();
@@ -372,8 +368,6 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         void operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rd = get_rd();
             if (rd != 0) {
                 usize rs1 = get_rs1();
@@ -499,8 +493,6 @@ namespace riscv_isa {
 
         template<typename OP, typename RegT>
         bool operate_on(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-
             usize rs1 = get_rs1();
             usize rs2 = get_rs2();
 
@@ -532,9 +524,6 @@ namespace riscv_isa {
 
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-            static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
-
             usize rd = get_rd();
             usize rs1 = get_rs1();
             XLenT imm = get_imm();
@@ -560,9 +549,6 @@ namespace riscv_isa {
 
         template<typename ValT, typename RegT, typename MemT>
         bool operate_on(RegT &reg, MemT &mem) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value, "operate on type RegisterFile only");
-            static_assert(std::is_base_of<Memory, MemT>::value, "operate on type Memory only");
-
             usize rs1 = get_rs1();
             usize rs2 = get_rs2();
             XLenT imm = get_imm();

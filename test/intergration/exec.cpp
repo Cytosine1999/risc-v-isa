@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "target/hart.hpp"
+#include "target/dump.hpp"
 
 using namespace riscv_isa;
 
@@ -22,8 +23,10 @@ public:
 
             switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
                 case ILLEGAL_INSTRUCTION_EXCEPTION:
-                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' '
-                              << *reinterpret_cast<u32 *>(inst) << std::endl;
+                    if (inst == nullptr)
+                        riscv_isa_unreachable("illegal instruction exception instruction fetch failed!");
+
+                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' ' << *inst << std::endl;
 
                     return;
                 case MEMORY_ERROR:

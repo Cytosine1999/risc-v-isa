@@ -14,8 +14,6 @@ namespace riscv_isa {
 
         template<typename RegT>
         void operator()(RegT &reg) const {
-            static_assert(std::is_base_of<RegisterFile, RegT>::value);
-
             // todo
         }
     };

@@ -189,15 +189,11 @@ namespace riscv_isa {
             return NONE; // todo
         }
 
-        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
-            return ECALL;
-        }
+        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) { return ECALL; }
+
+        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) { return EBREAK; }
 
 #if defined(__RV_EXTENSION_M__)
-
-        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
-            return EBREAK;
-        }
 
         RetT visit_mul_inst(MULInst *inst) {
             (*inst)(reg);
