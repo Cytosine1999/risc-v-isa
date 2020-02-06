@@ -1,17 +1,23 @@
-#ifndef RISCV_ISA_REGISTER_FILE_HPP
-#define RISCV_ISA_REGISTER_FILE_HPP
+#ifndef RISCV_ISA_INTEGER_REGISTER_HPP
+#define RISCV_ISA_INTEGER_REGISTER_HPP
+
+
+#include "utility.hpp"
 
 
 namespace riscv_isa {
-    class RegisterFile {
+    template<typename xlen=xlen_trait>
+    class IntegerRegister {
     private:
-#if defined(__RV_EXTENSION_E__)
+        using XlenT = typename xlen::XLenT;
+
+#if defined(__RV_BASE_E__)
         static constexpr usize GENERAL_PURPOSE_NUM = 16;
 #else
         static constexpr usize GENERAL_PURPOSE_NUM = 32;
 #endif
-        XLenT pc;
-        XLenT x[GENERAL_PURPOSE_NUM];
+        XlenT pc;
+        XlenT x[GENERAL_PURPOSE_NUM];
 
     public:
         static constexpr usize ZERO = 0;
@@ -31,7 +37,7 @@ namespace riscv_isa {
         static constexpr usize A3 = 13;
         static constexpr usize A4 = 14;
         static constexpr usize A5 = 15;
-#if !defined(__RV_EXTENSION_E__)
+#if !defined(__RV_BASE_E__)
         static constexpr usize A6 = 16;
         static constexpr usize A7 = 17;
         static constexpr usize S2 = 18;
@@ -50,19 +56,25 @@ namespace riscv_isa {
         static constexpr usize T6 = 31;
 #endif // !defined(__RV_EXTENSION_E__)
 
-        RegisterFile() : pc{}, x{} {}
+        IntegerRegister() : pc{}, x{} {}
 
-        void set_pc(XLenT val) { pc = val; }
+        void set_pc(XlenT val) { pc = val; }
 
-        XLenT get_pc() const { return pc; }
+        XlenT get_pc() const { return pc; }
 
-        void inc_pc(XLenT offset) { pc += offset; }
+        void inc_pc(XlenT offset) { pc += offset; }
 
-        void set_x(usize index, XLenT val) { if (index != 0) x[index] = val; }
+        void set_x(usize index, XlenT val) {
+            if (index >= GENERAL_PURPOSE_NUM) riscv_isa_abort("Integer register index exceed.");
+            if (index != 0) x[index] = val;
+        }
 
-        XLenT get_x(usize index) const { return x[index]; }
+        XlenT get_x(usize index) const {
+            if (index >= GENERAL_PURPOSE_NUM) riscv_isa_abort("Integer register index exceed.");
+            return x[index];
+        }
     };
 }
 
 
-#endif //RISCV_ISA_REGISTER_FILE_HPP
+#endif //RISCV_ISA_INTEGER_REGISTER_HPP

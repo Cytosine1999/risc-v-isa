@@ -4,11 +4,12 @@
 
 #include <ostream>
 
+#include "utility.hpp"
 #include "instruction/instruction_visitor.hpp"
 
 
 namespace riscv_isa {
-    class Dump : public InstructionVisitor<Dump, usize> {
+    class Dump : public InstructionVisitor<Dump, xlen_trait, usize> {
     public:
         using RetT = usize;
 
@@ -77,11 +78,11 @@ namespace riscv_isa {
 
         RetT visit_andi_inst(ANDIInst *inst) { return dump_inst(inst); }
 
-        RetT visit_slli_inst(SLLIInst *inst) { return dump_inst(inst); }
+        RetT visit_slli_inst(SLLIInst<> *inst) { return dump_inst(inst); }
 
-        RetT visit_srli_inst(SRLIInst *inst) { return dump_inst(inst); }
+        RetT visit_srli_inst(SRLIInst<> *inst) { return dump_inst(inst); }
 
-        RetT visit_srai_inst(SRAIInst *inst) { return dump_inst(inst); }
+        RetT visit_srai_inst(SRAIInst<> *inst) { return dump_inst(inst); }
 
         RetT visit_add_inst(ADDInst *inst) { return dump_inst(inst); }
 

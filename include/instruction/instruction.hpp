@@ -3,14 +3,8 @@
 
 
 #include "utility.hpp"
-#include "register/register_file.hpp"
 #include "memory/memory.hpp"
 
-
-// todo: some question to be defined,
-//      1. use operator() as semantic?
-//      2. unify signature of all instruction?
-//      3. use bool as return type?
 
 namespace riscv_isa {
     class Instruction {
@@ -43,254 +37,25 @@ namespace riscv_isa {
         using InnerT = i32;
         using UInnerT = u32;
 
-        static constexpr UXLenT PTR_MASK = bits_mask<UXLenT, XLEN, 1>::val;
+        static UInnerT slice_op_code(UInnerT val) { return get_bits<UInnerT, 7, 2>(val); }
 
-        struct EQ {
-            static bool op(XLenT a, XLenT b) { return a == b; }
-        };
+        static UInnerT slice_rd(UInnerT val) { return get_bits<UInnerT, 12, 7>(val); }
 
-        struct NE {
-            static bool op(XLenT a, XLenT b) { return a != b; }
-        };
+        static UInnerT slice_funct3(UInnerT val) { return get_bits<UInnerT, 15, 12>(val); }
 
-        struct LT {
-            static bool op(XLenT a, XLenT b) { return a < b; }
-        };
+        static UInnerT slice_rs1(UInnerT val) { return get_bits<UInnerT, 20, 15>(val); }
 
-        struct GE {
-            static bool op(XLenT a, XLenT b) { return a >= b; }
-        };
+        static UInnerT slice_rs2(UInnerT val) { return get_bits<UInnerT, 25, 20>(val); }
 
-        struct LTU {
-            static bool op(UXLenT a, UXLenT b) { return a < b; }
-        };
+        static UInnerT slice_funct7(UInnerT val) { return get_bits<UInnerT, 32, 25>(val); }
 
-        struct GEU {
-            static bool op(UXLenT a, UXLenT b) { return a >= b; }
-        };
-
-        struct ADD {
-            static XLenT op(XLenT a, XLenT b) { return a + b; }
-        };
-
-        struct SUB {
-            static XLenT op(XLenT a, XLenT b) { return a - b; }
-        };
-
-        struct SLT {
-            static XLenT op(XLenT a, XLenT b) { return a < b; }
-        };
-
-        struct SLTU {
-            static XLenT op(UXLenT a, UXLenT b) { return a < b; }
-        };
-
-        struct XOR {
-            static XLenT op(UXLenT a, UXLenT b) { return a ^ b; }
-        };
-
-        struct OR {
-            static XLenT op(UXLenT a, UXLenT b) { return a | b; }
-        };
-
-        struct AND {
-            static XLenT op(UXLenT a, UXLenT b) { return a & b; }
-        };
-
-        struct SLL {
-            static XLenT op(UXLenT a, UXLenT b) { return a << b; }
-        };
-
-        struct SRL {
-            static XLenT op(UXLenT a, UXLenT b) { return a >> b; }
-        };
-
-        struct SRA {
-            static XLenT op(XLenT a, UXLenT b) { return a >> b; }
-        };
-
-#if defined(__RV_EXTENSION_M__)
-        static constexpr usize HALF_WIDTH = XLEN_BYTE / 2;
-        static constexpr UXLenT HALF_MASK = bits_mask<UXLenT, HALF_WIDTH, 0>::val;
-        static constexpr XLenT XLenTMin = (XLenT) (1u << (XLEN_BYTE - 1));
-
-        struct MUL {
-            static XLenT op(XLenT a, XLenT b) { return a * b; }
-        };
-
-        struct MULH {
-            static XLenT op(XLenT a, XLenT b) {
-                UXLenT as = a < 0;
-                UXLenT au = (~as + 1) ^(a - as);
-                UXLenT bs = b < 0;
-                UXLenT bu = (~bs + 1) ^(b - bs);
-                UXLenT a0 = au & HALF_MASK;
-                UXLenT a1 = au >> HALF_WIDTH;
-                UXLenT b0 = bu & HALF_MASK;
-                UXLenT b1 = bu >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT lh = (d1 << HALF_WIDTH) + (c0 & HALF_MASK);
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                UXLenT s = as ^bs;
-                UXLenT lhs = lh - s;
-                UXLenT hhs = -s ^(hh - (lhs > lh));
-
-                return hhs;
-            }
-        };
-
-        struct MULHSU {
-            static XLenT op(XLenT a, UXLenT b) {
-                UXLenT as = a < 0;
-                UXLenT au = (~as + 1) ^(a - as);
-                UXLenT a0 = au & HALF_MASK;
-                UXLenT a1 = au >> HALF_WIDTH;
-                UXLenT b0 = b & HALF_MASK;
-                UXLenT b1 = b >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT lh = (d1 << HALF_WIDTH) + (c0 & HALF_MASK);
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                UXLenT s = as;
-                UXLenT lhs = lh - s;
-                UXLenT hhs = -s ^(hh - (lhs > lh));
-
-                return hhs;
-            }
-        };
-
-        struct MULHU {
-            static XLenT op(UXLenT a, UXLenT b) {
-                UXLenT a0 = a & HALF_MASK;
-                UXLenT a1 = a >> HALF_WIDTH;
-                UXLenT b0 = b & HALF_MASK;
-                UXLenT b1 = b >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                return hh;
-            }
-        };
-
-        struct DIV {
-            static XLenT op(XLenT a, XLenT b) {
-                if (b == 0) return -1;
-                else if (a == XLenTMin && b == -1) return XLenTMin;
-                return a / b;
-            }
-        };
-
-        struct DIVU {
-            static XLenT op(UXLenT a, UXLenT b) { return b == 0 ? -1 : a / b; }
-        };
-
-        struct REM {
-            static XLenT op(XLenT a, XLenT b) {
-                if (b == 0) return a;
-                else if (a == XLenTMin && b == -1) return 0;
-                return a % b;
-            }
-        };
-
-        struct REMU {
-            static XLenT op(UXLenT a, UXLenT b) { return b == 0 ? a : a % b; }
-        };
-
-#endif // defined(__RV_EXTENSION_M__)
-#if __RV_BIT_WIDTH__ == 64
-
-        struct ADDW {
-            static i32 op(i32 a, i32 b) { return a + b; }
-        };
-
-        struct SUBW {
-            static i32 op(i32 a, i32 b) { return a - b; }
-        };
-
-        struct SLLW {
-            static i32 op(u32 a, u32 b) { return a << b; }
-        };
-
-        struct SRLW {
-            static i32 op(u32 a, u32 b) { return a >> b; }
-        };
-
-        struct SRAW {
-            static i32 op(i32 a, u32 b) { return a >> b; }
-        };
-
-#if defined(__RV_EXTENSION_M__)
-
-        struct MULW {
-            static i32 op(i32 a, i32 b) { return a * b; }
-        };
-
-        struct DIVW {
-            static i32 op(i32 a, i32 b) {
-                if (b == 0) return -1;
-                else if (a == XLenTMin && b == -1) return XLenTMin;
-                return a / b;
-            }
-        };
-
-        struct DIVUW {
-            static i32 op(u32 a, u32 b) { return b == 0 ? -1 : a / b; }
-        };
-
-        struct REMW {
-            static i32 op(i32 a, i32 b) {
-                if (b == 0) return a;
-                else if (a == XLenTMin && b == -1) return 0;
-                return a % b;
-            }
-        };
-
-        struct REMUW {
-            static i32 op(u32 a, u32 b) { return b == 0 ? a : a % b; }
-        };
-
-#endif // defined(__RV_EXTENSION_M__)
-#endif // __RV_BIT_WIDTH__ == 64
-
-        static UInnerT slice_op_code(UInnerT val) { return get_slice<UInnerT, 7, 2>(val); }
-
-        static UInnerT slice_rd(UInnerT val) { return get_slice<UInnerT, 12, 7>(val); }
-
-        static UInnerT slice_funct3(UInnerT val) { return get_slice<UInnerT, 15, 12>(val); }
-
-        static UInnerT slice_rs1(UInnerT val) { return get_slice<UInnerT, 20, 15>(val); }
-
-        static UInnerT slice_rs2(UInnerT val) { return get_slice<UInnerT, 25, 20>(val); }
-
-        static UInnerT slice_funct7(UInnerT val) { return get_slice<UInnerT, 32, 25>(val); }
-
+        template<typename xlen=xlen_trait>
         static UInnerT slice_funct_shift(UInnerT val) {
-            return get_slice<UInnerT, 32, 20 + XLEN_INDEX, XLEN_INDEX>(val);
+            return get_bits<UInnerT, 32, 20 + xlen::XLEN_INDEX, xlen::XLEN_INDEX>(val);
         }
 
-        static UInnerT slice_shift_amount(UInnerT val) { return get_slice<UInnerT, 20 + XLEN_INDEX, 20>(val); }
+        template<typename xlen=xlen_trait>
+        static UInnerT slice_shift_amount(UInnerT val) { return get_bits<UInnerT, 20 + xlen::XLEN_INDEX, 20>(val); }
 
         InnerT inner;
 
@@ -314,23 +79,12 @@ namespace riscv_isa {
         Instruction32R(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(rd) |
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
-                                        get_slice<UInnerT, 7, 0, 25>(funct7))} {}
-
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                usize rs2 = get_rs2();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), reg.get_x(rs2)));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 5, 0, 7>(rd) |
+                                        get_bits<UInnerT, 3, 0, 12>(funct3) |
+                                        get_bits<UInnerT, 5, 0, 15>(rs1) |
+                                        get_bits<UInnerT, 5, 0, 20>(rs2) |
+                                        get_bits<UInnerT, 7, 0, 25>(funct7))} {}
 
     public:
         usize get_rd() const { return slice_rd(inner); }
@@ -346,36 +100,14 @@ namespace riscv_isa {
 
     class Instruction32I : public Instruction32 {
     protected:
-        template<typename OP, typename Self, typename RegT>
-        static void operate_shift(Self *self, RegT &reg) {
-            usize rd = self->get_rd();
-            if (rd != 0) {
-                usize rs1 = self->get_rs1();
-                XLenT imm = self->get_shift_amount();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
-
-        Instruction32I(usize op, usize rd, usize funct3, usize rs1, UXLenT imm)
+        Instruction32I(usize op, usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(rd) |
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
-                                        get_slice<UInnerT, 12, 0, 20>(imm))} {}
-
-        template<typename OP, typename RegT>
-        void operate_on(RegT &reg) const {
-            usize rd = get_rd();
-            if (rd != 0) {
-                usize rs1 = get_rs1();
-                XLenT imm = get_imm();
-                reg.set_x(rd, OP::op(reg.get_x(rs1), imm));
-            }
-            reg.inc_pc(INST_WIDTH);
-        }
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 5, 0, 7>(rd) |
+                                        get_bits<UInnerT, 3, 0, 12>(funct3) |
+                                        get_bits<UInnerT, 5, 0, 15>(rs1) |
+                                        get_bits<UInnerT, 12, 0, 20>(imm))} {}
 
     public:
         usize get_rd() const { return slice_rd(inner); }
@@ -384,23 +116,20 @@ namespace riscv_isa {
 
         usize get_rs1() const { return slice_rs1(inner); }
 
-        XLenT get_imm() const {
-            InnerT imm32_20 = inner >> 20;
-            return static_cast<XLenT>(imm32_20);
-        }
+        InnerT get_imm() const { return inner >> 20; }
     };
 
     class Instruction32S : public Instruction32 {
     protected:
-        Instruction32S(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
+        Instruction32S(usize op, usize funct3, usize rs1, usize rs2, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(imm) |
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
-                                        get_slice<UInnerT, 12, 5, 25>(imm))} {}
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 5, 0, 7>(imm) |
+                                        get_bits<UInnerT, 3, 0, 12>(funct3) |
+                                        get_bits<UInnerT, 5, 0, 15>(rs1) |
+                                        get_bits<UInnerT, 5, 0, 20>(rs2) |
+                                        get_bits<UInnerT, 12, 5, 25>(imm))} {}
 
     public:
         usize get_funct3() const { return slice_funct3(inner); }
@@ -409,26 +138,26 @@ namespace riscv_isa {
 
         usize get_rs2() const { return slice_rs2(inner); }
 
-        XLenT get_imm() const {
-            InnerT imm12_7 = get_slice<UInnerT, 12, 7, 0>(inner);
+        InnerT get_imm() const {
+            InnerT imm12_7 = get_bits<UInnerT, 12, 7, 0>(inner);
             InnerT imm32_25 = inner >> 20 & bits_mask<UInnerT, 32, 5>::val;
-            return static_cast<XLenT>(imm32_25 | imm12_7);
+            return imm32_25 | imm12_7;
         }
     };
 
     class Instruction32B : public Instruction32 {
     protected:
-        Instruction32B(usize op, usize funct3, usize rs1, usize rs2, UXLenT imm)
+        Instruction32B(usize op, usize funct3, usize rs1, usize rs2, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 12, 11, 7>(imm) |
-                                        get_slice<UInnerT, 5, 1, 8>(imm) |
-                                        get_slice<UInnerT, 3, 0, 12>(funct3) |
-                                        get_slice<UInnerT, 5, 0, 15>(rs1) |
-                                        get_slice<UInnerT, 5, 0, 20>(rs2) |
-                                        get_slice<UInnerT, 11, 5, 25>(imm) |
-                                        get_slice<UInnerT, 13, 12, 31>(imm))} {}
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 12, 11, 7>(imm) |
+                                        get_bits<UInnerT, 5, 1, 8>(imm) |
+                                        get_bits<UInnerT, 3, 0, 12>(funct3) |
+                                        get_bits<UInnerT, 5, 0, 15>(rs1) |
+                                        get_bits<UInnerT, 5, 0, 20>(rs2) |
+                                        get_bits<UInnerT, 11, 5, 25>(imm) |
+                                        get_bits<UInnerT, 13, 12, 31>(imm))} {}
 
     public:
         usize get_funct3() const { return slice_funct3(inner); }
@@ -437,77 +166,56 @@ namespace riscv_isa {
 
         usize get_rs2() const { return slice_rs2(inner); }
 
-        XLenT get_imm() const {
-            InnerT imm8_7 = get_slice<UInnerT, 8, 7, 11>(inner);
-            InnerT imm12_8 = get_slice<UInnerT, 12, 8, 1>(inner);
+        InnerT get_imm() const {
+            InnerT imm8_7 = get_bits<UInnerT, 8, 7, 11>(inner);
+            InnerT imm12_8 = get_bits<UInnerT, 12, 8, 1>(inner);
             InnerT imm32_25 = inner >> 20 & (bits_mask<UInnerT, 32, 12>::val | bits_mask<UInnerT, 11, 5>::val);
-            return static_cast<XLenT>(imm32_25 | imm8_7 | imm12_8);
+            return imm32_25 | imm8_7 | imm12_8;
         }
     };
 
     class Instruction32U : public Instruction32 {
     protected:
-        Instruction32U(usize op, usize rd, UXLenT imm)
+        Instruction32U(usize op, usize rd, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(rd) |
-                                        get_slice<UInnerT, 32, 12, 12>(imm))} {}
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 5, 0, 7>(rd) |
+                                        get_bits<UInnerT, 32, 12, 12>(imm))} {}
 
     public:
         usize get_rd() const { return slice_rd(inner); }
 
-        XLenT get_imm() const {
-            InnerT imm32_12 = get_slice<UInnerT, 32, 12, 12>(inner);
-            return static_cast<XLenT>(imm32_12);
-        }
+        InnerT get_imm() const { return get_bits<UInnerT, 32, 12, 12>(inner); }
     };
 
     class Instruction32J : public Instruction32 {
     protected:
-        Instruction32J(usize op, usize rd, UXLenT imm)
+        Instruction32J(usize op, usize rd, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
-                                        get_slice<UInnerT, 5, 0, 2>(op) |
-                                        get_slice<UInnerT, 5, 0, 7>(rd) |
-                                        get_slice<UInnerT, 20, 12, 12>(imm) |
-                                        get_slice<UInnerT, 12, 11, 20>(imm) |
-                                        get_slice<UInnerT, 11, 1, 21>(imm) |
-                                        get_slice<UInnerT, 21, 20, 31>(imm))} {}
+                                        get_bits<UInnerT, 5, 0, 2>(op) |
+                                        get_bits<UInnerT, 5, 0, 7>(rd) |
+                                        get_bits<UInnerT, 20, 12, 12>(imm) |
+                                        get_bits<UInnerT, 12, 11, 20>(imm) |
+                                        get_bits<UInnerT, 11, 1, 21>(imm) |
+                                        get_bits<UInnerT, 21, 20, 31>(imm))} {}
 
     public:
         usize get_rd() const { return slice_rd(inner); }
 
-        XLenT get_imm() const {
-            InnerT imm20_12 = get_slice<UInnerT, 20, 12, 12>(inner);
-            InnerT imm21_20 = get_slice<UInnerT, 21, 20, 11>(inner);
+        InnerT get_imm() const {
+            InnerT imm20_12 = get_bits<UInnerT, 20, 12, 12>(inner);
+            InnerT imm21_20 = get_bits<UInnerT, 21, 20, 11>(inner);
             InnerT imm32_21 = inner >> 20 & (bits_mask<UInnerT, 32, 20>::val | bits_mask<UInnerT, 11, 1>::val);
-            return static_cast<XLenT>(imm32_21 | imm20_12 | imm21_20);
+            return imm32_21 | imm20_12 | imm21_20;
         }
     };
 
     class InstructionBranchSet : public Instruction32B {
     protected:
-        InstructionBranchSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
+        InstructionBranchSet(usize funct3, usize rs1, usize rs2, UInnerT imm)
                 : Instruction32B{OP_CODE, funct3, rs1, rs2, imm} {}
-
-        template<typename OP, typename RegT>
-        bool operate_on(RegT &reg) const {
-            usize rs1 = get_rs1();
-            usize rs2 = get_rs2();
-
-            if (OP::op(reg.get_x(rs1), reg.get_x(rs2))) {
-                XLenT imm = get_imm();
-#if IALIGN == 32
-                if (get_slice<UXLenT, 2, 0>(imm) != 0) return false;
-#endif
-                reg.inc_pc(imm);
-            } else {
-                reg.inc_pc(INST_WIDTH);
-            }
-
-            return true;
-        }
 
     public:
         using BaseT = Instruction32;
@@ -519,20 +227,8 @@ namespace riscv_isa {
 
     class InstructionLoadSet : public Instruction32I {
     protected:
-        InstructionLoadSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+        InstructionLoadSet(usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
-
-        template<typename ValT, typename RegT, typename MemT>
-        bool operate_on(RegT &reg, MemT &mem) const {
-            usize rd = get_rd();
-            usize rs1 = get_rs1();
-            XLenT imm = get_imm();
-            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
-            if (ptr == nullptr) return false;
-            if (rd != 0) reg.set_x(rd, *ptr);  // todo: this may fail from interrupt
-            reg.inc_pc(INST_WIDTH);
-            return true;
-        }
 
     public:
         using BaseT = Instruction32;
@@ -544,20 +240,8 @@ namespace riscv_isa {
 
     class InstructionStoreSet : public Instruction32S {
     protected:
-        InstructionStoreSet(usize funct3, usize rs1, usize rs2, UXLenT imm)
+        InstructionStoreSet(usize funct3, usize rs1, usize rs2, UInnerT imm)
                 : Instruction32S{OP_CODE, funct3, rs1, rs2, imm} {}
-
-        template<typename ValT, typename RegT, typename MemT>
-        bool operate_on(RegT &reg, MemT &mem) const {
-            usize rs1 = get_rs1();
-            usize rs2 = get_rs2();
-            XLenT imm = get_imm();
-            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(reg.get_x(rs1)) + imm);
-            if (ptr == nullptr) return false;
-            *ptr = static_cast<ValT>(reg.get_x(rs2)); // todo: this may fail from interrupt
-            reg.inc_pc(INST_WIDTH);
-            return true;
-        }
 
     public:
         using BaseT = Instruction32;
@@ -569,7 +253,7 @@ namespace riscv_isa {
 
     class InstructionArithImmSet : public Instruction32I {
     protected:
-        InstructionArithImmSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+        InstructionArithImmSet(usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -595,7 +279,7 @@ namespace riscv_isa {
 
     class InstructionFenceSet : public Instruction32I {
     protected:
-        InstructionFenceSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+        InstructionFenceSet(usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -608,7 +292,7 @@ namespace riscv_isa {
 
     class InstructionSystemSet : public Instruction32I {
     protected:
-        InstructionSystemSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+        InstructionSystemSet(usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -623,7 +307,7 @@ namespace riscv_isa {
 
     class InstructionArithImmWSet : public Instruction32I {
     protected:
-        InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UXLenT imm)
+        InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UInnerT imm)
                 : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:

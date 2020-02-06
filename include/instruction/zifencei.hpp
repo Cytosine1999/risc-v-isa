@@ -11,11 +11,6 @@ namespace riscv_isa {
     class FENCEIInst : public InstructionFenceSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b001;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const {
-            // todo
-        }
     };
 }
 

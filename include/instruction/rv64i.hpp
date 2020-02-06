@@ -7,14 +7,18 @@
 
 #if __RV_BIT_WIDTH__ == 64
 namespace riscv_isa {
+    template<typename xlen=xlen_trait>
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
-        usize get_shift_amount() const { return slice_shift_amount(inner); }
-        usize get_funct_shift() const { return slice_funct_shift(inner); }
+        usize get_shift_amount() const { return slice_shift_amount<xlen>(inner); }
+        usize get_funct_shift() const { return slice_funct_shift<xlen>(inner); }
     };
 
-    class InstructionShiftRightImmWSet : public InstructionShiftImmWSet {
+    template<typename xlen=xlen_trait>
+    class InstructionShiftRightImmWSet : public InstructionShiftImmWSet<xlen> {
     public:
+        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
+
         static constexpr UInnerT FUNCT3 = 0b101;
     };
 
@@ -32,9 +36,6 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b011;
 
-        template<typename RegT, typename MemT>
-        bool operator()(RegT &reg, MemT &mem) const { return operate_on<i64>(reg, mem); }
-
         friend std::ostream &operator<<(std::ostream &stream, const LDInst &inst) {
             stream << "\tld\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
@@ -44,9 +45,6 @@ namespace riscv_isa {
     class LWUInst : public InstructionLoadSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b110;
-
-        template<typename RegT, typename MemT>
-        bool operator()(RegT &reg, MemT &mem) const { return operate_on<u32>(reg, mem); }
 
         friend std::ostream &operator<<(std::ostream &stream, const LWUInst &inst) {
             stream << "\tlwu\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
@@ -58,9 +56,6 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b011;
 
-        template<typename RegT, typename MemT>
-        bool operator()(RegT &reg, MemT &mem) const { return operate_on<i64>(reg, mem); }
-
         friend std::ostream &operator<<(std::ostream &stream, const SDInst &inst) {
             stream << "\tsd\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
@@ -71,22 +66,19 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b000;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<ADD>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const ADDIWInst &inst) {
             stream << "\taddiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
 
-    class SLLIWInst : public InstructionShiftImmWSet {
+    template<typename xlen=xlen_trait>
+    class SLLIWInst : public InstructionShiftImmWSet<xlen> {
     public:
+        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
+
         static constexpr UInnerT FUNCT3 = 0b001;
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_shift<SLLW>(this, reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIWInst &inst) {
             stream << "\tslliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -94,12 +86,13 @@ namespace riscv_isa {
         }
     };
 
-    class SRLIWInst : public InstructionShiftRightImmWSet {
+    template<typename xlen=xlen_trait>
+    class SRLIWInst : public InstructionShiftRightImmWSet<xlen> {
     public:
-        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
+        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
+        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_shift<SRLW>(this, reg); }
+        static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIWInst &inst) {
             stream << "\tsrliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -107,12 +100,13 @@ namespace riscv_isa {
         }
     };
 
-    class SRAIWInst : public InstructionShiftRightImmWSet {
+    template<typename xlen=xlen_trait>
+    class SRAIWInst : public InstructionShiftRightImmWSet<xlen> {
     public:
-        static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
+        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
+        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_shift<SRAW>(this, reg); }
+        static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIWInst &inst) {
             stream << "\tsraiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -124,9 +118,6 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b000;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<ADDW>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const ADDWInst &inst) {
             stream << "\taddw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -136,9 +127,6 @@ namespace riscv_isa {
     class SUBWInst : public InstructionIntegerRegModWSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b000;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SUBW>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SUBWInst &inst) {
             stream << "\tsubw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -150,9 +138,6 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b001;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SLLW>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const SLLWInst &inst) {
             stream << "\tsllw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -163,9 +148,6 @@ namespace riscv_isa {
     public:
         static constexpr UInnerT FUNCT3 = 0b101;
 
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRLW>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const SRLWInst &inst) {
             stream << "\tsrlw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -175,9 +157,6 @@ namespace riscv_isa {
     class SRAWInst : public InstructionIntegerRegModWSet {
     public:
         static constexpr UInnerT FUNCT3 = 0b101;
-
-        template<typename RegT>
-        void operator()(RegT &reg) const { operate_on<SRAW>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAWInst &inst) {
             stream << "\tsraw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();

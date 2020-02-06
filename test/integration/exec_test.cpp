@@ -15,7 +15,7 @@ using namespace elf;
 
 class LinuxHart : public Hart<LinuxHart> {
 public:
-    LinuxHart(RegisterFile &reg, Memory &mem) : Hart{reg, mem} {}
+    LinuxHart(IntegerRegister<> &reg, Memory<> &mem) : Hart{reg, mem} {}
 
     void start() {
         while (true) {
@@ -39,25 +39,25 @@ public:
 
                     return;
                 case ECALL:
-                    switch (reg.get_x(RegisterFile::A7)) {
+                    switch (reg.get_x(IntegerRegister<>::A7)) {
                         case 57: {
-                            int fd = reg.get_x(RegisterFile::A0);
-                            reg.set_x(RegisterFile::A0, fd > 2 ? close(fd) : 0); // todo: stdin, stdout, stderr
+                            int fd = reg.get_x(IntegerRegister<>::A0);
+                            reg.set_x(IntegerRegister<>::A0, fd > 2 ? close(fd) : 0); // todo: stdin, stdout, stderr
 
                             break;
                         }
                         case 64:
-                            reg.set_x(RegisterFile::A0, write(reg.get_x(RegisterFile::A0),
-                                                              mem.address<char>(reg.get_x(RegisterFile::A1)),
-                                                              RegisterFile::A3));
+                            reg.set_x(IntegerRegister<>::A0, write(reg.get_x(IntegerRegister<>::A0),
+                                                                 mem.address<char>(reg.get_x(IntegerRegister<>::A1)),
+                                                                 IntegerRegister<>::A3));
 
                             break;
                         case 80:
-                            reg.set_x(RegisterFile::A0, -1); // todo: need convert
+                            reg.set_x(IntegerRegister<>::A0, -1); // todo: need convert
 
                             break;
                         case 93:
-                            std::cout << std::endl << "[exit " << reg.get_x(RegisterFile::A0) << ']' << std::endl;
+                            std::cout << std::endl << "[exit " << reg.get_x(IntegerRegister<>::A0) << ']' << std::endl;
 
                             return;
                         case 214:
@@ -65,7 +65,7 @@ public:
                             break;
                         default:
                             std::cerr << "Invalid ecall number at " << std::hex << reg.get_pc()
-                                      << ", call number " << std::dec << reg.get_x(RegisterFile::A7) << std::endl;
+                                      << ", call number " << std::dec << reg.get_x(IntegerRegister<>::A7) << std::endl;
 
                             return;
                     }
@@ -111,11 +111,11 @@ int main(int argc, char **argv) {
     if (section_header_string_table_header == nullptr) riscv_isa_abort("Broken section header string table!");
 //    auto section_header_string_table = section_header_string_table_header->get_string_table(visitor);
 
-    RegisterFile reg{};
+    IntegerRegister<> reg{};
     reg.set_pc(elf_header->entry_point);
-    reg.set_x(RegisterFile::SP, 0xfffff000);
+    reg.set_x(IntegerRegister<>::SP, 0xfffff000);
 
-    Memory mem{0x100000000};
+    Memory<> mem{0x100000000};
 
     for (auto &program: elf_header->programs(visitor)) {
 //        std::cout << program << std::endl;

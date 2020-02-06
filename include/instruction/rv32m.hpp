@@ -16,9 +16,6 @@ namespace riscv_isa {
     public:
         static constexpr InnerT FUNCT_3 = 0b000;
 
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<MUL>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const MULInst &inst) {
             stream << "\tmul\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -28,9 +25,6 @@ namespace riscv_isa {
     class MULHInst : public InstructionMulDivSet {
     public:
         static constexpr InnerT FUNCT_3 = 0b001;
-
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<MULH>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const MULHInst &inst) {
             stream << "\tmulh\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -42,9 +36,6 @@ namespace riscv_isa {
     public:
         static constexpr InnerT FUNCT_3 = 0b010;
 
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<MULHSU>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const MULHSUInst &inst) {
             stream << "\tmulhsu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -54,9 +45,6 @@ namespace riscv_isa {
     class MULHUInst : public InstructionMulDivSet {
     public:
         static constexpr InnerT FUNCT_3 = 0b011;
-
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<MULHU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const MULHUInst &inst) {
             stream << "\tmulhu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -68,9 +56,6 @@ namespace riscv_isa {
     public:
         static constexpr InnerT FUNCT_3 = 0b100;
 
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<DIV>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const DIVInst &inst) {
             stream << "\tdiv\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -80,9 +65,6 @@ namespace riscv_isa {
     class DIVUInst : public InstructionMulDivSet {
     public:
         static constexpr InnerT FUNCT_3 = 0b101;
-
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<DIVU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVUInst &inst) {
             stream << "\tdivu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -94,9 +76,6 @@ namespace riscv_isa {
     public:
         static constexpr InnerT FUNCT_3 = 0b110;
 
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<REM>(reg); }
-
         friend std::ostream &operator<<(std::ostream &stream, const REMInst &inst) {
             stream << "\trem\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
@@ -106,9 +85,6 @@ namespace riscv_isa {
     class REMUInst : public InstructionMulDivSet {
     public:
         static constexpr InnerT FUNCT_3 = 0b111;
-
-        template <typename RegT>
-        void operator()(RegT &reg) { operate_on<REMU>(reg); }
 
         friend std::ostream &operator<<(std::ostream &stream, const REMUInst &inst) {
             stream << "\tremu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();

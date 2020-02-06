@@ -37,8 +37,8 @@ void check_invalid_op_code(usize op_code) {
     for (u32 i = 0; i < 0b10000000000000000000000000; i += 999983) {
         u32 val = 0b11u + (op_code << OP_CODE) + (i << 7u);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
-        check_all_dyn_cast<void>(_inst);
+        CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+        check_all_dyn_cast<void, xlen_32_trait>(_inst);
     }
 }
 
@@ -47,8 +47,8 @@ void check_i_type_inst(usize rd, usize rs1, usize imm_i) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
               (imm_i << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
@@ -61,8 +61,8 @@ void check_i_type_invalid(usize op_code, usize rd, usize funct3, usize rs1, usiz
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
               (imm_i << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<void>{}.visit(_inst);
-    check_all_dyn_cast<void>(_inst);
+    CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+    check_all_dyn_cast<void, xlen_32_trait>(_inst);
 }
 
 template<typename T, usize op_code, usize funct3>
@@ -70,8 +70,8 @@ void check_s_type_inst(usize imm_s_1, usize rs1, usize rs2, usize imm_s_2) {
     u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
               (imm_s_2 << IMM_S_2);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_funct3(), funct3);
@@ -84,8 +84,8 @@ void check_s_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1,
     u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
               (imm_s_2 << IMM_S_2);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<void>{}.visit(_inst);
-    check_all_dyn_cast<void>(_inst);
+    CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+    check_all_dyn_cast<void, xlen_32_trait>(_inst);
 }
 
 template<typename T, usize op_code, usize funct3>
@@ -93,8 +93,8 @@ void check_b_type_inst(usize imm_s_1, usize rs1, usize rs2, usize imm_s_2) {
     u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
               (imm_s_2 << IMM_S_2);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_funct3(), funct3);
@@ -109,8 +109,8 @@ void check_b_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1,
     u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
               (imm_s_2 << IMM_S_2);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<void>{}.visit(_inst);
-    check_all_dyn_cast<void>(_inst);
+    CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+    check_all_dyn_cast<void, xlen_32_trait>(_inst);
 }
 
 template<typename T, usize op_code, usize funct3, usize funct7>
@@ -118,8 +118,8 @@ void check_r_type_inst(usize rd, usize rs1, usize rs2) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
               (rs2 << RS2) | (funct7 << FUNCT7);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
@@ -134,8 +134,8 @@ void check_shift_imm_inst(usize rd, usize rs1, usize shift_amount) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
               ((shift_amount | funct_shift) << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
@@ -150,16 +150,16 @@ void check_invalid_funct_shift(usize op_code, usize rd, usize funct3, usize rs1,
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
               ((shift_amount | funct_shift) << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<void>{}.visit(_inst);
-    check_all_dyn_cast<void>(_inst);
+    CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+    check_all_dyn_cast<void, xlen_32_trait>(_inst);
 }
 
 void check_invalid_funct7(usize op_code, usize rd, usize funct3, usize rs1, usize rs2, usize funct7) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
               (funct7 << FUNCT7);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<void>{}.visit(_inst);
-    check_all_dyn_cast<void>(_inst);
+    CheckVisitor<void, xlen_32_trait>{}.visit(_inst);
+    check_all_dyn_cast<void, xlen_32_trait>(_inst);
 }
 
 void check_fence_inst(usize rd, usize rs1, usize sw, usize sr, usize so, usize si, usize pw, usize pr, usize po,
@@ -171,8 +171,8 @@ void check_fence_inst(usize rd, usize rs1, usize sw, usize sr, usize so, usize s
               (sr << 21u) | (so << 22u) | (si << 23u) | (pw << 24u) | (pr << 25u) | (po << 26u) | (pi << 27u) |
               (fm << 28u);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<FENCEInst>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<FENCEInst>(_inst);
+    CheckVisitor<FENCEInst, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<FENCEInst, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
@@ -190,30 +190,30 @@ void check_fence_inst(usize rd, usize rs1, usize sw, usize sr, usize so, usize s
 }
 
 template<typename T, usize op_code>
-void check_u_type_inst(usize rd, UXLenT imm_j) {
+void check_u_type_inst(usize rd, typename xlen_32_trait::UXLenT imm_j) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (imm_j << IMM_U);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<T>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<T>(_inst);
+    CheckVisitor<T, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<T, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
-    ASSERT_EQ(inst->get_imm(), static_cast<XLenT>(imm_j << IMM_U));
+    ASSERT_EQ(inst->get_imm(), static_cast<typename xlen_32_trait::XLenT>(imm_j << IMM_U));
 }
 
-void check_jal_inst(usize rd, UXLenT imm_u) {
+void check_jal_inst(usize rd, typename xlen_32_trait::UXLenT imm_u) {
     constexpr usize op_code = 0b11011;
 
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | ((imm_u & 0b1111111111u) << 21u) |
               ((imm_u & 0b10000000000u) << 10u) | ((imm_u & 0b1111111100000000000u) << 1u) |
               ((imm_u & 0b10000000000000000000u) << 12u);
     auto _inst = reinterpret_cast<Instruction *>(&val);
-    CheckVisitor<JALInst>{}.visit(_inst);
-    auto inst = check_all_dyn_cast<JALInst>(_inst);
+    CheckVisitor<JALInst, xlen_32_trait>{}.visit(_inst);
+    auto inst = check_all_dyn_cast<JALInst, xlen_32_trait>(_inst);
 
     ASSERT_EQ(inst->get_op_code(), op_code);
     ASSERT_EQ(inst->get_rd(), rd);
-    ASSERT_EQ(inst->get_imm(), static_cast<XLenT>(imm_u << 12u) >> 11u);
+    ASSERT_EQ(inst->get_imm(), static_cast<typename xlen_32_trait::XLenT>(imm_u << 12u) >> 11u);
 }
 
 int main() {
@@ -275,10 +275,10 @@ int main() {
                 check_i_type_inst<ADDIInst, 0b00100, 0b000>(rd, rs1, imm_i);
         for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
             for (u32 imm_i = 0; imm_i < IMM_I_MAX; imm_i += IMM_I_INR) {
-                check_shift_imm_inst<SLLIInst, 0b00100, 0b001, 0b000000000000>(rd, rs1, get_slice<usize, 5, 0>(imm_i));
+                check_shift_imm_inst<SLLIInst<xlen_32_trait>, 0b00100, 0b001, 0b000000000000>(rd, rs1, get_bits<usize, 5, 0>(imm_i));
 
                 for (u32 funct_shift = 32; funct_shift < 0b1000000000000; funct_shift += 32 * 32)
-                    check_invalid_funct_shift(0b00100, rd, 0b001, rs1, get_slice<usize, 5, 0>(imm_i), funct_shift);
+                    check_invalid_funct_shift(0b00100, rd, 0b001, rs1, get_bits<usize, 5, 0>(imm_i), funct_shift);
             }
         for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
             for (u32 imm_i = 0; imm_i < IMM_I_MAX; imm_i += IMM_I_INR)
@@ -291,11 +291,11 @@ int main() {
                 check_i_type_inst<XORIInst, 0b00100, 0b100>(rd, rs1, imm_i);
         for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
             for (u32 imm_i = 0; imm_i < IMM_I_MAX; imm_i += IMM_I_INR) {
-                check_shift_imm_inst<SRLIInst, 0b00100, 0b101, 0b000000000000>(rd, rs1, get_slice<usize, 5, 0>(imm_i));
-                check_shift_imm_inst<SRAIInst, 0b00100, 0b101, 0b010000000000>(rd, rs1, get_slice<usize, 5, 0>(imm_i));
+                check_shift_imm_inst<SRLIInst<xlen_32_trait>, 0b00100, 0b101, 0b000000000000>(rd, rs1, get_bits<usize, 5, 0>(imm_i));
+                check_shift_imm_inst<SRAIInst<xlen_32_trait>, 0b00100, 0b101, 0b010000000000>(rd, rs1, get_bits<usize, 5, 0>(imm_i));
 
                 for (u32 funct_shift = 32; funct_shift < 0b1000000000000; funct_shift += 32 * 32)
-                    check_invalid_funct_shift(0b00100, rd, 0b101, rs1, get_slice<usize, 5, 0>(imm_i), funct_shift);
+                    check_invalid_funct_shift(0b00100, rd, 0b101, rs1, get_bits<usize, 5, 0>(imm_i), funct_shift);
             }
         for (u32 rs1 = 0; rs1 < R_MAX; rs1 += R_INR)
             for (u32 imm_i = 0; imm_i < IMM_I_MAX; imm_i += IMM_I_INR)

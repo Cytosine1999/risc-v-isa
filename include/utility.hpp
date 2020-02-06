@@ -9,8 +9,32 @@
 #include <type_traits>
 
 
-#if __RV_BIT_WIDTH__ != 32 && __RV_BIT_WIDTH__ != 64
+#if !defined(__RV_BIT_WIDTH__)
 #error "Bit width not defined!"
+#endif
+
+#if __RV_BIT_WIDTH__ != 32 && __RV_BIT_WIDTH__ != 64
+#error "Bit width should be 32 or 64!"
+#endif
+
+#if defined(__RV_BASE_I__) && defined(__RV_BASE_E__)
+#error "Base instruction set I and E cannot be defined at the same time!"
+#endif
+
+#if defined(__RV_BASE_E__) && __RV_BIT_WIDTH__ != 32
+#error "Base instruction set E only support 32 bits width!"
+#endif
+
+#ifndef VENDOR_ID
+#define VENDOR_ID 0
+#endif
+
+#ifndef ARCH_ID
+#define ARCH_ID 0
+#endif
+
+#ifndef IMP_ID
+#define IMP_ID 0
 #endif
 
 namespace riscv_isa {
@@ -54,21 +78,91 @@ namespace riscv_isa {
     using usize = u_int32_t;
 #endif
 
-#if __RV_BIT_WIDTH__ == 32
-    using XLenT = i32;
-    using UXLenT = u32;
-    constexpr usize XLEN_INDEX = 5;
-#elif __RV_BIT_WIDTH__ == 64
-    using XLenT = i64;
-    using UXLenT = u64;
-    constexpr usize XLEN_INDEX = 6;
-#else
-    using XLenT = void;
-    using UXLenT = void;
+    template<typename T, usize end, usize begin>
+    struct bits_mask {
+    private:
+        using RetT = typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) * 8 >= end &&
+                                              end > begin), T>::type;
+
+    public:
+        static constexpr RetT val = ((static_cast<T>(1u) << (end - begin)) - static_cast<T>(1u)) << begin;
+    };
+
+    template<typename T, usize begin>
+    struct bit_mask {
+    public:
+        static constexpr T val = bits_mask<T, begin + 1, begin>::val;
+    };
+
+    template<typename T, usize end, usize begin, isize offset = 0, bool flag = (begin > offset)>
+    struct _get_bits;
+
+    template<typename T, usize end, usize begin, isize offset>
+    struct _get_bits<T, end, begin, offset, true> {
+    public:
+        static constexpr T inner(T val) {
+            return (val >> (begin - offset)) & bits_mask<T, end - begin, 0>::val << offset;
+        }
+    };
+
+    template<typename T, usize end, usize begin, isize offset>
+    struct _get_bits<T, end, begin, offset, false> {
+    public:
+        static constexpr T inner(T val) {
+            return (val << (offset - begin)) & bits_mask<T, end - begin, 0>::val << offset;
+        }
+    };
+
+    template<typename T, usize end, usize begin, isize offset = 0>
+    constexpr inline T get_bits(T val) {
+        static_assert(sizeof(T) * 8 >= end, "end exceed length");
+        static_assert(end > begin, "end need to be bigger than start");
+        static_assert(sizeof(T) * 8 >= end - begin + offset, "result exceed length");
+
+        return _get_bits<T, end, begin, offset>::inner(val);
+    }
+
+    template<typename T, usize begin, isize offset = 0>
+    constexpr inline T get_bit(T val) { return get_bits<T, begin + 1, begin, offset>(val); }
+
+    struct _xlen_32_trait {
+    public:
+        using XLenT = i32;
+        using UXLenT = u32;
+        static constexpr usize XLEN_INDEX = 5;
+    };
+
+#if __RV_BIT_WIDTH__ == 64
+    struct _xlen_64_trait {
+    public:
+        using XLenT = i64;
+        using UXLenT = u64;
+        static constexpr usize XLEN_INDEX = 6;
+    };
 #endif
 
-    constexpr usize XLEN_BYTE = sizeof(XLenT);
-    constexpr usize XLEN = XLEN_BYTE * 8;
+    template <typename T>
+    struct _xlen_trait : public T {
+    public:
+        static constexpr usize XLEN_BYTE = sizeof(typename T::XLenT);
+        static constexpr usize XLEN = XLEN_BYTE * 8;
+        static constexpr usize HALF_WIDTH = XLEN_BYTE / 2;
+        static constexpr typename T::UXLenT HALF_MASK = bits_mask<typename T::UXLenT, HALF_WIDTH, 0>::val;
+        static constexpr typename T::XLenT XLenTMin = static_cast<typename T::XLenT>(1u << (XLEN_BYTE - 1));
+    };
+
+    using xlen_32_trait = _xlen_trait<_xlen_32_trait>;
+#if __RV_BIT_WIDTH__ == 64
+    using xlen_64_trait = _xlen_trait<_xlen_64_trait>;
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+    using xlen_trait = xlen_32_trait;
+#elif __RV_BIT_WIDTH__ == 64
+
+
+    using xlen_trait = xlen_64_trait;
+#endif
 
     /// @cite: RVISM - Volume I - V20191213 - P8
     ///
@@ -90,46 +184,6 @@ namespace riscv_isa {
 
 #define ILEN 32
     using ILenT = u32;
-
-    template<typename T, usize end, usize begin>
-    struct bits_mask {
-    private:
-        using RetT = typename std::enable_if<(std::is_unsigned<T>::value && sizeof(T) * 8 >= end &&
-                                              end > begin), T>::type;
-
-    public:
-        static constexpr RetT val = ((static_cast<T>(1u) << end - begin) - static_cast<T>(1u)) << begin;
-    };
-
-    template<typename T, usize end, usize begin, isize offset = 0, bool flag = (begin > offset)>
-    struct _get_slice;
-
-    template<typename T, usize end, usize begin, isize offset>
-    struct _get_slice<T, end, begin, offset, true> {
-    public:
-        static constexpr T inner(T val) {
-            static_assert(sizeof(T) * 8 >= end, "end exceed length");
-            static_assert(end > begin, "end need to be bigger than start");
-            static_assert(sizeof(T) * 8 >= end - begin + offset, "result exceed length");
-
-            return (val >> (begin - offset)) & bits_mask<T, end - begin, 0>::val << offset;
-        }
-    };
-
-    template<typename T, usize end, usize begin, isize offset>
-    struct _get_slice<T, end, begin, offset, false> {
-    public:
-        static constexpr T inner(T val) {
-            static_assert(sizeof(T) * 8 >= end, "end exceed length");
-            static_assert(end > begin, "end need to be bigger than start");
-            static_assert(sizeof(T) * 8 >= end - begin + offset, "result exceed length");
-
-            return (val << (offset - begin)) & bits_mask<T, end - begin, 0>::val << offset;
-        }
-    };
-
-    template<typename T, usize end, usize begin, isize offset = 0>
-    constexpr inline T get_slice(T val) { return _get_slice<T, end, begin, offset>::inner(val); }
 
     template<typename T, typename U>
     bool is_type(U *self);

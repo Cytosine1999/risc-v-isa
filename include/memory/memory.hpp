@@ -9,14 +9,17 @@
 
 
 namespace riscv_isa {
+    template<typename xlen=xlen_trait>
     class Memory {
     private:
+        using XLenT = typename xlen::UXLenT;
+
         usize page_size;
         usize memory_size;
         u8 *memory_offset;
 
     public:
-        Memory(usize _memory_size) {
+        explicit Memory(usize _memory_size) {
             isize _page_size = sysconf(_SC_PAGESIZE);
 
             if (_page_size <= 0) riscv_isa_abort("Unable to get page size or improper page size!");
@@ -39,11 +42,11 @@ namespace riscv_isa {
         Memory &operator=(const Memory &other) = delete;
 
         template<typename LoadT>
-        LoadT *address(UXLenT addr) {
+        LoadT *address(XLenT addr) {
             return addr < memory_size ? reinterpret_cast<LoadT *>(memory_offset + addr) : nullptr;
         }
 
-        bool memory_copy(UXLenT offset, const void *src, usize length) {
+        bool memory_copy(XLenT offset, const void *src, usize length) {
             if (offset + length <= memory_size) {
                 memcpy(memory_offset + offset, src, length);
                 return true;

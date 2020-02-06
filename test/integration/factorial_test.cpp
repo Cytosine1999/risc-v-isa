@@ -5,7 +5,7 @@ using namespace riscv_isa;
 
 class NoneHart : public Hart<NoneHart> {
 public:
-    NoneHart(RegisterFile &reg, Memory &mem) : Hart{reg, mem} {}
+    NoneHart(IntegerRegister<> &reg, Memory<> &mem) : Hart{reg, mem} {}
 
     void start() {
         while (true) {
@@ -22,13 +22,13 @@ public:
 
                     return;
                 case ECALL:
-                    switch (reg.get_x(RegisterFile::A0)) {
+                    switch (reg.get_x(IntegerRegister<>::A0)) {
                         case 1:
-                            std::cout << std::dec << reg.get_x(RegisterFile::A1);
+                            std::cout << std::dec << reg.get_x(IntegerRegister<>::A1);
 
                             break;
                         case 11:
-                            std::cout << static_cast<char>(reg.get_x(RegisterFile::A1));
+                            std::cout << static_cast<char>(reg.get_x(IntegerRegister<>::A1));
 
                             break;
                         case 10:
@@ -106,11 +106,11 @@ int main() {
             3, 6, 7, 8
     };
 
-    RegisterFile reg{};
+    IntegerRegister<> reg{};
     reg.set_pc(0);
-    reg.set_x(RegisterFile::SP, 4092);
+    reg.set_x(IntegerRegister<>::SP, 4092);
 
-    Memory mem{4096};
+    Memory<> mem{4096};
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));
 
