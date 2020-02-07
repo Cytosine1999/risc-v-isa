@@ -4,12 +4,10 @@
 
 #include "utility.hpp"
 #include "instruction.hpp"
-#include "register/register.hpp"
 #include "memory/memory.hpp"
 
 
 namespace riscv_isa {
-    template<typename xlen=xlen_trait>
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
         InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UInnerT imm)
@@ -21,14 +19,13 @@ namespace riscv_isa {
         usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
-    template<typename xlen=xlen_trait>
-    class InstructionShiftRightImmSet : public InstructionShiftImmSet<xlen> {
+    class InstructionShiftRightImmSet : public InstructionShiftImmSet {
     public:
-        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
+        using UInnerT = typename InstructionShiftImmSet::UInnerT;
 
     protected:
         InstructionShiftRightImmSet(usize rd, usize rs1, UInnerT imm) :
-                InstructionShiftImmSet<xlen>{rd, FUNCT3, rs1, imm} {}
+                InstructionShiftImmSet{rd, FUNCT3, rs1, imm} {}
 
     public:
         static constexpr UInnerT FUNCT3 = 0b101;
@@ -452,24 +449,22 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SLLIInst : public InstructionShiftImmSet<xlen> {
+    class SLLIInst : public InstructionShiftImmSet {
     public:
-        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
 
         using BaseT = InstructionArithImmSet;
 
         static bool is_self_type(BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet<xlen> *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT3 = 0b001;
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         SLLIInst(usize rd, usize rs1, UInnerT imm)
-                : InstructionShiftImmSet<xlen>{rd, FUNCT3, rs1,
-                                               (imm & bits_mask<UInnerT, xlen::XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
+                : InstructionShiftImmSet{rd, FUNCT3, rs1,
+                                         (imm & bits_mask<UInnerT, xlen_trait::XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIInst &inst) {
             stream << "\tslli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -477,24 +472,23 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SRLIInst : public InstructionShiftRightImmSet<xlen> {
+    class SRLIInst : public InstructionShiftRightImmSet {
     public:
-        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
-        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
+        using UInnerT = typename InstructionShiftRightImmSet::UInnerT;
+        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet::FUNCT3;
 
         using BaseT = InstructionArithImmSet;
 
         static bool is_self_type(BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet<xlen> *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         SRLIInst(usize rd, usize rs1, UInnerT imm)
-                : InstructionShiftRightImmSet<xlen>{rd, rs1,
-                                                    get_bits<UInnerT, xlen::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
+                : InstructionShiftRightImmSet{rd, rs1,
+                                              get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIInst &inst) {
             stream << "\tsrli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
@@ -502,24 +496,23 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SRAIInst : public InstructionShiftRightImmSet<xlen> {
+    class SRAIInst : public InstructionShiftRightImmSet {
     public:
-        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
-        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
+        using UInnerT = typename InstructionShiftRightImmSet::UInnerT;
+        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet::FUNCT3;
 
         using BaseT = InstructionArithImmSet;
 
         static bool is_self_type(BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet<xlen> *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         SRAIInst(usize rd, usize rs1, UInnerT imm)
-                : InstructionShiftRightImmSet<xlen>{rd, rs1,
-                                                    get_bits<UInnerT, xlen::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
+                : InstructionShiftRightImmSet{rd, rs1,
+                                              get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIInst &inst) {
             stream << "\tsrai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();

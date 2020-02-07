@@ -15,65 +15,68 @@ using namespace elf;
 
 class LinuxHart : public Hart<LinuxHart> {
 public:
-    LinuxHart(IntegerRegister<> &reg, Memory<> &mem) : Hart{reg, mem} {}
+    LinuxHart(XLenT pc, IntegerRegister<> &reg, Memory<> &mem) : Hart{pc, reg, mem} {}
 
     void start() {
         while (true) {
-            Instruction *inst = mem.address<Instruction>(reg.get_pc());
+            Instruction *inst = mem.address<Instruction>(get_pc());
 
             switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
                 case ILLEGAL_INSTRUCTION_EXCEPTION:
                     if (inst == nullptr)
                         riscv_isa_unreachable("illegal instruction exception instruction fetch failed!");
 
-                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' ' << *inst << std::endl;
+                    std::cerr << "Illegal instruction at " << std::hex << get_pc() << ' ' << *inst << std::endl;
 
                     return;
                 case MEMORY_ERROR:
-                    std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
+                    std::cerr << "Memory error at " << std::hex << get_pc() << std::endl;
 
                     return;
                 case INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION:
-                    std::cerr << "Instruction address misaligned at " << std::hex << reg.get_pc() << ' '
+                    std::cerr << "Instruction address misaligned at " << std::hex << get_pc() << ' '
                               << *reinterpret_cast<u32 *>(inst) << std::endl;
 
                     return;
                 case ECALL:
-                    switch (reg.get_x(IntegerRegister<>::A7)) {
+                    switch (int_reg.get_x(IntegerRegister<>::A7)) {
                         case 57: {
-                            int fd = reg.get_x(IntegerRegister<>::A0);
-                            reg.set_x(IntegerRegister<>::A0, fd > 2 ? close(fd) : 0); // todo: stdin, stdout, stderr
+                            int fd = int_reg.get_x(IntegerRegister<>::A0);
+                            int_reg.set_x(IntegerRegister<>::A0, fd > 2 ? close(fd) : 0); // todo: stdin, stdout, stderr
 
                             break;
                         }
                         case 64:
-                            reg.set_x(IntegerRegister<>::A0, write(reg.get_x(IntegerRegister<>::A0),
-                                                                 mem.address<char>(reg.get_x(IntegerRegister<>::A1)),
-                                                                 IntegerRegister<>::A3));
+                            int_reg.set_x(IntegerRegister<>::A0, write(int_reg.get_x(IntegerRegister<>::A0),
+                                                                       mem.address<char>(
+                                                                               int_reg.get_x(IntegerRegister<>::A1)),
+                                                                       IntegerRegister<>::A3));
 
                             break;
                         case 80:
-                            reg.set_x(IntegerRegister<>::A0, -1); // todo: need convert
+                            int_reg.set_x(IntegerRegister<>::A0, -1); // todo: need convert
 
                             break;
                         case 93:
-                            std::cout << std::endl << "[exit " << reg.get_x(IntegerRegister<>::A0) << ']' << std::endl;
+                            std::cout << std::endl << "[exit " << int_reg.get_x(IntegerRegister<>::A0) << ']'
+                                      << std::endl;
 
                             return;
                         case 214:
 
                             break;
                         default:
-                            std::cerr << "Invalid ecall number at " << std::hex << reg.get_pc()
-                                      << ", call number " << std::dec << reg.get_x(IntegerRegister<>::A7) << std::endl;
+                            std::cerr << "Invalid ecall number at " << std::hex << get_pc()
+                                      << ", call number " << std::dec << int_reg.get_x(IntegerRegister<>::A7)
+                                      << std::endl;
 
                             return;
                     }
-                    reg.inc_pc(ECALLInst::INST_WIDTH);
+                    inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
                 case EBREAK:
-                    reg.inc_pc(EBREAKInst::INST_WIDTH);
+                    inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
                 default:;
@@ -112,7 +115,6 @@ int main(int argc, char **argv) {
 //    auto section_header_string_table = section_header_string_table_header->get_string_table(visitor);
 
     IntegerRegister<> reg{};
-    reg.set_pc(elf_header->entry_point);
     reg.set_x(IntegerRegister<>::SP, 0xfffff000);
 
     Memory<> mem{0x100000000};
@@ -154,6 +156,6 @@ int main(int argc, char **argv) {
 //        }
 //    }
 
-    LinuxHart core{reg, mem};
+    LinuxHart core{static_cast<xlen_trait::XLenT>(elf_header->entry_point), reg, mem};
     core.start();
 }

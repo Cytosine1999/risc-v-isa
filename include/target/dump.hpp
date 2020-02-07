@@ -9,7 +9,7 @@
 
 
 namespace riscv_isa {
-    class Dump : public InstructionVisitor<Dump, xlen_trait, usize> {
+    class Dump : public InstructionVisitor<Dump, usize> {
     public:
         using RetT = usize;
 
@@ -78,11 +78,11 @@ namespace riscv_isa {
 
         RetT visit_andi_inst(ANDIInst *inst) { return dump_inst(inst); }
 
-        RetT visit_slli_inst(SLLIInst<> *inst) { return dump_inst(inst); }
+        RetT visit_slli_inst(SLLIInst *inst) { return dump_inst(inst); }
 
-        RetT visit_srli_inst(SRLIInst<> *inst) { return dump_inst(inst); }
+        RetT visit_srli_inst(SRLIInst *inst) { return dump_inst(inst); }
 
-        RetT visit_srai_inst(SRAIInst<> *inst) { return dump_inst(inst); }
+        RetT visit_srai_inst(SRAIInst *inst) { return dump_inst(inst); }
 
         RetT visit_add_inst(ADDInst *inst) { return dump_inst(inst); }
 
@@ -110,8 +110,6 @@ namespace riscv_isa {
 
         RetT visit_ebreak_inst(EBREAKInst *inst) { return dump_inst(inst); }
 
-#if defined(__RV_EXTENSION_M__)
-
         RetT visit_mul_inst(MULInst *inst) { return dump_inst(inst); }
 
         RetT visit_mulh_inst(MULHInst *inst) { return dump_inst(inst); }
@@ -127,8 +125,6 @@ namespace riscv_isa {
         RetT visit_rem_inst(REMInst *inst) { return dump_inst(inst); }
 
         RetT visit_remu_inst(REMUInst *inst) { return dump_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_M__)
     };
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {

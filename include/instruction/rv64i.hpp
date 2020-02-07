@@ -7,17 +7,15 @@
 
 #if __RV_BIT_WIDTH__ == 64
 namespace riscv_isa {
-    template<typename xlen=xlen_trait>
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
-        usize get_shift_amount() const { return slice_shift_amount<xlen>(inner); }
-        usize get_funct_shift() const { return slice_funct_shift<xlen>(inner); }
+        usize get_shift_amount() const { return slice_shift_amount(inner); }
+        usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
-    template<typename xlen=xlen_trait>
-    class InstructionShiftRightImmWSet : public InstructionShiftImmWSet<xlen> {
+    class InstructionShiftRightImmWSet : public InstructionShiftImmWSet {
     public:
-        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
+        using UInnerT = typename InstructionShiftImmSet::UInnerT;
 
         static constexpr UInnerT FUNCT3 = 0b101;
     };
@@ -72,10 +70,8 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SLLIWInst : public InstructionShiftImmWSet<xlen> {
+    class SLLIWInst : public InstructionShiftImmWSet {
     public:
-        using UInnerT = typename InstructionShiftImmSet<xlen>::UInnerT;
 
         static constexpr UInnerT FUNCT3 = 0b001;
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
@@ -86,11 +82,8 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SRLIWInst : public InstructionShiftRightImmWSet<xlen> {
+    class SRLIWInst : public InstructionShiftRightImmWSet {
     public:
-        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
-        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
 
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
@@ -100,12 +93,8 @@ namespace riscv_isa {
         }
     };
 
-    template<typename xlen=xlen_trait>
-    class SRAIWInst : public InstructionShiftRightImmWSet<xlen> {
+    class SRAIWInst : public InstructionShiftRightImmWSet {
     public:
-        using UInnerT = typename InstructionShiftRightImmSet<xlen>::UInnerT;
-        static constexpr UInnerT FUNCT3 = InstructionShiftRightImmSet<xlen>::FUNCT3;
-
         static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIWInst &inst) {

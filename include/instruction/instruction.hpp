@@ -26,7 +26,7 @@ namespace riscv_isa {
         using BaseT = Instruction;
 
         static bool is_self_type(BaseT *self) {
-            return (*reinterpret_cast<u16 *>(self) & BITS_MASK<u16, 2, 0>) != BITS_MASK<u16, 2, 0>;
+            return (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val;
         }
     };
 
@@ -39,23 +39,41 @@ namespace riscv_isa {
 
         static UInnerT slice_op_code(UInnerT val) { return get_bits<UInnerT, 7, 2>(val); }
 
-        static UInnerT slice_rd(UInnerT val) { return get_bits<UInnerT, 12, 7>(val); }
+        static UInnerT slice_rd(UInnerT val) {
+#if defined(__RV_BASE_I__)
+            return get_bits<UInnerT, 12, 7>(val);
+#elif defined(__RV_BASE_M__)
+            return get_bits<UInnerT, 11, 7>(val);
+#endif
+        }
 
         static UInnerT slice_funct3(UInnerT val) { return get_bits<UInnerT, 15, 12>(val); }
 
-        static UInnerT slice_rs1(UInnerT val) { return get_bits<UInnerT, 20, 15>(val); }
+        static UInnerT slice_rs1(UInnerT val) {
+#if defined(__RV_BASE_I__)
+            return get_bits<UInnerT, 20, 15>(val);
+#elif defined(__RV_BASE_M__)
+            return get_bits<UInnerT, 19, 15>(val);
+#endif
+        }
 
-        static UInnerT slice_rs2(UInnerT val) { return get_bits<UInnerT, 25, 20>(val); }
+        static UInnerT slice_rs2(UInnerT val) {
+#if defined(__RV_BASE_I__)
+            return get_bits<UInnerT, 25, 20>(val);
+#elif defined(__RV_BASE_M__)
+            return get_bits<UInnerT, 24, 20>(val);
+#endif
+        }
 
         static UInnerT slice_funct7(UInnerT val) { return get_bits<UInnerT, 32, 25>(val); }
 
-        template<typename xlen=xlen_trait>
         static UInnerT slice_funct_shift(UInnerT val) {
-            return get_bits<UInnerT, 32, 20 + xlen::XLEN_INDEX, xlen::XLEN_INDEX>(val);
+            return get_bits<UInnerT, 32, 20 + xlen_trait::XLEN_INDEX, xlen_trait::XLEN_INDEX>(val);
         }
 
-        template<typename xlen=xlen_trait>
-        static UInnerT slice_shift_amount(UInnerT val) { return get_bits<UInnerT, 20 + xlen::XLEN_INDEX, 20>(val); }
+        static UInnerT slice_shift_amount(UInnerT val) {
+            return get_bits<UInnerT, 20 + xlen_trait::XLEN_INDEX, 20>(val);
+        }
 
         InnerT inner;
 

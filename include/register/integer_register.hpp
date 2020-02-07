@@ -16,8 +16,8 @@ namespace riscv_isa {
 #else
         static constexpr usize GENERAL_PURPOSE_NUM = 32;
 #endif
-        XlenT pc;
-        XlenT x[GENERAL_PURPOSE_NUM];
+        /// register size is controlled by macro
+        typename xlen_trait::XLenT x[GENERAL_PURPOSE_NUM];
 
     public:
         static constexpr usize ZERO = 0;
@@ -56,13 +56,7 @@ namespace riscv_isa {
         static constexpr usize T6 = 31;
 #endif // !defined(__RV_EXTENSION_E__)
 
-        IntegerRegister() : pc{}, x{} {}
-
-        void set_pc(XlenT val) { pc = val; }
-
-        XlenT get_pc() const { return pc; }
-
-        void inc_pc(XlenT offset) { pc += offset; }
+        IntegerRegister() : x{} {}
 
         void set_x(usize index, XlenT val) {
             if (index >= GENERAL_PURPOSE_NUM) riscv_isa_abort("Integer register index exceed.");

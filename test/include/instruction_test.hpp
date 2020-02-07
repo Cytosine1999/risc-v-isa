@@ -9,8 +9,8 @@
 
 
 namespace riscv_isa {
-    template<typename InputT, typename xlen>
-    class CheckVisitor : public InstructionVisitor<CheckVisitor<InputT, xlen>, xlen> {
+    template<typename InputT>
+    class CheckVisitor : public InstructionVisitor<CheckVisitor<InputT>, void> {
     public:
         using RetT = void;
 
@@ -114,16 +114,16 @@ namespace riscv_isa {
             ASSERT((std::is_same<ANDIInst, InputT>::value));
         }
 
-        RetT visit_slli_inst(riscv_isa_unused SLLIInst<xlen> *inst) {
-            ASSERT((std::is_same<SLLIInst<xlen>, InputT>::value));
+        RetT visit_slli_inst(riscv_isa_unused SLLIInst *inst) {
+            ASSERT((std::is_same<SLLIInst, InputT>::value));
         }
 
-        RetT visit_srli_inst(riscv_isa_unused SRLIInst<xlen> *inst) {
-            ASSERT((std::is_same<SRLIInst<xlen>, InputT>::value));
+        RetT visit_srli_inst(riscv_isa_unused SRLIInst *inst) {
+            ASSERT((std::is_same<SRLIInst, InputT>::value));
         }
 
-        RetT visit_srai_inst(riscv_isa_unused SRAIInst<xlen> *inst) {
-            ASSERT((std::is_same<SRAIInst<xlen>, InputT>::value));
+        RetT visit_srai_inst(riscv_isa_unused SRAIInst *inst) {
+            ASSERT((std::is_same<SRAIInst, InputT>::value));
         }
 
         RetT visit_add_inst(riscv_isa_unused ADDInst *inst) {
@@ -206,7 +206,7 @@ namespace riscv_isa {
     template<typename T>
     T *_dyn_cast_with_void(Instruction *inst) { return dyn_cast<T>(inst); }
 
-    template<typename T, typename xlen>
+    template<typename T>
     T *check_all_dyn_cast(Instruction *inst) {
         check_dyn_cast<T, LUIInst>(inst);
         check_dyn_cast<T, AUIPCInst>(inst);
@@ -232,9 +232,9 @@ namespace riscv_isa {
         check_dyn_cast<T, XORIInst>(inst);
         check_dyn_cast<T, ORIInst>(inst);
         check_dyn_cast<T, ANDIInst>(inst);
-        check_dyn_cast<T, SLLIInst<xlen>>(inst);
-        check_dyn_cast<T, SRLIInst<xlen>>(inst);
-        check_dyn_cast<T, SRAIInst<xlen>>(inst);
+        check_dyn_cast<T, SLLIInst>(inst);
+        check_dyn_cast<T, SRLIInst>(inst);
+        check_dyn_cast<T, SRAIInst>(inst);
         check_dyn_cast<T, ADDInst>(inst);
         check_dyn_cast<T, SUBInst>(inst);
         check_dyn_cast<T, SLLInst>(inst);

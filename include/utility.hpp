@@ -141,7 +141,7 @@ namespace riscv_isa {
     };
 #endif
 
-    template <typename T>
+    template<typename T>
     struct _xlen_trait : public T {
     public:
         static constexpr usize XLEN_BYTE = sizeof(typename T::XLenT);
@@ -159,8 +159,6 @@ namespace riscv_isa {
 #if __RV_BIT_WIDTH__ == 32
     using xlen_trait = xlen_32_trait;
 #elif __RV_BIT_WIDTH__ == 64
-
-
     using xlen_trait = xlen_64_trait;
 #endif
 

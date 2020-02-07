@@ -13,7 +13,7 @@
 
 
 namespace riscv_isa {
-    template<typename SubT, typename xlen=xlen_trait, typename _RetT = void>
+    template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
     private:
         ILenT buffer;
@@ -183,19 +183,19 @@ namespace riscv_isa {
                     return sub_type()->visit_ori_inst(reinterpret_cast<ORIInst *>(inst));
                 case ANDIInst::FUNCT3:
                     return sub_type()->visit_andi_inst(reinterpret_cast<ANDIInst *>(inst));
-                case SLLIInst<xlen>::FUNCT3:
-                    switch (reinterpret_cast<SLLIInst<xlen> *>(inst)->get_funct_shift()) {
-                        case SLLIInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_slli_inst(reinterpret_cast<SLLIInst<xlen> *>(inst));
+                case SLLIInst::FUNCT3:
+                    switch (reinterpret_cast<SLLIInst *>(inst)->get_funct_shift()) {
+                        case SLLIInst::FUNCT_SHIFT:
+                            return sub_type()->visit_slli_inst(reinterpret_cast<SLLIInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionShiftRightImmSet<xlen>::FUNCT3:
-                    switch (reinterpret_cast<InstructionShiftRightImmSet<xlen> *>(inst)->get_funct_shift()) {
-                        case SRLIInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_srli_inst(reinterpret_cast<SRLIInst<xlen> *>(inst));
-                        case SRAIInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_srai_inst(reinterpret_cast<SRAIInst<xlen> *>(inst));
+                case InstructionShiftRightImmSet::FUNCT3:
+                    switch (reinterpret_cast<InstructionShiftRightImmSet *>(inst)->get_funct_shift()) {
+                        case SRLIInst::FUNCT_SHIFT:
+                            return sub_type()->visit_srli_inst(reinterpret_cast<SRLIInst *>(inst));
+                        case SRAIInst::FUNCT_SHIFT:
+                            return sub_type()->visit_srai_inst(reinterpret_cast<SRAIInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
@@ -315,19 +315,19 @@ namespace riscv_isa {
             switch (inst->get_funct3()) {
                 case ADDIWInst::FUNCT3:
                     return sub_type()->visit_addiw_inst(reinterpret_cast<ADDIWInst *>(inst));
-                case SLLIWInst<xlen>::FUNCT3:
-                    switch (reinterpret_cast<SLLIWInst<xlen> *>(inst)->get_funct_shift()) {
-                        case SLLIWInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_slliw_inst(reinterpret_cast<SLLIWInst<xlen> *>(inst));
+                case SLLIWInst::FUNCT3:
+                    switch (reinterpret_cast<SLLIWInst *>(inst)->get_funct_shift()) {
+                        case SLLIWInst::FUNCT_SHIFT:
+                            return sub_type()->visit_slliw_inst(reinterpret_cast<SLLIWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
-                case InstructionShiftRightImmWSet<xlen>::FUNCT3:
-                    switch (reinterpret_cast<InstructionShiftRightImmWSet<xlen> *>(inst)->get_funct_shift()) {
-                        case SRLIWInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_srliw_inst(reinterpret_cast<SRLIWInst<xlen> *>(inst));
-                        case SRAIWInst<xlen>::FUNCT_SHIFT:
-                            return sub_type()->visit_sraiw_inst(reinterpret_cast<SRAIWInst<xlen> *>(inst));
+                case InstructionShiftRightImmWSet::FUNCT3:
+                    switch (reinterpret_cast<InstructionShiftRightImmWSet *>(inst)->get_funct_shift()) {
+                        case SRLIWInst::FUNCT_SHIFT:
+                            return sub_type()->visit_srliw_inst(reinterpret_cast<SRLIWInst *>(inst));
+                        case SRAIWInst::FUNCT_SHIFT:
+                            return sub_type()->visit_sraiw_inst(reinterpret_cast<SRAIWInst *>(inst));
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
@@ -392,11 +392,7 @@ namespace riscv_isa {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
 ///     }
 
-#if defined(__RV_EXTENSION_C__)
-
-        RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(); }
-
-#endif // defined(__RV_EXTENSION_C__)
+        RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(inst); }
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
@@ -462,11 +458,11 @@ namespace riscv_isa {
 
         RetT visit_andi_inst(ANDIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
 
-        RetT visit_slli_inst(SLLIInst<xlen> *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
+        RetT visit_slli_inst(SLLIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
 
-        RetT visit_srli_inst(SRLIInst<xlen> *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
+        RetT visit_srli_inst(SRLIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
 
-        RetT visit_srai_inst(SRAIInst<xlen> *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
+        RetT visit_srai_inst(SRAIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
 
         RetT visit_add_inst(ADDInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
 
@@ -527,11 +523,11 @@ namespace riscv_isa {
 
         RetT visit_addiw_inst(ADDIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
 
-        RetT visit_slliw_inst(SLLIWInst<xlen> *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
+        RetT visit_slliw_inst(SLLIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
 
-        RetT visit_srliw_inst(SRLIWInst<xlen> *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
+        RetT visit_srliw_inst(SRLIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
 
-        RetT visit_sraiw_inst(SRAIWInst<xlen> *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
+        RetT visit_sraiw_inst(SRAIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
 
         RetT visit_addw_inst(ADDWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
 

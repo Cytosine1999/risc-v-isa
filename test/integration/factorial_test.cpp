@@ -5,30 +5,30 @@ using namespace riscv_isa;
 
 class NoneHart : public Hart<NoneHart> {
 public:
-    NoneHart(IntegerRegister<> &reg, Memory<> &mem) : Hart{reg, mem} {}
+    NoneHart(XLenT pc, IntegerRegister<> &reg, Memory<> &mem) : Hart{pc, reg, mem} {}
 
     void start() {
         while (true) {
-            Instruction *inst = mem.address<Instruction>(reg.get_pc());
+            Instruction *inst = mem.address<Instruction>(get_pc());
 
             switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
                 case ILLEGAL_INSTRUCTION_EXCEPTION:
-                    std::cerr << "Illegal instruction at " << std::hex << reg.get_pc() << ' '
+                    std::cerr << "Illegal instruction at " << std::hex << get_pc() << ' '
                               << *reinterpret_cast<u32 *>(inst) << std::endl;
 
                     return;
                 case MEMORY_ERROR:
-                    std::cerr << "Memory error at " << std::hex << reg.get_pc() << std::endl;
+                    std::cerr << "Memory error at " << std::hex << get_pc() << std::endl;
 
                     return;
                 case ECALL:
-                    switch (reg.get_x(IntegerRegister<>::A0)) {
+                    switch (int_reg.get_x(IntegerRegister<>::A0)) {
                         case 1:
-                            std::cout << std::dec << reg.get_x(IntegerRegister<>::A1);
+                            std::cout << std::dec << int_reg.get_x(IntegerRegister<>::A1);
 
                             break;
                         case 11:
-                            std::cout << static_cast<char>(reg.get_x(IntegerRegister<>::A1));
+                            std::cout << static_cast<char>(int_reg.get_x(IntegerRegister<>::A1));
 
                             break;
                         case 10:
@@ -36,16 +36,16 @@ public:
 
                             return;
                         default:
-                            std::cerr << "Invalid ecall number at " << std::hex << reg.get_pc() << ' '
+                            std::cerr << "Invalid ecall number at " << std::hex << get_pc() << ' '
                                       << *reinterpret_cast<u32 *>(inst) << std::endl;
 
                             return;
                     }
-                    reg.inc_pc(ECALLInst::INST_WIDTH);
+                    inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
                 case EBREAK:
-                    reg.inc_pc(EBREAKInst::INST_WIDTH);
+                    inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
                 default:;
@@ -107,14 +107,13 @@ int main() {
     };
 
     IntegerRegister<> reg{};
-    reg.set_pc(0);
     reg.set_x(IntegerRegister<>::SP, 4092);
 
     Memory<> mem{4096};
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));
 
-    NoneHart core{reg, mem};
+    NoneHart core{0, reg, mem};
 
     core.start();
 }
