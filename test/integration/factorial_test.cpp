@@ -110,6 +110,8 @@ int main() {
     reg.set_x(IntegerRegister<>::SP, 4092);
 
     Memory<> mem{4096};
+    if (mem.address<>(0) == nullptr) riscv_isa_abort("memory allocate failed");
+
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));
 

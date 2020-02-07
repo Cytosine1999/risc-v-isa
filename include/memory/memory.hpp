@@ -14,40 +14,31 @@ namespace riscv_isa {
     private:
         using XLenT = typename xlen::UXLenT;
 
-        usize page_size;
-        usize memory_size;
         u8 *memory_offset;
+        usize memory_size;
 
     public:
-        explicit Memory(usize _memory_size) {
-            isize _page_size = sysconf(_SC_PAGESIZE);
 
-            if (_page_size <= 0) riscv_isa_abort("Unable to get page size or improper page size!");
-
-            page_size = _page_size;
-
-            memory_size = ((_memory_size + page_size - 1) / page_size) * page_size;
-
-            memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size + page_size, PROT_READ | PROT_WRITE,
-                                                   MAP_ANONYMOUS | MAP_SHARED, -1, 0));
-            if (memory_offset == MAP_FAILED) riscv_isa_abort("Memory map failed!");
-
-            // todo: memory wrap around through interrupt
-            if(mprotect(memory_offset + memory_size, page_size, PROT_NONE) != 0)
-                riscv_isa_abort("Guard page set failed!");
+        Memory(usize _memory_size) : memory_size{_memory_size} {
+            memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size, PROT_READ | PROT_WRITE,
+                                                       MAP_ANONYMOUS | MAP_SHARED, -1, 0));
+            if (memory_offset == MAP_FAILED) {
+                memory_offset = nullptr;
+                memory_size = 0;
+            }
         }
 
         Memory(const Memory &other) = delete;
 
         Memory &operator=(const Memory &other) = delete;
 
-        template<typename LoadT>
-        LoadT *address(XLenT addr) {
-            return addr < memory_size ? reinterpret_cast<LoadT *>(memory_offset + addr) : nullptr;
+        template<typename T=void *>
+        T *address(XLenT addr) {
+            return addr < memory_size ? reinterpret_cast<T *>(memory_offset + addr) : nullptr;
         }
 
         bool memory_copy(XLenT offset, const void *src, usize length) {
-            if (offset + length <= memory_size) {
+            if (offset <= memory_size - length) {
                 memcpy(memory_offset + offset, src, length);
                 return true;
             } else {
@@ -55,7 +46,7 @@ namespace riscv_isa {
             }
         }
 
-        ~Memory() { munmap(memory_offset, memory_size); }
+        ~Memory() { if (memory_offset != nullptr) munmap(memory_offset, memory_size); }
     };
 }
 

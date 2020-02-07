@@ -118,6 +118,7 @@ int main(int argc, char **argv) {
     reg.set_x(IntegerRegister<>::SP, 0xfffff000);
 
     Memory<> mem{0x100000000};
+    if (mem.address<>(0) == nullptr) riscv_isa_abort("memory allocate failed");
 
     for (auto &program: elf_header->programs(visitor)) {
 //        std::cout << program << std::endl;
