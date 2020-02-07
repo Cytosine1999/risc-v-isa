@@ -392,7 +392,11 @@ namespace riscv_isa {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
 ///     }
 
+#if defined(__RV_EXTENSION_C__)
+
         RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_C__)
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
 
