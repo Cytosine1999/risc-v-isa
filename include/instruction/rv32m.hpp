@@ -17,7 +17,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b000;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULInst &inst) {
-            stream << "\tmul\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "mul\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -27,7 +27,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b001;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULHInst &inst) {
-            stream << "\tmulh\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "mulh\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -37,7 +37,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b010;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULHSUInst &inst) {
-            stream << "\tmulhsu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "mulhsu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -47,7 +47,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b011;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULHUInst &inst) {
-            stream << "\tmulhu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "mulhu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -57,7 +57,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b100;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVInst &inst) {
-            stream << "\tdiv\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "div\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -67,7 +67,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b101;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVUInst &inst) {
-            stream << "\tdivu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "divu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -77,7 +77,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b110;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMInst &inst) {
-            stream << "\trem\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "rem\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -87,7 +87,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b111;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMUInst &inst) {
-            stream << "\tremu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "remu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };

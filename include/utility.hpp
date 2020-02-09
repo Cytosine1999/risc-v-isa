@@ -130,6 +130,7 @@ namespace riscv_isa {
         using XLenT = i32;
         using UXLenT = u32;
         static constexpr usize XLEN_INDEX = 5;
+        static constexpr usize UXLenMax = INT32_MAX;
     };
 
 #if __RV_BIT_WIDTH__ == 64
@@ -138,6 +139,7 @@ namespace riscv_isa {
         using XLenT = i64;
         using UXLenT = u64;
         static constexpr usize XLEN_INDEX = 6;
+        static constexpr usize UXLenMax = INT64_MAX;
     };
 #endif
 

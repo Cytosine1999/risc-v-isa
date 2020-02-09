@@ -17,7 +17,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b000;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULWInst &inst) {
-            stream << "\tmulw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "mulw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -27,7 +27,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b100;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVWInst &inst) {
-            stream << "\tdivw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "divw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -37,7 +37,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b101;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVUWInst &inst) {
-            stream << "\tdivuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "divuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -47,7 +47,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b110;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMWInst &inst) {
-            stream << "\tremw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "remw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -57,7 +57,7 @@ namespace riscv_isa {
         static constexpr InnerT FUNCT_3 = 0b111;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMUWInst &inst) {
-            stream << "\tremuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "remuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
