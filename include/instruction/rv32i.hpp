@@ -4,7 +4,6 @@
 
 #include "utility.hpp"
 #include "instruction.hpp"
-#include "memory/memory.hpp"
 
 
 namespace riscv_isa {

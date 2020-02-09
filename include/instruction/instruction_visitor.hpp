@@ -16,8 +16,6 @@ namespace riscv_isa {
     template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
     private:
-        ILenT buffer;
-
         SubT *sub_type() { return static_cast<SubT *>(this); }
 
     public:
@@ -26,27 +24,18 @@ namespace riscv_isa {
         RetT visit(Instruction *inst) {
             static_assert(std::is_base_of<InstructionVisitor, SubT>::value, "not subtype of visitor");
 
-            usize leading_16 = *reinterpret_cast<u16 *>(inst);
 
+            if ((*reinterpret_cast<u16 *>(inst) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
-            if ((leading_16 & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
-                buffer = *reinterpret_cast<u16 *>(inst);
-                return visit_16(reinterpret_cast<Instruction16 *>(&inst));
-            }
-#endif // defined(__RV_EXTENSION_C__)
-            if ((leading_16 & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
-#if IALIGN == 32
-                buffer = *reinterpret_cast<u32 *>(inst);
-#elif IALIGN == 16
-                *(reinterpret_cast<u16 *>(&buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
-                *(reinterpret_cast<u16 *>(&buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
+                return visit_16(reinterpret_cast<Instruction16 *>(inst));
 #else
-                riscv_isa_unreachable("IALIGN should be 32 or 16.");
-#endif
-                return visit_32(reinterpret_cast<Instruction32 *>(&buffer));
+                return sub_type()->illegal_instruction(inst);
+#endif // defined(__RV_EXTENSION_C__)
+            } else if ((*reinterpret_cast<u16 *>(inst) & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+                return visit_32(reinterpret_cast<Instruction32 *>(inst));
+            } else {
+                return sub_type()->illegal_instruction(inst);
             }
-
-            return sub_type()->illegal_instruction(inst);
         }
 
 #if defined(__RV_EXTENSION_C__)

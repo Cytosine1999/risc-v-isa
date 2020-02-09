@@ -18,7 +18,9 @@ namespace riscv_isa {
             INSTRUCTION_PAGE_FAULT = 12,
             LOAD_PAGE_FAULT = 13,
             STORE_AMO_PAGE_FAULT = 15,
+        };
 
+        enum InterruptCode {
             SUPERVISOR_SOFTWARE_INTERRUPT = 1,
             SUPERVISOR_TIMER_INTERRUPT = 5,
             SUPERVISOR_EXTERNAL_INTERRUPT = 9,

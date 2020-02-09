@@ -125,6 +125,48 @@ namespace riscv_isa {
         RetT visit_rem_inst(REMInst *inst) { return dump_inst(inst); }
 
         RetT visit_remu_inst(REMUInst *inst) { return dump_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 64
+
+        RetT visit_ld_inst(LDInst *inst) { return dump_inst(inst); }
+
+        RetT visit_lwu_inst(LWUInst *inst) { return dump_inst(inst); }
+
+        RetT visit_sd_inst(SDInst *inst) { return dump_inst(inst); }
+
+        RetT visit_addiw_inst(ADDIWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_slliw_inst(SLLIWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_srliw_inst(SRLIWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_sraiw_inst(SRAIWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_addw_inst(ADDWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_subw_inst(SUBWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_sllw_inst(SLLWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_srlw_inst(SRLWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_sraw_inst(SRAWInst *inst) { return dump_inst(inst); }
+
+#if defined(__RV_EXTENSION_M__)
+
+        RetT visit_mulw_inst(MULWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_divw_inst(DIVWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_divuw_inst(DIVUWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_remw_inst(REMWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_remuw_inst(REMUWInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_M__)
+#endif // __RV_BIT_WIDTH__ == 64
+
     };
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {

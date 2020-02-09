@@ -6,32 +6,42 @@
 #include "operators.hpp"
 #include "instruction/instruction_visitor.hpp"
 #include "register/register.hpp"
-#include "memory/memory.hpp"
 #include "trap/trap.hpp"
 
 
 namespace riscv_isa {
-    enum InternalInterrupt {
-        NONE,
-        INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION,
-        ILLEGAL_INSTRUCTION_EXCEPTION,
-        MEMORY_ERROR,
-        ECALL,
-        EBREAK,
-    };
-
     template<typename SubT, typename xlen=xlen_trait>
-    class Hart : public InstructionVisitor<SubT, InternalInterrupt> {
+    class Hart : public InstructionVisitor<SubT, bool> {
     public:
-        using RetT = InternalInterrupt;
+        using RetT = bool;
 
     private:
         xlen_trait::XLenT pc;
+
+        SubT *sub_type() { return static_cast<SubT *>(this); }
 
     protected:
         using XLenT = typename xlen::XLenT;
         using UXLenT = typename xlen::UXLenT;
         static constexpr usize XLEN = xlen::XLEN;
+
+///        template<typename ValT>
+///        RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
+///            csr_reg.scause = LOAD_PAGE_FAULT;
+///            return false;
+///        }
+///
+///        template<typename ValT>
+///        RetT mmu_store_int_reg(riscv_isa_unused usize src, riscv_isa_unused XLenT addr) {
+///            csr_reg.scause = STORE_AMO_PAGE_FAULT;
+///            return false;
+///        }
+///
+///        template<usize offset>
+///        RetT mmu_load_inst_half(riscv_isa_unused XLenT addr) {
+///            csr_reg.scause = INSTRUCTION_PAGE_FAULT;
+///            return false;
+///        }
 
         template<typename OP, typename InstT>
         RetT operate_reg(const InstT *inst) {
@@ -43,7 +53,7 @@ namespace riscv_isa {
             }
             inc_pc(InstT::INST_WIDTH);
 
-            return NONE;
+            return true;
         }
 
         template<typename OP, typename InstT>
@@ -56,7 +66,7 @@ namespace riscv_isa {
             }
             inc_pc(InstT::INST_WIDTH);
 
-            return NONE;
+            return true;
         }
 
         template<typename OP, typename InstT>
@@ -67,14 +77,17 @@ namespace riscv_isa {
             if (OP::op(int_reg.get_x(rs1), int_reg.get_x(rs2))) {
                 XLenT imm = inst->get_imm();
 #if IALIGN == 32
-                if (get_bits<UXLenT, 2, 0>(imm) != 0) return INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
+                if (get_bits<UXLenT, 2, 0>(imm) != 0) {
+                    csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
+                    return false;
+                }
 #endif
                 inc_pc(imm);
             } else {
                 inc_pc(InstT::INST_WIDTH);
             }
 
-            return NONE;
+            return true;
         }
 
         template<typename ValT, typename InstT>
@@ -82,11 +95,9 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(int_reg.get_x(rs1)) + imm);
-            if (ptr == nullptr) return MEMORY_ERROR;
-            if (rd != 0) int_reg.set_x(rd, *ptr);
+            if (!sub_type()->template mmu_load_int_reg<ValT>(rd, int_reg.get_x(rs1) + imm)) return false;
             pc += InstT::INST_WIDTH;
-            return NONE;
+            return true;
         }
 
         template<typename ValT, typename InstT>
@@ -94,15 +105,13 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
             XLenT imm = inst->get_imm();
-            ValT *ptr = mem.template address<ValT>(static_cast<UXLenT>(int_reg.get_x(rs1)) + imm);
-            if (ptr == nullptr) return MEMORY_ERROR;
-            *ptr = static_cast<ValT>(int_reg.get_x(rs2));
+            if (!sub_type()->template mmu_store_int_reg<ValT>(rs2, int_reg.get_x(rs1) + imm)) return false;
             inc_pc(InstT::INST_WIDTH);
-            return NONE;
+            return true;
         }
 
         template<typename OP, typename InstT>
-        RetT operate_immediate_shift(const InstT *inst) {
+        RetT operate_imm_shift(const InstT *inst) {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
@@ -111,11 +120,12 @@ namespace riscv_isa {
             }
             inc_pc(InstT::INST_WIDTH);
 
-            return NONE;
+            return true;
         }
 
         IntegerRegister<xlen> &int_reg;
-        Memory<xlen> &mem;
+        CSRRegister<xlen> csr_reg;
+        ILenT inst_buffer;
 
         XLenT get_pc() const { return pc; }
 
@@ -124,9 +134,30 @@ namespace riscv_isa {
         void inc_pc(XLenT val) { set_pc(get_pc() + val); }
 
     public:
-        Hart(XLenT pc, IntegerRegister<xlen> &reg, Memory<xlen> &mem) : pc{pc}, int_reg{reg}, mem{mem} {}
+        Hart(XLenT pc, IntegerRegister<xlen> &reg) : pc{pc}, int_reg{reg}, csr_reg{} {}
 
-        RetT illegal_instruction(riscv_isa_unused Instruction *inst) { return ILLEGAL_INSTRUCTION_EXCEPTION; }
+        RetT visit() {
+            if (!sub_type()->template mmu_load_inst_half<0>(get_pc())) return false;
+
+            if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
+#if defined(__RV_EXTENSION_C__)
+                return this->visit_16(reinterpret_cast<Instruction16 *>(&this->buffer));
+#else
+                return this->sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
+#endif // defined(__RV_EXTENSION_C__)
+            } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+                if (!sub_type()->template mmu_load_inst_half<1>(get_pc())) return false;
+
+                return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
+            } else {
+                return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
+            }
+        }
+
+        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
+            csr_reg.scause = trap::ILLEGAL_INSTRUCTION;
+            return false;
+        }
 
         RetT visit_lui_inst(LUIInst *inst) {
             usize rd = inst->get_rd();
@@ -136,7 +167,7 @@ namespace riscv_isa {
             }
             inc_pc(LUIInst::INST_WIDTH);
 
-            return NONE;
+            return true;
         }
 
         RetT visit_auipc_inst(AUIPCInst *inst) {
@@ -147,20 +178,23 @@ namespace riscv_isa {
             }
             inc_pc(LUIInst::INST_WIDTH);
 
-            return NONE;
+            return true;
         }
 
         RetT visit_jal_inst(JALInst *inst) {
             usize rd = inst->get_rd();
             XLenT imm = inst->get_imm();
 #if IALIGN == 32
-            if (get_bits<UXLenT, 2, 0>(imm) != 0) return INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
+            if (get_bits<UXLenT, 2, 0>(imm) != 0) {
+                csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
+                return false;
+            }
 #endif
             XLenT pc = get_pc();
             if (rd != 0) int_reg.set_x(rd, pc + JALInst::INST_WIDTH);
             set_pc(pc + imm);
 
-            return NONE;
+            return true;
         }
 
         RetT visit_jalr_inst(JALRInst *inst) {
@@ -169,12 +203,15 @@ namespace riscv_isa {
             XLenT imm = inst->get_imm();
             UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(int_reg.get_x(rs1) + imm);
 #if IALIGN == 32
-            if (get_bits<UXLenT, 2, 0>(target) != 0) return INSTRUCTION_ADDRESS_MISALIGNED_EXCEPTION;
+            if (get_bits<UXLenT, 2, 0>(target) != 0) {
+                csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
+                return false;
+            }
 #endif
             if (rd != 0) int_reg.set_x(rd, get_pc() + JALRInst::INST_WIDTH);
             set_pc(target);
 
-            return NONE;
+            return true;
         }
 
         RetT visit_beq_inst(BEQInst *inst) { return operate_branch<typename operators::EQ<xlen>>(inst); }
@@ -217,11 +254,11 @@ namespace riscv_isa {
 
         RetT visit_andi_inst(ANDIInst *inst) { return operate_imm<typename operators::AND<xlen>>(inst); }
 
-        RetT visit_slli_inst(SLLIInst *inst) { return operate_immediate_shift<typename operators::SLL<xlen>>(inst); }
+        RetT visit_slli_inst(SLLIInst *inst) { return operate_imm_shift<typename operators::SLL<xlen>>(inst); }
 
-        RetT visit_srli_inst(SRLIInst *inst) { return operate_immediate_shift<typename operators::SRL<xlen>>(inst); }
+        RetT visit_srli_inst(SRLIInst *inst) { return operate_imm_shift<typename operators::SRL<xlen>>(inst); }
 
-        RetT visit_srai_inst(SRAIInst *inst) { return operate_immediate_shift<typename operators::SRA<xlen>>(inst); }
+        RetT visit_srai_inst(SRAIInst *inst) { return operate_imm_shift<typename operators::SRA<xlen>>(inst); }
 
         RetT visit_add_inst(ADDInst *inst) { return operate_reg<typename operators::ADD<xlen>>(inst); }
 
@@ -243,11 +280,17 @@ namespace riscv_isa {
 
         RetT visit_and_inst(ANDInst *inst) { return operate_reg<typename operators::AND<xlen>>(inst); }
 
-        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) { return NONE; } // todo
+        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) { return true; } // todo
 
-        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) { return ECALL; }
+        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
+            csr_reg.scause = trap::U_MODE_ENVIRONMENT_CALL;
+            return false;
+        }
 
-        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) { return EBREAK; }
+        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
+            csr_reg.scause = trap::BREAKPOINT;
+            return false;
+        }
 
 #if defined(__RV_EXTENSION_M__)
 

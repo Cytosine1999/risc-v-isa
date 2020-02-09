@@ -1,54 +1,176 @@
+#include <sys/mman.h>
+
 #include "target/hart.hpp"
+#include "target/dump.hpp"
 
 using namespace riscv_isa;
 
 
+template<typename xlen=xlen_trait>
+class Memory {
+private:
+    using XLenT = typename xlen::UXLenT;
+
+    u8 *memory_offset;
+    usize memory_size;
+
+public:
+
+    Memory(usize _memory_size) : memory_size{_memory_size} {
+        memory_offset = static_cast<u8 *>(mmap(nullptr, memory_size, PROT_READ | PROT_WRITE,
+                                               MAP_ANONYMOUS | MAP_SHARED, -1, 0));
+        if (memory_offset == MAP_FAILED) {
+            memory_offset = nullptr;
+            memory_size = 0;
+        }
+    }
+
+    Memory(const Memory &other) = delete;
+
+    Memory &operator=(const Memory &other) = delete;
+
+    template<typename T=void *>
+    T *address(XLenT addr) {
+        return addr < memory_size ? reinterpret_cast<T *>(memory_offset + addr) : nullptr;
+    }
+
+    bool memory_copy(XLenT offset, const void *src, usize length) {
+        if (offset <= memory_size - length) {
+            memcpy(memory_offset + offset, src, length);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    ~Memory() { if (memory_offset != nullptr) munmap(memory_offset, memory_size); }
+};
+
+
 class NoneHart : public Hart<NoneHart> {
 public:
-    NoneHart(XLenT pc, IntegerRegister<> &reg, Memory<> &mem) : Hart{pc, reg, mem} {}
+protected:
+    Memory<> &mem;
+
+public:
+    NoneHart(XLenT pc, IntegerRegister<> &reg, Memory<> &mem) : Hart{pc, reg}, mem{mem} {}
+
+    template<typename ValT>
+    RetT mmu_load_int_reg(usize dest, XLenT addr) {
+        ValT *ptr = mem.template address<ValT>(addr);
+        if (ptr == nullptr) {
+            csr_reg.scause = trap::LOAD_PAGE_FAULT;
+            return false;
+        } else {
+            if (dest != 0) int_reg.set_x(dest, *ptr);
+            return true;
+        }
+    }
+
+    template<typename ValT>
+    RetT mmu_store_int_reg(usize src, XLenT addr) {
+        ValT *ptr = mem.template address<ValT>(addr);
+        if (ptr == nullptr) {
+            csr_reg.scause = trap::STORE_AMO_PAGE_FAULT;
+            return false;
+        } else {
+            *ptr = static_cast<ValT>(int_reg.get_x(src));
+            return true;
+        }
+    }
+
+    template<usize offset>
+    RetT mmu_load_inst_half(XLenT addr) {
+        u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
+        if (ptr == nullptr) {
+            csr_reg.scause = trap::INSTRUCTION_PAGE_FAULT;
+            return false;
+        } else {
+            *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
+            return true;
+        }
+    }
+
+    bool system_call() {
+        switch (int_reg.get_x(IntegerRegister<>::A0)) {
+            case 1:
+                std::cout << std::dec << int_reg.get_x(IntegerRegister<>::A1);
+
+                return true;
+            case 11:
+                std::cout << static_cast<char>(int_reg.get_x(IntegerRegister<>::A1));
+
+                return true;
+            case 10:
+                std::cout << std::endl << "[exit]" << std::endl;
+
+                return false;
+            default:
+                std::cerr << "Invalid enviroment call number at " << std::hex << get_pc()
+                          << ", call number " << std::dec << int_reg.get_x(IntegerRegister<>::A7)
+                          << std::endl;
+
+                return false;
+        }
+    }
 
     void start() {
         while (true) {
-            Instruction *inst = mem.address<Instruction>(get_pc());
+            if (visit()) continue;
 
-            switch (inst == nullptr ? MEMORY_ERROR : visit(inst)) {
-                case ILLEGAL_INSTRUCTION_EXCEPTION:
-                    std::cerr << "Illegal instruction at " << std::hex << get_pc() << ' '
-                              << *reinterpret_cast<u32 *>(inst) << std::endl;
-
-                    return;
-                case MEMORY_ERROR:
-                    std::cerr << "Memory error at " << std::hex << get_pc() << std::endl;
+            switch (csr_reg.scause) {
+                case trap::INSTRUCTION_ADDRESS_MISALIGNED:
+                case trap::INSTRUCTION_ACCESS_FAULT:
+                    std::cerr << "Instruction address misaligned at "
+                              << std::hex << get_pc() << std::endl;
 
                     return;
-                case ECALL:
-                    switch (int_reg.get_x(IntegerRegister<>::A0)) {
-                        case 1:
-                            std::cout << std::dec << int_reg.get_x(IntegerRegister<>::A1);
+                case trap::ILLEGAL_INSTRUCTION:
+                    std::cerr << "Illegal instruction at "
+                              << std::hex << get_pc() << ": " << std::dec
+                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
 
-                            break;
-                        case 11:
-                            std::cout << static_cast<char>(int_reg.get_x(IntegerRegister<>::A1));
-
-                            break;
-                        case 10:
-                            std::cout << std::endl << "[exit]" << std::endl;
-
-                            return;
-                        default:
-                            std::cerr << "Invalid ecall number at " << std::hex << get_pc() << ' '
-                                      << *reinterpret_cast<u32 *>(inst) << std::endl;
-
-                            return;
-                    }
+                    return;
+                case trap::BREAKPOINT:
+                    std::cerr << "Break point at " << std::hex << get_pc() << std::endl;
                     inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
-                case EBREAK:
+                case trap::LOAD_ADDRESS_MISALIGNED:
+                case trap::LOAD_ACCESS_FAULT:
+                    std::cerr << "Load address misaligned at "
+                              << std::hex << get_pc() << ": " << std::dec
+                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
+
+                    return;
+                case trap::STORE_AMO_ADDRESS_MISALIGNED:
+                case trap::STORE_AMO_ACCESS_FAULT:
+                    std::cerr << "Store or AMO address misaligned at "
+                              << std::hex << get_pc() << ": " << std::dec
+                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
+
+                    return;
+                case trap::U_MODE_ENVIRONMENT_CALL:
+                    if (!system_call()) return;
                     inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
-                default:;
+                case trap::S_MODE_ENVIRONMENT_CALL:
+                    riscv_isa_unreachable("no system mode interrupt!");
+                case trap::INSTRUCTION_PAGE_FAULT:
+                    std::cerr << "Instruction page fault at " << std::hex << get_pc() << std::endl;
+
+                    return;
+                case trap::LOAD_PAGE_FAULT:
+                    std::cerr << "Load page fault at " << std::hex << get_pc() << std::endl;
+
+                    return;
+                case trap::STORE_AMO_PAGE_FAULT:
+                    std::cerr << "Store or AMO page fault at " << std::hex << get_pc() << std::endl;
+
+                    return;
+                default:
+                    riscv_isa_unreachable("unknown internal interrupt!");
             }
         }
     }

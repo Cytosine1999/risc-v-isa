@@ -3,7 +3,6 @@
 
 
 #include "utility.hpp"
-#include "memory/memory.hpp"
 
 
 namespace riscv_isa {

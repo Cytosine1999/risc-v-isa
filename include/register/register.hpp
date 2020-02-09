@@ -3,7 +3,7 @@
 
 
 #include "integer_register.hpp"
-//#include "csr_register.hpp"
+#include "csr_register.hpp"
 
 
 #endif //RISCV_ISA_REGISTER_HPP
