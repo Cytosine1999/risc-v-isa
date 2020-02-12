@@ -59,7 +59,7 @@ public:
     RetT mmu_load_int_reg(usize dest, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg.scause = trap::LOAD_PAGE_FAULT;
+            csr_reg[csr_scause] = trap::LOAD_PAGE_FAULT;
             return false;
         } else {
             if (dest != 0) int_reg.set_x(dest, *ptr);
@@ -71,7 +71,7 @@ public:
     RetT mmu_store_int_reg(usize src, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg.scause = trap::STORE_AMO_PAGE_FAULT;
+            csr_reg[csr_scause] = trap::STORE_AMO_PAGE_FAULT;
             return false;
         } else {
             *ptr = static_cast<ValT>(int_reg.get_x(src));
@@ -83,7 +83,7 @@ public:
     RetT mmu_load_inst_half(XLenT addr) {
         u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
         if (ptr == nullptr) {
-            csr_reg.scause = trap::INSTRUCTION_PAGE_FAULT;
+            csr_reg[csr_scause] = trap::INSTRUCTION_PAGE_FAULT;
             return false;
         } else {
             *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
@@ -92,10 +92,6 @@ public:
     }
 
 #if defined(__RV_EXTENSION_ZICSR__)
-
-    RetT write_illegal_csr(riscv_isa_unused usize index) { return true; }
-
-    UXLenT read_illegal_csr(riscv_isa_unused usize index) { return 0; }
 
     RetT set_csr(riscv_isa_unused UXLenT val) { return true; }
 
@@ -128,7 +124,7 @@ public:
         while (true) {
             if (visit()) continue;
 
-            switch (csr_reg.scause) {
+            switch (csr_reg[csr_scause]) {
                 case trap::INSTRUCTION_ADDRESS_MISALIGNED:
                 case trap::INSTRUCTION_ACCESS_FAULT:
                     std::cerr << "Instruction address misaligned at "

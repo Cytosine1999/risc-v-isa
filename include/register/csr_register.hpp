@@ -3,31 +3,34 @@
 
 
 #include "utility.hpp"
-
-
-
-
 #include "csr_register.def"
 
 
 namespace riscv_isa {
+    /// following macro defines index for all csr.
+
+#define _riscv_isa_declare_csr_index(NAME, name, num) \
+        csr_##name,
+
+    enum CSRIndex {
+        riscv_isa_csr_reg_map(_riscv_isa_declare_csr_index)
+        csr_num,
+    };
+
     template<typename xlen=xlen_trait>
     class CSRRegister {
     public:
         using XLenT = typename xlen::XLenT;
         using UXLenT = typename xlen::UXLenT;
 
+    private:
+        UXLenT inner[csr_num];
+
+    public:
 
         /// macro riscv_isa_csr_reg_map apply a macro to all csr registers.
         /// it will pass three arguments to the macro as showing below.
-        /// following macro defines const for all csr.
-
-#define _riscv_isa_declare_csr(NAME, name, num) \
-        static constexpr usize NAME = num; \
-        typename xlen_trait::XLenT name
-
-        riscv_isa_csr_reg_map(_riscv_isa_declare_csr);
-
+        ///
         /// NAME            name            num     info
         /// ----------------------------------------------------------------------------------------------------
         /// USTATUS,        ustatus,        0x000:  User status register.
@@ -47,7 +50,7 @@ namespace riscv_isa {
         /// SIE,            sie,            0x104:  Supervisor interrupt-enable register.
         /// STVEC,          stvec,          0x105:  Supervisor trap handler base address.
         /// SCOUNTEREN,     scounteren,     0x106:  Supervisor counter enable.
-        /// SSCRATCH,       sscratch,       0x140:  Scratch register for supervisor trap handlers.
+        /// SSCRATCH,       sscratch,       0x140:  Supervisor scratch register trap handlers.
         /// SEPC,           sepc,           0x141:  Supervisor exception program counter.
         /// SCAUSE,         scause,         0x142:  Supervisor trap cause.
         /// STVAL,          stval,          0x143:  Supervisor bad address or instruction.
@@ -70,7 +73,7 @@ namespace riscv_isa {
         /// MTVEC,          mtvec,          0x305:  Machine trap handler base address.
         /// MCOUNTEREN,     mcounteren,     0x306:  Machine counter enable.
 #if __RV_BIT_WIDTH__ == 32
-        /// MSTATUSH,      mstatush,        0x310:  Additional machine status register.
+        /// MSTATUSH,      mstatush,        0x310:
 #endif
         /// MCOUNTINHIBIT,  mcountinhibit,  0x320:  Machine counter-inhibit register.
         /// MHPMEVENT3,     mhpmevent3,     0x323:  Machine performance-monitoring event selector.
@@ -143,12 +146,44 @@ namespace riscv_isa {
         /// HPMCOUNTER31H,  hpmcounter31h,  0xC9F:
 #endif
         /// HGEIP,          hgeip,          0xE07:  Hypervisor guest external interrupt pending.
-        /// MVENDORID,      mvendorid,      0xF11:
-        /// MARCHID,        marchid,        0xF12:
-        /// MIMPID,         mimpid,         0xF13:
-        /// MHARTID,        mhartid,        0xF14:  Machine Trap Setup.
+        /// MVENDORID,      mvendorid,      0xF11:  Vendor ID.
+        /// MARCHID,        marchid,        0xF12:  Architecture ID.
+        /// MIMPID,         mimpid,         0xF13:  Implementation ID.
+        /// MHARTID,        mhartid,        0xF14:  Hardware thread ID.
+
+        /// following macro defines const for all csr.
+
+#define _riscv_isa_declare_csr(NAME, name, num) \
+        static constexpr usize NAME = num;
+
+        riscv_isa_csr_reg_map(_riscv_isa_declare_csr);
 
         CSRRegister() = default;
+
+        /// following function transfer csr number to real index.
+        /// if csr not defined, csr_num will be returned.
+
+#define _riscv_isa_csr_get_index(NAME, name, num) \
+        case NAME: \
+            return csr_##name;
+
+        static usize get_index(usize csr) {
+            switch(csr) {
+                riscv_isa_csr_reg_map(_riscv_isa_csr_get_index)
+                default:
+                    return csr_num;
+            }
+        }
+
+        const UXLenT &operator[](usize index) const {
+            if (index >= csr_num) riscv_isa_abort("csr index out of boundary!");
+            return inner[index];
+        }
+
+        UXLenT &operator[](usize index) {
+            if (index >= csr_num) riscv_isa_abort("csr index out of boundary!");
+            return inner[index];
+        }
     };
 }
 
