@@ -15,6 +15,7 @@ namespace riscv_isa {
             STORE_AMO_ACCESS_FAULT = 7,
             U_MODE_ENVIRONMENT_CALL = 8,
             S_MODE_ENVIRONMENT_CALL = 9,
+            M_MODE_ENVIRONMENT_CALL = 11,
             INSTRUCTION_PAGE_FAULT = 12,
             LOAD_PAGE_FAULT = 13,
             STORE_AMO_PAGE_FAULT = 15,
@@ -22,8 +23,11 @@ namespace riscv_isa {
 
         enum InterruptCode {
             SUPERVISOR_SOFTWARE_INTERRUPT = 1,
+            MACHINE_SOFTWARE_INTERRUPT = 3,
             SUPERVISOR_TIMER_INTERRUPT = 5,
+            MACHINE_TIMER_INTERRUPT = 7,
             SUPERVISOR_EXTERNAL_INTERRUPT = 9,
+            MACHINE_EXTERNAL_INTERRUPT = 11,
         };
     }
 }

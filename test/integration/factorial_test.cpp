@@ -91,6 +91,16 @@ public:
         }
     }
 
+#if defined(__RV_EXTENSION_ZICSR__)
+
+    RetT write_illegal_csr(riscv_isa_unused usize index) { return true; }
+
+    UXLenT read_illegal_csr(riscv_isa_unused usize index) { return 0; }
+
+    RetT set_csr(riscv_isa_unused UXLenT val) { return true; }
+
+#endif // defined(__RV_EXTENSION_ZICSR__)
+
     bool system_call() {
         switch (int_reg.get_x(IntegerRegister<>::A0)) {
             case 1:
@@ -157,6 +167,8 @@ public:
                     break;
                 case trap::S_MODE_ENVIRONMENT_CALL:
                     riscv_isa_unreachable("no system mode interrupt!");
+                case trap::M_MODE_ENVIRONMENT_CALL:
+                    riscv_isa_unreachable("no machine mode interrupt!");
                 case trap::INSTRUCTION_PAGE_FAULT:
                     std::cerr << "Instruction page fault at " << std::hex << get_pc() << std::endl;
 

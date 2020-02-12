@@ -25,23 +25,22 @@ namespace riscv_isa {
         using UXLenT = typename xlen::UXLenT;
         static constexpr usize XLEN = xlen::XLEN;
 
-///        template<typename ValT>
-///        RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
-///            csr_reg.scause = LOAD_PAGE_FAULT;
-///            return false;
-///        }
+///     these functions are required to be implemented
 ///
-///        template<typename ValT>
-///        RetT mmu_store_int_reg(riscv_isa_unused usize src, riscv_isa_unused XLenT addr) {
-///            csr_reg.scause = STORE_AMO_PAGE_FAULT;
-///            return false;
-///        }
+///     template<typename ValT>
+///     RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
+///         riscv_isa_unreachable("memory management unit load integer register undefined");
+///     }
 ///
-///        template<usize offset>
-///        RetT mmu_load_inst_half(riscv_isa_unused XLenT addr) {
-///            csr_reg.scause = INSTRUCTION_PAGE_FAULT;
-///            return false;
-///        }
+///     template<typename ValT>
+///     RetT mmu_store_int_reg(riscv_isa_unused usize src, riscv_isa_unused XLenT addr) {
+///         riscv_isa_unreachable("memory management unit store integer register undefined");
+///     }
+///
+///     template<usize offset>
+///     RetT mmu_load_inst_half(riscv_isa_unused XLenT addr) {
+///         riscv_isa_unreachable("memory management unit load instruction two byte undefined");
+///     }
 
         template<typename OP, typename InstT>
         RetT operate_reg(const InstT *inst) {
@@ -351,6 +350,121 @@ namespace riscv_isa {
 
 #endif // defined(__RV_EXTENSION_M__)
 #endif // __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_ZICSR__)
+
+#define _riscv_isa_csr_read_switch(NAME, name, num) \
+    case CSRRegister<xlen>::NAME: \
+        return csr_reg.name
+
+#define _riscv_isa_csr_write_switch(NAME, name, num) \
+    case CSRRegister<xlen>::NAME: \
+        return sub_type()->set_##name##_csr(val)
+
+#define _riscv_isa_visit_csr(NAME, name, num) \
+    RetT set_##name##_csr(UXLenT val) { return sub_type()->set_csr(val); }
+
+#include "register/csr_register.def"
+
+        UXLenT get_csr(usize index) {
+            switch (index) {
+                // case CSRRegister<xlen>::USTATUS:
+                //     return csr_reg.ustatus;
+                // ...
+                // case CSRRegister<xlen>::DSCRATCH1:
+                //     return csr_reg.dscratch1;
+                riscv_isa_csr_reg_map(_riscv_isa_csr_read_switch);
+                default:
+                    return 0;
+            }
+        }
+
+        RetT set_csr(usize index, UXLenT val) {
+            switch (index) {
+                // case CSRRegister<xlen>::USTATUS:
+                //     return set_ustatus_csr(val);
+                // ...
+                // case CSRRegister<xlen>::DSCRATCH1:
+                //     return set_dscratch1_csr(val);
+                riscv_isa_csr_reg_map(_riscv_isa_csr_write_switch);
+                default:
+                    return false;
+            }
+        }
+
+        RetT visit_csrrw_inst(CSRRWInst *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            UXLenT csr_val = get_csr(csr);
+            if (!set_csr(csr, int_reg.get_x(rs1))) return false;
+            if (rd != 0) int_reg.set_x(rd, csr_val);
+            return true;
+        }
+
+        RetT visit_csrrs_inst(CSRRSInst *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            UXLenT csr_val = get_csr(csr);
+            if (rd != 0) int_reg.set_x(rd, csr_val);
+            if (rs1 != 0) return set_csr(csr, csr_val | int_reg.get_x(rs1));
+            else return true;
+        }
+
+        RetT visit_csrrc_inst(CSRRCInst *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            UXLenT csr_val = get_csr(csr);
+            if (rd != 0) int_reg.set_x(rd, csr_val);
+            if (rs1 != 0) return set_csr(csr, csr_val & ~int_reg.get_x(rs1));
+            else return true;
+        }
+
+        RetT visit_csrrwi_inst(CSRRWIInst *inst) {
+            usize rd = inst->get_rd();
+            usize imm = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            if (rd != 0) int_reg.set_x(rd, get_csr(csr));
+            return set_csr(csr, imm);
+        }
+
+        RetT visit_csrrsi_inst(CSRRSIInst *inst) {
+            usize rd = inst->get_rd();
+            usize imm = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            UXLenT csr_val = get_csr(csr);
+            if (rd != 0) int_reg.set_x(rd, csr_val);
+            if (imm != 0) return set_csr(csr, csr_val | imm);
+            else return true;
+        }
+
+        RetT visit_csrrci_inst(CSRRCIInst *inst) {
+            usize rd = inst->get_rd();
+            usize imm = inst->get_rs1();
+            usize csr = inst->get_csr();
+
+            UXLenT csr_val = get_csr(csr);
+            int_reg.set_x(rd, csr_val);
+            if (imm != 0) return set_csr(csr, csr_val & ~imm);
+            else return true;
+        }
+
+        /// RetT set_csr(riscv_isa_unused UXLenT val) {
+        ///     riscv_isa_unreachable("write csr undefined");
+        /// }
+
+        // RetT set_ustatus_csr(UXLenT val) { return sub_type()->set_csr(val); }
+        // ...
+        // RetT set_dscratch1_csr(UXLenT val) { return sub_type()->set_csr(val); }
+        riscv_isa_csr_reg_map(_riscv_isa_visit_csr);
+
+#endif // defined(__RV_EXTENSION_ZICSR__)
     };
 }
 

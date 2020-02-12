@@ -166,7 +166,21 @@ namespace riscv_isa {
 
 #endif // defined(__RV_EXTENSION_M__)
 #endif // __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_ZICSR__)
 
+        RetT visit_csrrw_inst(CSRRWInst *inst) { return dump_inst(inst); }
+
+        RetT visit_csrrs_inst(CSRRSInst *inst) { return dump_inst(inst); }
+
+        RetT visit_csrrc_inst(CSRRCInst *inst) { return dump_inst(inst); }
+
+        RetT visit_csrrwi_inst(CSRRWIInst *inst) { return dump_inst(inst); }
+
+        RetT visit_csrrsi_inst(CSRRSIInst *inst) { return dump_inst(inst); }
+
+        RetT visit_csrrci_inst(CSRRCIInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_ZICSR__)
     };
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {

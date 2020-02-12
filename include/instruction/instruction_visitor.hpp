@@ -375,7 +375,7 @@ namespace riscv_isa {
             riscv_isa_abort("Illegal instruction met!");
         }
 
-///     All instruction should be caught in an instruction visitor.
+///     this function is required to be implemented
 ///
 ///     RetT visit_inst(riscv_isa_unused Instruction *inst) {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
