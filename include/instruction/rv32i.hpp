@@ -71,7 +71,7 @@ namespace riscv_isa {
         LUIInst(usize rd, UInnerT imm) : Instruction32U{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LUIInst &inst) {
-            stream << "\tlui\tx" << inst.get_rd() << ", " << inst.get_imm();
+            stream << "lui\tx" << inst.get_rd() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -87,7 +87,7 @@ namespace riscv_isa {
         AUIPCInst(usize rd, UInnerT imm) : Instruction32U{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const AUIPCInst &inst) {
-            stream << "\tauipc\tx" << inst.get_rd() << ", " << inst.get_imm();
+            stream << "auipc\tx" << inst.get_rd() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -103,7 +103,7 @@ namespace riscv_isa {
         JALInst(usize rd, UInnerT imm) : Instruction32J{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const JALInst &inst) {
-            stream << "\tjal\tx" << inst.get_rd() << ", " << inst.get_imm();
+            stream << "jal\tx" << inst.get_rd() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -123,7 +123,7 @@ namespace riscv_isa {
         JALRInst(usize rd, usize rs1, UInnerT imm) : Instruction32I{OP_CODE, rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const JALRInst &inst) {
-            stream << "\tjalr\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "jalr\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -139,7 +139,7 @@ namespace riscv_isa {
         BEQInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BEQInst &inst) {
-            stream << "\tbeq\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "beq\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -155,7 +155,7 @@ namespace riscv_isa {
         BNEInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BNEInst &inst) {
-            stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "bne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -171,7 +171,7 @@ namespace riscv_isa {
         BLTInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTInst &inst) {
-            stream << "\tblt\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "blt\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -187,7 +187,7 @@ namespace riscv_isa {
         BGEInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEInst &inst) {
-            stream << "\tbne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "bne\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -203,7 +203,7 @@ namespace riscv_isa {
         BLTUInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BLTUInst &inst) {
-            stream << "\tbltu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "bltu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -219,7 +219,7 @@ namespace riscv_isa {
         BGEUInst(usize rs1, usize rs2, UInnerT imm) : InstructionBranchSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const BGEUInst &inst) {
-            stream << "\tbgeu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
+            stream << "bgeu\tx" << inst.get_rs1() << ", x" << inst.get_rs2() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -235,7 +235,7 @@ namespace riscv_isa {
         LBInst(usize rd, usize rs1, UInnerT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LBInst &inst) {
-            stream << "\tlb\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "lb\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -251,7 +251,7 @@ namespace riscv_isa {
         LHInst(usize rd, usize rs1, UInnerT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LHInst &inst) {
-            stream << "\tlh\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "lh\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -267,7 +267,7 @@ namespace riscv_isa {
         LWInst(usize rd, usize rs1, UInnerT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LWInst &inst) {
-            stream << "\tlw\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "lw\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -283,7 +283,7 @@ namespace riscv_isa {
         LBUInst(usize rd, usize rs1, UInnerT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LBUInst &inst) {
-            stream << "\tlbu\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "lbu\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -299,7 +299,7 @@ namespace riscv_isa {
         LHUInst(usize rd, usize rs1, UInnerT imm) : InstructionLoadSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LHUInst &inst) {
-            stream << "\tlhu\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "lhu\tx" << inst.get_rd() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -315,7 +315,7 @@ namespace riscv_isa {
         SBInst(usize rs1, usize rs2, UInnerT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SBInst &inst) {
-            stream << "\tsb\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "sb\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -331,7 +331,7 @@ namespace riscv_isa {
         SHInst(usize rs1, usize rs2, UInnerT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SHInst &inst) {
-            stream << "\tsh\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "sh\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -347,7 +347,7 @@ namespace riscv_isa {
         SWInst(usize rs1, usize rs2, UInnerT imm) : InstructionStoreSet{FUNCT3, rs1, rs2, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SWInst &inst) {
-            stream << "\tsw\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
+            stream << "sw\tx" << inst.get_rs2() << ", " << inst.get_imm() << "(x" << inst.get_rs1() << ')';
             return stream;
         }
     };
@@ -363,7 +363,7 @@ namespace riscv_isa {
         ADDIInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ADDIInst &inst) {
-            stream << "\taddi\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "addi\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -379,7 +379,7 @@ namespace riscv_isa {
         SLTIInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLTIInst &inst) {
-            stream << "\tslti\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "slti\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -395,7 +395,7 @@ namespace riscv_isa {
         SLTIUInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLTIUInst &inst) {
-            stream << "\tsltiu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "sltiu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -411,7 +411,7 @@ namespace riscv_isa {
         XORIInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const XORIInst &inst) {
-            stream << "\txori\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "xori\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -427,7 +427,7 @@ namespace riscv_isa {
         ORIInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ORIInst &inst) {
-            stream << "\tori\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "ori\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -443,7 +443,7 @@ namespace riscv_isa {
         ANDIInst(usize rd, usize rs1, UInnerT imm) : InstructionArithImmSet{rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ANDIInst &inst) {
-            stream << "\tandi\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
+            stream << "andi\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
             return stream;
         }
     };
@@ -466,7 +466,7 @@ namespace riscv_isa {
                                          (imm & bits_mask<UInnerT, xlen_trait::XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIInst &inst) {
-            stream << "\tslli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "slli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
     };
@@ -490,7 +490,7 @@ namespace riscv_isa {
                                               get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIInst &inst) {
-            stream << "\tsrli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "srli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
     };
@@ -514,7 +514,7 @@ namespace riscv_isa {
                                               get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIInst &inst) {
-            stream << "\tsrai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "srai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
             return stream;
         }
     };
@@ -530,7 +530,7 @@ namespace riscv_isa {
         ADDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ADDInst &inst) {
-            stream << "\tadd\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "add\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -546,7 +546,7 @@ namespace riscv_isa {
         SUBInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SUBInst &inst) {
-            stream << "\tsub\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "sub\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -562,7 +562,7 @@ namespace riscv_isa {
         SLLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLInst &inst) {
-            stream << "\tsll\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "sll\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -578,7 +578,7 @@ namespace riscv_isa {
         SLTInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLTInst &inst) {
-            stream << "\tslt\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "slt\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -594,7 +594,7 @@ namespace riscv_isa {
         SLTUInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLTUInst &inst) {
-            stream << "\tsltu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "sltu\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -610,7 +610,7 @@ namespace riscv_isa {
         XORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const XORInst &inst) {
-            stream << "\txor\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "xor\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -626,7 +626,7 @@ namespace riscv_isa {
         SRLInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLInst &inst) {
-            stream << "\tsrl\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "srl\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -642,7 +642,7 @@ namespace riscv_isa {
         SRAInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegModSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAInst &inst) {
-            stream << "\tsra\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "sra\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -658,7 +658,7 @@ namespace riscv_isa {
         ORInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ORInst &inst) {
-            stream << "\tor\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "or\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -674,7 +674,7 @@ namespace riscv_isa {
         ANDInst(usize rd, usize rs1, usize rs2) : InstructionIntegerRegSet{rd, FUNCT3, rs1, rs2} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const ANDInst &inst) {
-            stream << "\tand\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
+            stream << "and\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
             return stream;
         }
     };
@@ -718,7 +718,7 @@ namespace riscv_isa {
         usize get_fm() const { return get_bits<UInnerT, 32, 28>(inner); }
 
         friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const FENCEInst &inst) {
-            stream << "\tfence";
+            stream << "fence";
             return stream;
         }
     };
@@ -738,7 +738,7 @@ namespace riscv_isa {
         ECALLInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const ECALLInst &inst) {
-            stream << "\tecall";
+            stream << "ecall";
             return stream;
         }
     };
@@ -758,7 +758,7 @@ namespace riscv_isa {
         EBREAKInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const EBREAKInst &inst) {
-            stream << "\tebreak";
+            stream << "ebreak";
             return stream;
         }
     };

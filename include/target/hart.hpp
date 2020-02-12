@@ -75,7 +75,7 @@ namespace riscv_isa {
 
             if (OP::op(int_reg.get_x(rs1), int_reg.get_x(rs2))) {
                 XLenT imm = inst->get_imm();
-#if IALIGN == 32
+#if RISCV_IALIGN == 32
                 if (get_bits<UXLenT, 2, 0>(imm) != 0) {
                     csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
                     return false;
@@ -183,7 +183,7 @@ namespace riscv_isa {
         RetT visit_jal_inst(JALInst *inst) {
             usize rd = inst->get_rd();
             XLenT imm = inst->get_imm();
-#if IALIGN == 32
+#if RISCV_IALIGN == 32
             if (get_bits<UXLenT, 2, 0>(imm) != 0) {
                 csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
                 return false;
@@ -201,7 +201,7 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
             UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(int_reg.get_x(rs1) + imm);
-#if IALIGN == 32
+#if RISCV_IALIGN == 32
             if (get_bits<UXLenT, 2, 0>(target) != 0) {
                 csr_reg.scause = trap::INSTRUCTION_ADDRESS_MISALIGNED;
                 return false;

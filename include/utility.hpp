@@ -25,16 +25,16 @@
 #error "Base instruction set E only support 32 bits width!"
 #endif
 
-#ifndef VENDOR_ID
-#define VENDOR_ID 0
+#ifndef RISCV_VENDOR_ID
+#define RISCV_VENDOR_ID 0
 #endif
 
-#ifndef ARCH_ID
-#define ARCH_ID 0
+#ifndef RISCV_ARCH_ID
+#define RISCV_ARCH_ID 0
 #endif
 
-#ifndef IMP_ID
-#define IMP_ID 0
+#ifndef RISCV_IMP_ID
+#define RISCV_IMP_ID 0
 #endif
 
 namespace riscv_isa {
@@ -130,6 +130,7 @@ namespace riscv_isa {
         using XLenT = i32;
         using UXLenT = u32;
         static constexpr usize XLEN_INDEX = 5;
+        static constexpr usize UXLenMax = INT32_MAX;
     };
 
 #if __RV_BIT_WIDTH__ == 64
@@ -138,6 +139,7 @@ namespace riscv_isa {
         using XLenT = i64;
         using UXLenT = u64;
         static constexpr usize XLEN_INDEX = 6;
+        static constexpr usize UXLenMax = INT64_MAX;
     };
 #endif
 
@@ -169,9 +171,9 @@ namespace riscv_isa {
     /// ISA extension, relax IALIGN to 16 bits. IALIGN may not take on any value other than 16 or 32."
     ///
 #if defined(__RV_EXTENSION_C__)
-#define IALIGN 16
+#define RISCV_IALIGN 16u
 #else
-#define IALIGN 32
+#define RISCV_IALIGN 32u
 #endif
 
     ///  @cite: RVISM - Volume I - V20191213 - P8
@@ -180,8 +182,10 @@ namespace riscv_isa {
     /// implementation, and which is always a multiple of IALIGN. For implementations supporting only a base
     /// instruction set, ILEN is 32 bits. Implementations supporting longer instructions have larger values of ILEN.
 
-#define ILEN 32
+#define RISCV_ILEN 32
     using ILenT = u32;
+
+#define RISCV_PAGE_SIZE 0x1000u
 
     template<typename T, typename U>
     bool is_type(U *self);
