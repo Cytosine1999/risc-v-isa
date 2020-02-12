@@ -4,6 +4,7 @@
 
 #include "range.def"
 
+
 #define _riscv_isa_declare_csr_n(func, NAME, name, base, n) \
     func(NAME##n, name##n, base + n)
 

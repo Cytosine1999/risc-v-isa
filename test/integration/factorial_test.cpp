@@ -55,14 +55,15 @@ protected:
     MemT &mem;
 
 public:
-    NoneHart(XLenT pc, IntRegT &reg, MemT &mem) : Hart{pc, reg}, mem{mem} {}
+    NoneHart(XLenT pc, IntRegT &reg, MemT &mem) : Hart{pc, reg}, mem{mem} {
+        cur_level = USER_MODE;
+    }
 
     template<typename ValT>
     RetT mmu_load_int_reg(usize dest, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg[CSRRegT::SCAUSE] = trap::LOAD_PAGE_FAULT;
-            return false;
+            return internal_interrupt(trap::LOAD_PAGE_FAULT);
         } else {
             if (dest != 0) int_reg.set_x(dest, *ptr);
             return true;
@@ -73,8 +74,7 @@ public:
     RetT mmu_store_int_reg(usize src, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg[CSRRegT::SCAUSE] = trap::STORE_AMO_PAGE_FAULT;
-            return false;
+            return internal_interrupt(trap::STORE_AMO_PAGE_FAULT);
         } else {
             *ptr = static_cast<ValT>(int_reg.get_x(src));
             return true;
@@ -85,8 +85,7 @@ public:
     RetT mmu_load_inst_half(XLenT addr) {
         u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
         if (ptr == nullptr) {
-            csr_reg[CSRRegT::SCAUSE] = trap::INSTRUCTION_PAGE_FAULT;
-            return false;
+            return internal_interrupt(trap::INSTRUCTION_PAGE_FAULT);
         } else {
             *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
             return true;
@@ -95,7 +94,9 @@ public:
 
 #if defined(__RV_EXTENSION_ZICSR__)
 
-    RetT set_csr(riscv_isa_unused UXLenT val) { return true; }
+    RetT get_csr_reg(riscv_isa_unused UXLenT index) { return csr_reg[index]; }
+
+    RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) { return true; }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
 

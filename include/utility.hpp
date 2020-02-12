@@ -216,6 +216,12 @@ namespace riscv_isa {
 
     template<typename T, typename U>
     T *dyn_cast(U *self) { return is_type<T>(self) ? reinterpret_cast<T *>(self) : nullptr; }
+
+    enum PrivilegeLevel : u8 {
+        USER_MODE = 0b00,
+        SUPERVISOR_MODE = 0b01,
+        MACHINE_MODE = 0b11,
+    };
 }
 
 

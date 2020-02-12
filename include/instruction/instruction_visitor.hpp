@@ -38,6 +38,7 @@ namespace riscv_isa {
             }
         }
 
+    protected:
 #if defined(__RV_EXTENSION_C__)
 
         RetT visit_16(Instruction16 *inst) {
@@ -375,6 +376,7 @@ namespace riscv_isa {
             riscv_isa_abort("Illegal instruction met!");
         }
 
+    public:
 ///     this function is required to be implemented
 ///
 ///     RetT visit_inst(riscv_isa_unused Instruction *inst) {

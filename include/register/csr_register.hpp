@@ -14,7 +14,7 @@ namespace riscv_isa {
         using UXLenT = typename xlen::UXLenT;
 
         /// macro riscv_isa_csr_reg_map apply a macro to all csr registers.
-        /// it will pass three arguments to the macro showed as below.
+        /// it will pass three arguments showed as below to the macro.
         ///
         /// NAME            name            num     info
         /// ----------------------------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ namespace riscv_isa {
         /// MTVEC,          mtvec,          0x305:  Machine trap handler base address.
         /// MCOUNTEREN,     mcounteren,     0x306:  Machine counter enable.
 #if __RV_BIT_WIDTH__ == 32
-        /// MSTATUSH,      mstatush,        0x310:
+        /// MSTATUSH,       mstatush,       0x310:
 #endif
         /// MCOUNTINHIBIT,  mcountinhibit,  0x320:  Machine counter-inhibit register.
         /// MHPMEVENT3,     mhpmevent3,     0x323:  Machine performance-monitoring event selector.
@@ -147,7 +147,8 @@ namespace riscv_isa {
         };
 
     private:
-        static constexpr UXLenT USTATUS_INIT = get_bits<UXLenT, 2, 0, xlen::XLEN - 2>(xlen::XLEN_INDEX - 4)
+        static constexpr xlen_trait::UXLenT USTATUS_INIT =
+                get_bits<UXLenT, 2, 0, xlen::XLEN - 2>(xlen::XLEN_INDEX - 4)
 #ifdef __RV_EXTENSION_A__
                 | bit_mask<UXLenT, 0>::val
 #endif
@@ -207,11 +208,17 @@ namespace riscv_isa {
 #endif
         ;
 
-        static const UXLenT CSR_INIT[CSR_REGISTER_NUM];
+        static const xlen_trait::UXLenT CSR_INIT[CSR_REGISTER_NUM];
 
-        UXLenT inner[CSR_REGISTER_NUM];
+        xlen_trait::UXLenT inner[CSR_REGISTER_NUM];
 
     public:
+        static constexpr usize READ_ONLY_BITS = 0b11;
+
+        static usize get_read_write_bits(usize num) { return get_bits<usize, 12, 10>(num); }
+
+        static usize get_privilege_bits(usize num) { return get_bits<usize, 10, 8>(num); }
+
         CSRRegister() { for (usize i = 0; i < CSR_REGISTER_NUM; ++i) inner[i] = CSR_INIT[i]; }
 
         /// following function transfer csr number to real index.
@@ -244,7 +251,7 @@ namespace riscv_isa {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winitializer-overrides"
     template<typename xlen>
-    const typename CSRRegister<xlen>::UXLenT CSRRegister<xlen>::CSR_INIT[CSR_REGISTER_NUM] = {
+    const typename xlen_trait::UXLenT CSRRegister<xlen>::CSR_INIT[CSR_REGISTER_NUM] = {
             [0 ... (CSR_REGISTER_NUM - 1)] = 0,
             [USTATUS] = USTATUS_INIT,
     };
