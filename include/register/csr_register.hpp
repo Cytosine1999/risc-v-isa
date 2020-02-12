@@ -7,29 +7,14 @@
 
 
 namespace riscv_isa {
-    /// following macro defines index for all csr.
-
-#define _riscv_isa_declare_csr_index(NAME, name, num) \
-        csr_##name,
-
-    enum CSRIndex {
-        riscv_isa_csr_reg_map(_riscv_isa_declare_csr_index)
-        csr_num,
-    };
-
     template<typename xlen=xlen_trait>
     class CSRRegister {
     public:
         using XLenT = typename xlen::XLenT;
         using UXLenT = typename xlen::UXLenT;
 
-    private:
-        UXLenT inner[csr_num];
-
-    public:
-
         /// macro riscv_isa_csr_reg_map apply a macro to all csr registers.
-        /// it will pass three arguments to the macro as showing below.
+        /// it will pass three arguments to the macro showed as below.
         ///
         /// NAME            name            num     info
         /// ----------------------------------------------------------------------------------------------------
@@ -151,41 +136,120 @@ namespace riscv_isa {
         /// MIMPID,         mimpid,         0xF13:  Implementation ID.
         /// MHARTID,        mhartid,        0xF14:  Hardware thread ID.
 
-        /// following macro defines const for all csr.
+        /// following macro defines index for all csr.
 
-#define _riscv_isa_declare_csr(NAME, name, num) \
-        static constexpr usize NAME = num;
+#define _riscv_isa_declare_csr_index(NAME, name, num) \
+        NAME,
 
-        riscv_isa_csr_reg_map(_riscv_isa_declare_csr);
+        enum CSRIndex {
+            riscv_isa_csr_reg_map(_riscv_isa_declare_csr_index)
+            CSR_REGISTER_NUM,
+        };
 
-        CSRRegister() = default;
+    private:
+        static constexpr UXLenT USTATUS_INIT = get_bits<UXLenT, 2, 0, xlen::XLEN - 2>(xlen::XLEN_INDEX - 4)
+#ifdef __RV_EXTENSION_A__
+                | bit_mask<UXLenT, 0>::val
+#endif
+#ifdef __RV_EXTENSION_B__
+                | bit_mask<UXLenT, 1>::val
+#endif
+#ifdef __RV_EXTENSION_C__
+                | bit_mask<UXLenT, 2>::val
+#endif
+#ifdef __RV_EXTENSION_D__
+                | bit_mask<UXLenT, 3>::val
+#endif
+#ifdef __RV_BASE_E__
+                | bit_mask<UXLenT, 4>::val
+#endif
+#ifdef __RV_EXTENSION_F__
+                | bit_mask<UXLenT, 5>::val
+#endif
+#ifdef __RV_PRIVILEGE_H__
+                | bit_mask<UXLenT, 7>::val
+#endif
+#ifdef __RV_BASE_I__
+                | bit_mask<UXLenT, 8>::val
+#endif
+#ifdef __RV_EXTENSION_J__
+                | bit_mask<UXLenT, 9>::val
+#endif
+#ifdef __RV_EXTENSION_L__
+                | bit_mask<UXLenT, 11>::val
+#endif
+#ifdef __RV_EXTENSION_M__
+                | bit_mask<UXLenT, 12>::val
+#endif
+#ifdef __RV_EXTENSION_N__
+                | bit_mask<UXLenT, 13>::val
+#endif
+#ifdef __RV_EXTENSION_P__
+                | bit_mask<UXLenT, 15>::val
+#endif
+#ifdef __RV_EXTENSION_Q__
+                | bit_mask<UXLenT, 16>::val
+#endif
+#ifdef __RV_PRIVILEGE_S__
+                | bit_mask<UXLenT, 18>::val
+#endif
+#ifdef __RV_EXTENSION_T__
+                | bit_mask<UXLenT, 19>::val
+#endif
+#ifdef __RV_PRIVILEGE_U__
+                | bit_mask<UXLenT, 20>::val
+#endif
+#ifdef __RV_EXTENSION_V__
+                | bit_mask<UXLenT, 21>::val
+#endif
+#ifdef __RV_NON_STANDARD__
+                | bit_mask<UXLenT, 23>::val
+#endif
+        ;
+
+        static const UXLenT CSR_INIT[CSR_REGISTER_NUM];
+
+        UXLenT inner[CSR_REGISTER_NUM];
+
+    public:
+        CSRRegister() { for (usize i = 0; i < CSR_REGISTER_NUM; ++i) inner[i] = CSR_INIT[i]; }
 
         /// following function transfer csr number to real index.
         /// if csr not defined, csr_num will be returned.
 
 #define _riscv_isa_csr_get_index(NAME, name, num) \
-        case NAME: \
-            return csr_##name;
+        case num: \
+            return NAME;
 
         static usize get_index(usize csr) {
-            switch(csr) {
+            switch (csr) {
                 riscv_isa_csr_reg_map(_riscv_isa_csr_get_index)
                 default:
-                    return csr_num;
+                    return CSR_REGISTER_NUM;
             }
         }
 
         const UXLenT &operator[](usize index) const {
-            if (index >= csr_num) riscv_isa_abort("csr index out of boundary!");
+            if (index >= CSR_REGISTER_NUM) riscv_isa_abort("csr index out of boundary!");
             return inner[index];
         }
 
         UXLenT &operator[](usize index) {
-            if (index >= csr_num) riscv_isa_abort("csr index out of boundary!");
+            if (index >= CSR_REGISTER_NUM) riscv_isa_abort("csr index out of boundary!");
             return inner[index];
         }
     };
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winitializer-overrides"
+    template<typename xlen>
+    const typename CSRRegister<xlen>::UXLenT CSRRegister<xlen>::CSR_INIT[CSR_REGISTER_NUM] = {
+            [0 ... (CSR_REGISTER_NUM - 1)] = 0,
+            [USTATUS] = USTATUS_INIT,
+    };
+#pragma GCC diagnostic pop
 }
 
 
-#endif // RISCV_ISA_CSR_REGISTER_HPP`
+#endif // RISCV_ISA_CSR_REGISTER_HPP

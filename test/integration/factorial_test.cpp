@@ -29,7 +29,7 @@ public:
 
     Memory &operator=(const Memory &other) = delete;
 
-    template<typename T=void *>
+    template<typename T>
     T *address(XLenT addr) {
         return addr < memory_size ? reinterpret_cast<T *>(memory_offset + addr) : nullptr;
     }
@@ -49,17 +49,19 @@ public:
 
 class NoneHart : public Hart<NoneHart> {
 public:
+    using MemT = Memory<>;
+    
 protected:
-    Memory<> &mem;
+    MemT &mem;
 
 public:
-    NoneHart(XLenT pc, IntegerRegister<> &reg, Memory<> &mem) : Hart{pc, reg}, mem{mem} {}
+    NoneHart(XLenT pc, IntRegT &reg, MemT &mem) : Hart{pc, reg}, mem{mem} {}
 
     template<typename ValT>
     RetT mmu_load_int_reg(usize dest, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg[csr_scause] = trap::LOAD_PAGE_FAULT;
+            csr_reg[CSRRegT::SCAUSE] = trap::LOAD_PAGE_FAULT;
             return false;
         } else {
             if (dest != 0) int_reg.set_x(dest, *ptr);
@@ -71,7 +73,7 @@ public:
     RetT mmu_store_int_reg(usize src, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            csr_reg[csr_scause] = trap::STORE_AMO_PAGE_FAULT;
+            csr_reg[CSRRegT::SCAUSE] = trap::STORE_AMO_PAGE_FAULT;
             return false;
         } else {
             *ptr = static_cast<ValT>(int_reg.get_x(src));
@@ -83,7 +85,7 @@ public:
     RetT mmu_load_inst_half(XLenT addr) {
         u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
         if (ptr == nullptr) {
-            csr_reg[csr_scause] = trap::INSTRUCTION_PAGE_FAULT;
+            csr_reg[CSRRegT::SCAUSE] = trap::INSTRUCTION_PAGE_FAULT;
             return false;
         } else {
             *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
@@ -98,13 +100,13 @@ public:
 #endif // defined(__RV_EXTENSION_ZICSR__)
 
     bool system_call() {
-        switch (int_reg.get_x(IntegerRegister<>::A0)) {
+        switch (int_reg.get_x(IntRegT::A0)) {
             case 1:
-                std::cout << std::dec << int_reg.get_x(IntegerRegister<>::A1);
+                std::cout << std::dec << int_reg.get_x(IntRegT::A1);
 
                 return true;
             case 11:
-                std::cout << static_cast<char>(int_reg.get_x(IntegerRegister<>::A1));
+                std::cout << static_cast<char>(int_reg.get_x(IntRegT::A1));
 
                 return true;
             case 10:
@@ -113,7 +115,7 @@ public:
                 return false;
             default:
                 std::cerr << "Invalid enviroment call number at " << std::hex << get_pc()
-                          << ", call number " << std::dec << int_reg.get_x(IntegerRegister<>::A7)
+                          << ", call number " << std::dec << int_reg.get_x(IntRegT::A7)
                           << std::endl;
 
                 return false;
@@ -124,7 +126,7 @@ public:
         while (true) {
             if (visit()) continue;
 
-            switch (csr_reg[csr_scause]) {
+            switch (csr_reg[CSRRegT::SCAUSE]) {
                 case trap::INSTRUCTION_ADDRESS_MISALIGNED:
                 case trap::INSTRUCTION_ACCESS_FAULT:
                     std::cerr << "Instruction address misaligned at "
@@ -236,11 +238,11 @@ int main() {
             3, 6, 7, 8
     };
 
-    IntegerRegister<> reg{};
-    reg.set_x(IntegerRegister<>::SP, 4092);
+    NoneHart::IntRegT reg{};
+    reg.set_x(NoneHart::IntRegT::SP, 4092);
 
-    Memory<> mem{4096};
-    if (mem.address<>(0) == nullptr) riscv_isa_abort("memory allocate failed");
+    NoneHart::MemT mem{4096};
+    if (mem.address<void>(0) == nullptr) riscv_isa_abort("memory allocate failed");
 
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));

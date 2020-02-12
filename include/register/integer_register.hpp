@@ -12,12 +12,12 @@ namespace riscv_isa {
         using XlenT = typename xlen::XLenT;
 
 #if defined(__RV_BASE_E__)
-        static constexpr usize GENERAL_PURPOSE_NUM = 16;
+        static constexpr usize INTEGER_REGISTER_NUM = 16;
 #else
-        static constexpr usize GENERAL_PURPOSE_NUM = 32;
+        static constexpr usize INTEGER_REGISTER_NUM = 32;
 #endif
         /// register size is controlled by macro
-        typename xlen_trait::XLenT x[GENERAL_PURPOSE_NUM];
+        typename xlen_trait::XLenT x[INTEGER_REGISTER_NUM];
 
     public:
         static constexpr usize ZERO = 0;
@@ -59,12 +59,12 @@ namespace riscv_isa {
         IntegerRegister() : x{} {}
 
         void set_x(usize index, XlenT val) {
-            if (index >= GENERAL_PURPOSE_NUM) riscv_isa_abort("Integer register index exceed.");
+            if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
             if (index != 0) x[index] = val;
         }
 
         XlenT get_x(usize index) const {
-            if (index >= GENERAL_PURPOSE_NUM) riscv_isa_abort("Integer register index exceed.");
+            if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
             return x[index];
         }
     };
