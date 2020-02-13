@@ -16,6 +16,9 @@ namespace riscv_isa {
         using RetT = bool;
         using IntRegT = IntegerRegister<xlen>;
         using CSRRegT = CSRRegister<xlen>;
+        using XLenT = typename xlen::XLenT;
+        using UXLenT = typename xlen::UXLenT;
+        static constexpr usize XLEN = xlen::XLEN;
 
     private:
         xlen_trait::XLenT pc;
@@ -23,32 +26,40 @@ namespace riscv_isa {
         SubT *sub_type() { return static_cast<SubT *>(this); }
 
     protected:
-        using XLenT = typename xlen::XLenT;
-        using UXLenT = typename xlen::UXLenT;
-        static constexpr usize XLEN = xlen::XLEN;
-
         XLenT get_pc() const { return pc; }
 
         void set_pc(XLenT val) { pc = val; }
 
         void inc_pc(XLenT val) { set_pc(get_pc() + val); }
 
-///     these functions are required to be implemented
+///     these functions are required to be implemented.
+///
+///     void internal_interrupt_action(riscv_isa_unused UXLenT interrupt, riscv_isa_unused UXLenT trap_value) {
+///         riscv_isa_unreachable("internal interrupt action undefined!");
+///     }
+///
+///     if interrupt generates in following three memory related functions, false should be returned and internal
+///     intterupt should be taken explicitly.
 ///
 ///     template<typename ValT>
 ///     RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit load integer register undefined");
+///         riscv_isa_unreachable("memory management unit load integer register undefined!");
 ///     }
 ///
 ///     template<typename ValT>
 ///     RetT mmu_store_int_reg(riscv_isa_unused usize src, riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit store integer register undefined");
+///         riscv_isa_unreachable("memory management unit store integer register undefined!");
 ///     }
 ///
 ///     template<usize offset>
 ///     RetT mmu_load_inst_half(riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit load instruction two byte undefined");
+///         riscv_isa_unreachable("memory management unit load instruction two byte undefined!");
 ///     }
+
+        RetT internal_interrupt(UXLenT interrupt, UXLenT trap_value) {
+            sub_type()->internal_interrupt_action(interrupt, trap_value);
+            return false;
+        }
 
         template<typename OP, typename InstT>
         RetT operate_reg(const InstT *inst) {
@@ -83,11 +94,12 @@ namespace riscv_isa {
 
             if (OP::op(int_reg.get_x(rs1), int_reg.get_x(rs2))) {
                 XLenT imm = inst->get_imm();
+                UXLenT target = imm + get_pc();
 #if RISCV_IALIGN == 32
-                if (get_bits<UXLenT, 2, 0>(imm) != 0)
-                    return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED);
+                if (get_bits<UXLenT, 2, 0>(target) != 0)
+                    return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
 #endif
-                inc_pc(imm);
+                set_pc(target);
             } else {
                 inc_pc(InstT::INST_WIDTH);
             }
@@ -101,7 +113,7 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
             if (!sub_type()->template mmu_load_int_reg<ValT>(rd, int_reg.get_x(rs1) + imm)) return false;
-            pc += InstT::INST_WIDTH;
+            inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
@@ -133,16 +145,15 @@ namespace riscv_isa {
         ILenT inst_buffer;
         PrivilegeLevel cur_level;
 
-        RetT internal_interrupt(UXLenT interrupt) {
-            csr_reg[CSRRegT::SCAUSE] = interrupt; // todo: check current privilege level
-            return false;
-        }
-
     public:
-        Hart(XLenT pc, IntRegT &reg) : pc{pc}, int_reg{reg}, csr_reg{}, inst_buffer{0}, cur_level{MACHINE_MODE} {}
+        Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
+                pc{pc}, int_reg{reg}, csr_reg{hart_id}, inst_buffer{0}, cur_level{MACHINE_MODE} {}
 
         RetT visit() {
-            if (!sub_type()->template mmu_load_inst_half<0>(get_pc())) return false;
+            inst_buffer = 0; // zeroing instruction buffer
+
+            if (!sub_type()->template mmu_load_inst_half<0>(get_pc()))
+                return false;
 
             if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
@@ -151,7 +162,8 @@ namespace riscv_isa {
                 return this->sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
 #endif // defined(__RV_EXTENSION_C__)
             } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
-                if (!sub_type()->template mmu_load_inst_half<1>(get_pc())) return false;
+                if (!sub_type()->template mmu_load_inst_half<1>(get_pc()))
+                    return false;
 
                 return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
             } else {
@@ -160,7 +172,7 @@ namespace riscv_isa {
         }
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
-            return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            return internal_interrupt(trap::ILLEGAL_INSTRUCTION, inst_buffer);
         }
 
         RetT visit_lui_inst(LUIInst *inst) {
@@ -188,13 +200,14 @@ namespace riscv_isa {
         RetT visit_jal_inst(JALInst *inst) {
             usize rd = inst->get_rd();
             XLenT imm = inst->get_imm();
+            UXLenT target = imm + get_pc();
 #if RISCV_IALIGN == 32
-            if (get_bits<UXLenT, 2, 0>(imm) != 0)
-                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED);
+            if (get_bits<UXLenT, 2, 0>(target) != 0)
+                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
 #endif
-            XLenT pc = get_pc();
-            if (rd != 0) int_reg.set_x(rd, pc + JALInst::INST_WIDTH);
-            set_pc(pc + imm);
+
+            if (rd != 0) int_reg.set_x(rd, get_pc() + JALInst::INST_WIDTH);
+            set_pc(target);
 
             return true;
         }
@@ -206,7 +219,7 @@ namespace riscv_isa {
             UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(int_reg.get_x(rs1) + imm);
 #if RISCV_IALIGN == 32
             if (get_bits<UXLenT, 2, 0>(target) != 0)
-                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED);
+                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
 #endif
             if (rd != 0) int_reg.set_x(rd, get_pc() + JALRInst::INST_WIDTH);
             set_pc(target);
@@ -280,14 +293,30 @@ namespace riscv_isa {
 
         RetT visit_and_inst(ANDInst *inst) { return operate_reg<typename operators::AND<xlen>>(inst); }
 
-        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) { return true; } // todo
+        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
+            inc_pc(FENCEInst::INST_WIDTH); // todo
+            return true;
+        }
 
         RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
-            return internal_interrupt(trap::U_MODE_ENVIRONMENT_CALL);
+            switch (cur_level) {
+#if defined(__RV_USER_MODE__)
+                case USER_MODE:
+                    return internal_interrupt(trap::U_MODE_ENVIRONMENT_CALL, 0);
+#endif
+#if defined(__RV_SUPERVISOR_MODE__)
+                case SUPERVISOR_MODE:
+                    return internal_interrupt(trap::S_MODE_ENVIRONMENT_CALL, 0);
+#endif
+                case MACHINE_MODE:
+                    return internal_interrupt(trap::M_MODE_ENVIRONMENT_CALL, 0);
+                default:
+                    riscv_isa_unreachable("unrecognized privilege mode!");
+            }
         }
 
         RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
-            return internal_interrupt(trap::BREAKPOINT);
+            return internal_interrupt(trap::BREAKPOINT, get_pc());
         }
 
 #if defined(__RV_EXTENSION_M__)
@@ -361,7 +390,7 @@ namespace riscv_isa {
         /// }
 
 #define _riscv_isa_get_csr(NAME, name, num) \
-    UXLenT get_##name##_csr_reg() { return csr_reg[CSRRegT::NAME]; }
+    UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
 
         riscv_isa_csr_reg_map(_riscv_isa_get_csr);
 
@@ -425,7 +454,7 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) int_reg.set_x(rd, get_csr(index));
             return set_csr(index, int_reg.get_x(rs1));
@@ -437,12 +466,12 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
             if (rd != 0) int_reg.set_x(rd, csr_val);
             if (rs1 != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return false;
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
                 return set_csr(index, csr_val | int_reg.get_x(rs1));
             } else {
                 return true;
@@ -455,12 +484,12 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
             if (rd != 0) int_reg.set_x(rd, csr_val);
             if (rs1 != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return false;
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
                 return set_csr(index, csr_val & ~int_reg.get_x(rs1));
             } else {
                 return true;
@@ -473,7 +502,7 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) int_reg.set_x(rd, get_csr(index));
             return set_csr(index, imm);
@@ -485,12 +514,12 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
             if (rd != 0) int_reg.set_x(rd, csr_val);
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return false;
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
                 return set_csr(index, csr_val | imm);
             } else {
                 return true;
@@ -503,12 +532,12 @@ namespace riscv_isa {
             usize csr = inst->get_csr();
 
             usize index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return internal_interrupt(trap::ILLEGAL_INSTRUCTION);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
             int_reg.set_x(rd, csr_val);
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return false;
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
                 return set_csr(index, csr_val & ~imm);
             } else {
                 return true;

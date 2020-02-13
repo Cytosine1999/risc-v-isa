@@ -50,20 +50,24 @@ public:
 class NoneHart : public Hart<NoneHart> {
 public:
     using MemT = Memory<>;
-    
+
 protected:
     MemT &mem;
 
 public:
-    NoneHart(XLenT pc, IntRegT &reg, MemT &mem) : Hart{pc, reg}, mem{mem} {
+    NoneHart(UXLenT hart_id, XLenT pc, IntRegT &reg, MemT &mem) : Hart{hart_id, pc, reg}, mem{mem} {
         cur_level = USER_MODE;
+    }
+
+    void internal_interrupt_action(UXLenT interrupt, riscv_isa_unused UXLenT trap_value) {
+        csr_reg[CSRRegT::SCAUSE] = interrupt;
     }
 
     template<typename ValT>
     RetT mmu_load_int_reg(usize dest, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            return internal_interrupt(trap::LOAD_PAGE_FAULT);
+            return internal_interrupt(trap::LOAD_PAGE_FAULT, addr);
         } else {
             if (dest != 0) int_reg.set_x(dest, *ptr);
             return true;
@@ -74,7 +78,7 @@ public:
     RetT mmu_store_int_reg(usize src, XLenT addr) {
         ValT *ptr = mem.template address<ValT>(addr);
         if (ptr == nullptr) {
-            return internal_interrupt(trap::STORE_AMO_PAGE_FAULT);
+            return internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
         } else {
             *ptr = static_cast<ValT>(int_reg.get_x(src));
             return true;
@@ -85,7 +89,7 @@ public:
     RetT mmu_load_inst_half(XLenT addr) {
         u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
         if (ptr == nullptr) {
-            return internal_interrupt(trap::INSTRUCTION_PAGE_FAULT);
+            return internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
         } else {
             *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
             return true;
@@ -94,11 +98,26 @@ public:
 
 #if defined(__RV_EXTENSION_ZICSR__)
 
-    RetT get_csr_reg(riscv_isa_unused UXLenT index) { return csr_reg[index]; }
+    UXLenT get_csr_reg(riscv_isa_unused UXLenT index) { return csr_reg[index]; }
 
     RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) { return true; }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+#if defined(__RV_SUPERVISOR_MODE__)
+
+    RetT visit_sret_inst(riscv_isa_unused SRETInst *inst) { return illegal_instruction(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
+
+    RetT visit_mret_inst(riscv_isa_unused MRETInst *inst) { return illegal_instruction(inst); }
+
+    RetT visit_wfi_inst(riscv_isa_unused WFIInst *inst) { return illegal_instruction(inst); }
+
+#if defined(__RV_SUPERVISOR_MODE__)
+
+    RetT visit_sfencevma_inst(riscv_isa_unused SFENCEVAMInst *inst) { return illegal_instruction(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
 
     bool system_call() {
         switch (int_reg.get_x(IntRegT::A0)) {
@@ -236,7 +255,7 @@ int main() {
     };
 
     u32 data[] = {
-            3, 6, 7, 8
+            7, 8, 9, 10
     };
 
     NoneHart::IntRegT reg{};
@@ -248,7 +267,7 @@ int main() {
     mem.memory_copy(0, text, sizeof(text));
     mem.memory_copy(sizeof(text), data, sizeof(data));
 
-    NoneHart core{0, reg, mem};
+    NoneHart core{0, 0, reg, mem};
 
     core.start();
 }

@@ -181,6 +181,33 @@ namespace riscv_isa {
         RetT visit_csrrci_inst(CSRRCIInst *inst) { return dump_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+#if defined(__RV_EXTENSION_N__)
+
+        RetT visit_uret_inst(URETInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_N__)
+#if defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_sret_inst(SRETInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_mret_inst(MRETInst *inst) { return dump_inst(inst); }
+
+        RetT visit_wfi_inst(WFIInst *inst) { return dump_inst(inst); }
+
+#if defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_sfencevma_inst(SFENCEVAMInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
+#if defined(__RV_HYPERVISOR_MODE__)
+
+        RetT visit_hfencevvma_inst(HFENCEVVMAInst *inst) { return dump_inst(inst); }
+
+        RetT visit_hfencegvma_inst(HFENCEGVMAInst *inst) { return dump_inst(inst); }
+
+#endif // defined(__RV_HYPERVISOR_MODE__)
     };
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {

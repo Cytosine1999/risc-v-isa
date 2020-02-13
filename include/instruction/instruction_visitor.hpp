@@ -10,6 +10,7 @@
 #include "zicsr.hpp"
 #include "rv32m.hpp"
 #include "rv64m.hpp"
+#include "privileged_instruction.hpp"
 
 
 namespace riscv_isa {
@@ -269,17 +270,8 @@ namespace riscv_isa {
 
         RetT visit_system_set(InstructionSystemSet *inst) {
             switch (inst->get_funct3()) {
-                case InstructionEnvironmentSet::FUNCT3:
-                    if (reinterpret_cast<InstructionEnvironmentSet *>(inst)->get_unused() != 0)
-                        return sub_type()->illegal_instruction(inst);
-                    switch (reinterpret_cast<InstructionEnvironmentSet *>(inst)->get_funct_environment()) {
-                        case ECALLInst::FUNCT_ENVIRONMENT:
-                            return sub_type()->visit_ecall_inst(reinterpret_cast<ECALLInst *>(inst));
-                        case EBREAKInst::FUNCT_ENVIRONMENT:
-                            return sub_type()->visit_ebreak_inst(reinterpret_cast<EBREAKInst *>(inst));
-                        default:
-                            return sub_type()->illegal_instruction(inst);
-                    }
+                case InstructionPrivilegedSet::FUNCT3:
+                    return visit_privilege_set(reinterpret_cast<InstructionPrivilegedSet *>(inst));
 #if defined(__RV_EXTENSION_ZICSR__)
                 case CSRRWInst::FUNCT3:
                     return sub_type()->visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
@@ -294,6 +286,58 @@ namespace riscv_isa {
                 case CSRRCIInst::FUNCT3:
                     return sub_type()->visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
 #endif // defined(__RV_EXTENSION_ZICSR__)
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_privilege_set(InstructionPrivilegedSet *inst) {
+            switch (inst->get_funct7()) {
+                case 0b0000000:
+                    if (inst->get_rd() != 0 || inst->get_rs1() != 0)
+                        return sub_type()->illegal_instruction(inst);
+                    switch (inst->get_rs2()) {
+                        case ECALLInst::FUNCT_PRIVILEGE:
+                            return sub_type()->visit_ecall_inst(reinterpret_cast<ECALLInst *>(inst));
+                        case EBREAKInst::FUNCT_PRIVILEGE:
+                            return sub_type()->visit_ebreak_inst(reinterpret_cast<EBREAKInst *>(inst));
+#if defined(__RV_EXTENSION_N__)
+                        case URETInst::FUNCT_PRIVILEGE:
+                            return sub_type()->visit_uret_inst(reinterpret_cast<URETInst *>(inst));
+#endif // defined(__RV_EXTENSION_N__)
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+                case 0b0001000:
+                    if (inst->get_rd() != 0 || inst->get_rs1() != 0)
+                        return sub_type()->illegal_instruction(inst);
+                    switch (inst->get_rs2()) {
+#if defined(__RV_SUPERVISOR_MODE__)
+                        case SRETInst::FUNCT_PRIVILEGE:
+                            return sub_type()->visit_sret_inst(reinterpret_cast<SRETInst *>(inst));
+#endif // defined(__RV_SUPERVISOR_MODE__)
+                        case WFIInst::FUNCT_PRIVILEGE:
+                            return sub_type()->visit_wfi_inst(reinterpret_cast<WFIInst *>(inst));
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+                case MRETInst::FUNCT7:
+                    if (inst->get_rd() != 0 || inst->get_rs1() != 0)
+                        return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_mret_inst(reinterpret_cast<MRETInst *>(inst));
+#if defined(__RV_SUPERVISOR_MODE__)
+                case SFENCEVAMInst::FUNCT7:
+                    if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_sfencevma_inst(reinterpret_cast<SFENCEVAMInst *>(inst));
+#endif // defined(__RV_SUPERVISOR_MODE__)
+#if defined(__RV_HYPERVISOR_MODE__)
+                case HFENCEVVMAInst::FUNCT7:
+                    if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_hfencevvma_inst(reinterpret_cast<HFENCEVVMAInst *>(inst));
+                case HFENCEGVMAInst::FUNCT7:
+                    if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_hfencegvma_inst(reinterpret_cast<HFENCEGVMAInst *>(inst));
+#endif
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
@@ -377,7 +421,7 @@ namespace riscv_isa {
         }
 
     public:
-///     this function is required to be implemented
+///     this function is required to be implemented.
 ///
 ///     RetT visit_inst(riscv_isa_unused Instruction *inst) {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
@@ -568,6 +612,33 @@ namespace riscv_isa {
         RetT visit_csrrci_inst(CSRRCIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+#if defined(__RV_EXTENSION_N__)
+
+        RetT visit_uret_inst(URETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_N__)
+#if defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_sret_inst(SRETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_mret_inst(MRETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+        RetT visit_wfi_inst(WFIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+#if defined(__RV_SUPERVISOR_MODE__)
+
+        RetT visit_sfencevma_inst(SFENCEVAMInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+#endif // defined(__RV_SUPERVISOR_MODE__)
+#if defined(__RV_HYPERVISOR_MODE__)
+
+        RetT visit_hfencevvma_inst(HFENCEVVMAInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+        RetT visit_hfencegvma_inst(HFENCEGVMAInst *inst) { return sub_type()->visit_system_set_inst(inst); }
+
+#endif // defined(__RV_HYPERVISOR_MODE__)
 #if defined(__RV_CUSTOM_0__)
 
         RetT visit_custom_0_inst(InstructionCustom0 *inst) { return sub_type()->visit_32_inst(inst); }

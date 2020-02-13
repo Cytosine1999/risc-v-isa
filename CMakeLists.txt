@@ -14,5 +14,8 @@ target_compile_definitions(test_unit_rv32i PRIVATE __RV_BASE_I__ __RV_BIT_WIDTH_
 target_include_directories(test_unit_rv32i PRIVATE test/include)
 
 add_executable(test_inter_factorial test/integration/factorial_test.cpp)
-target_compile_definitions(test_inter_factorial PRIVATE __RV_BASE_I__ __RV_BIT_WIDTH__=32 __RV_EXTENSION_M__ __RV_EXTENSION_ZICSR__)
+target_compile_definitions(test_inter_factorial PRIVATE
+        __RV_BASE_I__ __RV_BIT_WIDTH__=32
+        __RV_USER_MODE__ __RV_SUPERVISOR_MODE__
+        __RV_EXTENSION_M__ __RV_EXTENSION_ZICSR__)
 target_include_directories(test_inter_factorial PRIVATE test/include)

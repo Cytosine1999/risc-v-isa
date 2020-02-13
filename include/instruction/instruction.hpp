@@ -307,10 +307,10 @@ namespace riscv_isa {
         static constexpr UInnerT OP_CODE = 0b00011;
     };
 
-    class InstructionSystemSet : public Instruction32I {
+    class InstructionSystemSet : public Instruction32R {
     protected:
-        InstructionSystemSet(usize rd, usize funct3, usize rs1, UInnerT imm)
-                : Instruction32I{OP_CODE, rd, funct3, rs1, imm} {}
+        InstructionSystemSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+                : Instruction32R{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
 
     public:
         using BaseT = Instruction32;
@@ -318,6 +318,15 @@ namespace riscv_isa {
         static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11100;
+    };
+
+    class InstructionPrivilegedSet : public InstructionSystemSet {
+    protected:
+        InstructionPrivilegedSet(usize rd, usize rs1, usize rs2, usize funct7)
+                : InstructionSystemSet{rd, FUNCT3, rs1, rs2, funct7} {}
+
+    public:
+        static constexpr UInnerT FUNCT3 = 0b000;
     };
 
 #if __RV_BIT_WIDTH__ == 64

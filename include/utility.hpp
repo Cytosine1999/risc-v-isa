@@ -25,6 +25,10 @@
 #error "Base instruction set E only support 32 bits width!"
 #endif
 
+#if defined(__RV_EXTENSION_F__) || defined(__RV_EXTENSION_D__) || defined(__RV_EXTENSION_Q__)
+#define __RV_FLOAT_POINT__
+#endif
+
 #ifndef RISCV_VENDOR_ID
 #define RISCV_VENDOR_ID 0
 #endif
@@ -218,8 +222,12 @@ namespace riscv_isa {
     T *dyn_cast(U *self) { return is_type<T>(self) ? reinterpret_cast<T *>(self) : nullptr; }
 
     enum PrivilegeLevel : u8 {
+#if defined(__RV_USER_MODE__)
         USER_MODE = 0b00,
+#endif
+#if defined(__RV_SUPERVISOR_MODE__)
         SUPERVISOR_MODE = 0b01,
+#endif
         MACHINE_MODE = 0b11,
     };
 }

@@ -48,18 +48,6 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT7 = 0b0100000;
     };
 
-    class InstructionEnvironmentSet : public InstructionSystemSet {
-    protected:
-        InstructionEnvironmentSet(usize rd, usize rs1, UInnerT imm) : InstructionSystemSet{rd, FUNCT3, rs1, imm} {}
-
-    public:
-        static constexpr UInnerT FUNCT3 = 0b000;
-
-        usize get_funct_environment() const { return get_bits<usize, 32, 20>(inner); }
-
-        usize get_unused() const { return inner & (bits_mask<UInnerT, 12, 7>::val | bits_mask<UInnerT, 20, 15>::val); }
-    };
-
     class LUIInst : public Instruction32U {
     public:
         using BaseT = Instruction32;
@@ -723,19 +711,18 @@ namespace riscv_isa {
         }
     };
 
-    class ECALLInst : public InstructionEnvironmentSet {
+    class ECALLInst : public InstructionPrivilegedSet {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *_self) {
-            InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
-            return self->get_funct3() == FUNCT3 && self->get_funct_environment() == FUNCT_ENVIRONMENT &&
-                   self->get_unused() == 0;
+        static bool is_self_type(BaseT *self) {
+            return reinterpret_cast<ECALLInst *>(self)->inner == ECALLInst().inner;
         }
 
-        static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000000;
+        static constexpr UInnerT FUNCT7 = 0b0000000;
+        static constexpr UInnerT FUNCT_PRIVILEGE = 0b00000;
 
-        ECALLInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
+        ECALLInst() : InstructionPrivilegedSet{0, 0, FUNCT_PRIVILEGE, FUNCT7} {}
 
         friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const ECALLInst &inst) {
             stream << "ecall";
@@ -743,19 +730,18 @@ namespace riscv_isa {
         }
     };
 
-    class EBREAKInst : public InstructionEnvironmentSet {
+    class EBREAKInst : public InstructionPrivilegedSet {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *_self) {
-            InstructionEnvironmentSet *self = reinterpret_cast<InstructionEnvironmentSet *>(_self);
-            return self->get_funct3() == FUNCT3 && self->get_funct_environment() == FUNCT_ENVIRONMENT &&
-                   self->get_unused() == 0;
+        static bool is_self_type(BaseT *self) {
+            return reinterpret_cast<EBREAKInst *>(self)->inner == EBREAKInst().inner;
         }
 
-        static constexpr UInnerT FUNCT_ENVIRONMENT = 0b000000000001;
+        static constexpr UInnerT FUNCT7 = 0b0000000;
+        static constexpr UInnerT FUNCT_PRIVILEGE = 0b00001;
 
-        EBREAKInst() : InstructionEnvironmentSet{0, 0, FUNCT_ENVIRONMENT} {}
+        EBREAKInst() : InstructionPrivilegedSet{0, 0, FUNCT_PRIVILEGE, FUNCT7} {}
 
         friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const EBREAKInst &inst) {
             stream << "ebreak";
