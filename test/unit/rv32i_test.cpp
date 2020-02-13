@@ -464,8 +464,10 @@ int main() {
         for (u32 imm_j = 0; imm_j < IMM_U_MAX; imm_j += IMM_U_INR)
             check_jal_inst(rd, imm_j);
 
-    check_i_type_inst<ECALLInst, 0b11100, 0b000>(0b00000, 0b00000, 0b000000000000);
-    check_i_type_inst<EBREAKInst, 0b11100, 0b000>(0b00000, 0b00000, 0b000000000001);
+    check_r_type_inst<ECALLInst, 0b11100, 0b000, 0b0000000>(0b00000, 0b00000, 0b00000);
+    check_r_type_inst<EBREAKInst, 0b11100, 0b000, 0b0000000>(0b00000, 0b00000, 0b00001);
+    check_r_type_inst<MRETInst, 0b11100, 0b000, 0b0011000>(0b00000, 0b00000, 0b00010);
+    check_r_type_inst<WFIInst, 0b11100, 0b000, 0b0001000>(0b00000, 0b00000, 0b00101);
 
     for (u32 rd = 1; rd < R_MAX; rd += R_INR) {
         for (u32 rs1 = 1; rs1 < R_MAX; rs1 += R_INR) {

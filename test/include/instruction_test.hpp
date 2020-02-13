@@ -177,6 +177,14 @@ namespace riscv_isa {
         RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
             ASSERT((std::is_same<EBREAKInst, InputT>::value));
         }
+
+        RetT visit_mret_inst(riscv_isa_unused MRETInst *inst) {
+            ASSERT((std::is_same<MRETInst, InputT>::value));
+        }
+
+        RetT visit_wfi_inst(riscv_isa_unused WFIInst *inst) {
+            ASSERT((std::is_same<WFIInst, InputT>::value));
+        }
     };
 
     template<typename T, typename U, bool flag = std::is_same<T, U>::value>
@@ -248,6 +256,8 @@ namespace riscv_isa {
         check_dyn_cast<T, FENCEInst>(inst);
         check_dyn_cast<T, ECALLInst>(inst);
         check_dyn_cast<T, EBREAKInst>(inst);
+        check_dyn_cast<T, MRETInst>(inst);
+        check_dyn_cast<T, WFIInst>(inst);
 
         return _dyn_cast_with_void<T>(inst);
     }
