@@ -130,9 +130,9 @@ void check_r_type_inst(usize rd, usize rs1, usize rs2) {
 }
 
 template<typename T, usize op_code, usize funct3, usize funct_shift>
-void check_shift_imm_inst(usize rd, usize rs1, usize shift_amount) {
+void check_shift_imm_inst(usize rd, usize rs1, usize shamt) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
-              ((shift_amount | funct_shift) << IMM_I);
+              ((shamt | funct_shift) << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
     CheckVisitor<T>{}.visit(_inst);
     auto inst = check_all_dyn_cast<T>(_inst);
@@ -141,14 +141,14 @@ void check_shift_imm_inst(usize rd, usize rs1, usize shift_amount) {
     ASSERT_EQ(inst->get_rd(), rd);
     ASSERT_EQ(inst->get_funct3(), funct3);
     ASSERT_EQ(inst->get_rs1(), rs1);
-    ASSERT_EQ(inst->get_shift_amount(), shift_amount);
+    ASSERT_EQ(inst->get_shamt(), shamt);
     ASSERT_EQ(inst->get_funct_shift(), funct_shift);
 }
 
-void check_invalid_funct_shift(usize op_code, usize rd, usize funct3, usize rs1, usize shift_amount,
+void check_invalid_funct_shift(usize op_code, usize rd, usize funct3, usize rs1, usize shamt,
                                usize funct_shift) {
     u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
-              ((shift_amount | funct_shift) << IMM_I);
+              ((shamt | funct_shift) << IMM_I);
     auto _inst = reinterpret_cast<Instruction *>(&val);
     CheckVisitor<void>{}.visit(_inst);
     check_all_dyn_cast<void>(_inst);

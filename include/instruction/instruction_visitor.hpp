@@ -10,6 +10,7 @@
 #include "zicsr.hpp"
 #include "rv32m.hpp"
 #include "rv64m.hpp"
+#include "rvc.hpp"
 #include "privileged_instruction.hpp"
 
 
@@ -43,7 +44,231 @@ namespace riscv_isa {
 #if defined(__RV_EXTENSION_C__)
 
         RetT visit_16(Instruction16 *inst) {
-            return;
+            switch (inst->get_op()) {
+                case 0b00:
+                    return visit_16_op0(inst);
+                case 0b01:
+                    return visit_16_op1(inst);
+                case 0b10:
+                    return visit_16_op2(inst);
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_16_op0(Instruction16 *inst) {
+            switch (inst->get_funct3()) {
+                case CADDI4SPNInst::FUNCT3:
+                    if (get_bits<u16, 13, 5>(*reinterpret_cast<u16 *>(inst)) != 0)
+                        return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_caddi4spn_inst(reinterpret_cast<CADDI4SPNInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+                case CFLDInst::FUNCT3:
+                    return sub_type()->visit_cfld_inst(reinterpret_cast<CFLDInst *>(inst));
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+                case CLQInst::FUNCT3:
+                    return sub_type()->visit_clq_inst(reinterpret_cast<CLQInst *>(inst));
+#endif
+                case CLWInst::FUNCT3:
+                    return sub_type()->visit_clw_inst(reinterpret_cast<CLWInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+                case CFLWInst::FUNCT3:
+                    return sub_type()->visit_cflw_inst(reinterpret_cast<CFLWInst *>(inst));
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case CLDInst::FUNCT3:
+                    return sub_type()->visit_cld_inst(reinterpret_cast<CLDInst *>(inst));
+#endif
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+                case CFSDInst::FUNCT3:
+                    return sub_type()->visit_cfsd_inst(reinterpret_cast<CFSDInst *>(inst));
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+                case CSQInst::FUNCT3:
+                    return sub_type()->visit_csq_inst(reinterpret_cast<CSQInst *>(inst));
+#endif
+                case CSWInst::FUNCT3:
+                    return sub_type()->visit_csw_inst(reinterpret_cast<CSWInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+                case CFSWInst::FUNCT3:
+                    return sub_type()->visit_cfsw_inst(reinterpret_cast<CFSWInst *>(inst));
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case CLDInst::FUNCT3:
+                    return sub_type()->visit_cld_inst(reinterpret_cast<CLDInst *>(inst));
+#endif
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_16_op1(Instruction16 *inst) {
+            switch (inst->get_op()) {
+                case CADDIInst::FUNCT3:
+                    return sub_type()->visit_caddi_inst(reinterpret_cast<CADDIInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32
+                case CJALInst::FUNCT3:
+                    return sub_type()->visit_cjal_inst(reinterpret_cast<CJALInst *>(inst));
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case CADDIWInst::FUNCT3:
+                    if (reinterpret_cast<CADDIWInst *>(inst)->get_rd() == 0)
+                        return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_caddiw_inst(reinterpret_cast<CADDIWInst *>(inst));
+#endif
+                case CLIInst::FUNCT3:
+                    return sub_type()->visit_cli_inst(reinterpret_cast<CLIInst *>(inst));
+                case 0b011:
+                    if ((*reinterpret_cast<u16 *>(inst) &
+                         (bits_mask<u16, 7, 2>::val | bits_mask<u16, 13, 12>::val)) == 0)
+                        return sub_type()->illegal_instruction(inst);
+                    switch (reinterpret_cast<CLUIInst *>(inst)->get_rd()) {
+                        case 2:
+                            return sub_type()->visit_caddi16sp_inst(reinterpret_cast<CADDI16SPInst *>(inst));
+                        default:
+                            return sub_type()->visit_clui_inst(reinterpret_cast<CLUIInst *>(inst));
+                    }
+                case 0b100:
+                    switch (reinterpret_cast<InstructionCA *>(inst)->get_funct2()) {
+                        case CSRLIInst::FUNCT2:
+                            if (reinterpret_cast<InstructionCR *>(inst)->get_funct1() != 0)
+                                return sub_type()->illegal_instruction(inst);
+                            return sub_type()->visit_csrli_inst(reinterpret_cast<CSRLIInst *>(inst));
+                        case CSRAIInst::FUNCT2:
+                            if (reinterpret_cast<InstructionCR *>(inst)->get_funct1() != 0)
+                                return sub_type()->illegal_instruction(inst);
+                            return sub_type()->visit_csrai_inst(reinterpret_cast<CSRAIInst *>(inst));
+                        case CANDIInst::FUNCT2:
+                            return sub_type()->visit_candi_inst(reinterpret_cast<CANDIInst *>(inst));
+                        case 0b11:
+                            return visit_instruction_ca_type(reinterpret_cast<InstructionCA *>(inst));
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+
+                case CJInst::FUNCT3:
+                    return sub_type()->visit_cj_inst(reinterpret_cast<CJInst *>(inst));
+                case CBEQZInst::FUNCT3:
+                    return sub_type()->visit_cbeqz_inst(reinterpret_cast<CBEQZInst *>(inst));
+                case CBNEZInst::FUNCT3:
+                    return sub_type()->visit_cbnez_inst(reinterpret_cast<CBNEZInst *>(inst));
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_16_op2(Instruction16 *inst) {
+            switch (inst->get_funct3()) {
+                case CSLLIInst::FUNCT3:
+                    if (reinterpret_cast<InstructionCR *>(inst)->get_funct1() != 0)
+                        return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_cslli_inst(reinterpret_cast<CSLLIInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+                case CFLDSPInst::FUNCT3:
+                    return sub_type()->visit_cfldsp_inst(reinterpret_cast<CFLDSPInst *>(inst));
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+                case CLQSPInst::FUNCT3:
+                    if (reinterpret_cast<CLQSPInst *>(inst)->get_rd() == 0)
+                        return sub_type()->illegal_instruction(inst);
+                    return sub_type()->visit_clqsp_inst(reinterpret_cast<CLQSPInst *>(inst));
+#endif
+                case CLWSPInst::FUNCT3:
+                    return sub_type()->visit_clwsp_inst(reinterpret_cast<CLWSPInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32
+                case CFLWSPInst::FUNCT3:
+                    return sub_type()->visit_cflwsp_inst(reinterpret_cast<CFLWSPInst *>(inst));
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case CLDSPInst::FUNCT3:
+                    return sub_type()->visit_cldsp_inst();
+#endif
+                case InstructionCR::FUNCT3:
+                    return visit_instruction_cr_type(reinterpret_cast<InstructionCR *>(inst));
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+                case CFSDSPInst::FUNCT3:
+                    return sub_type()->visit_cfsdsp_inst(reinterpret_cast<CFSDSPInst *>(inst));
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+                case CSQSPInst::FUNCT3:
+                    return sub_type()->visit_csqsp_inst(reinterpret_cast<CSQSPInst *>(inst));
+#endif
+                case CSWSPInst::FUNCT3:
+                    return sub_type()->visit_cswsp_inst(reinterpret_cast<CSWSPInst *>(inst));
+#if __RV_BIT_WIDTH__ == 32
+                case CFSWSPInst::FUNCT3:
+                    return sub_type()->visit_cfswsp_inst(reinterpret_cast<CFSWSPInst *>(inst));
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case CSDSPInst::FUNCT3:
+                    return sub_type()->visit_csdsp_inst(reinterpret_cast<CSDSPInst *>(inst));
+#endif
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_instruction_ca_type(InstructionCA *inst) {
+            switch (inst->get_funct1()) {
+                case 0b0:
+                    switch (inst->get_funct_arith()) {
+                        case CSUBInst::FUNCT_ARITH:
+                            return sub_type()->visit_csub_inst(reinterpret_cast<CSUBInst *>(inst));
+                        case CXORInst::FUNCT_ARITH:
+                            return sub_type()->visit_cxor_inst(reinterpret_cast<CXORInst *>(inst));
+                        case CORInst::FUNCT_ARITH:
+                            return sub_type()->visit_cor_inst(reinterpret_cast<CORInst *>(inst));
+                        case CANDInst::FUNCT_ARITH:
+                            return sub_type()->visit_cand_inst(reinterpret_cast<CANDInst *>(inst));
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+                case 0b1:
+                    switch (inst->get_funct_arith()) {
+                        case CSUBWInst::FUNCT_ARITH:
+                            return sub_type()->visit_csubw_inst(reinterpret_cast<CSUBWInst *>(inst));
+                        case CADDWInst::FUNCT_ARITH:
+                            return sub_type()->visit_caddw_inst(reinterpret_cast<CADDWInst *>(inst));
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+#endif
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+        RetT visit_instruction_cr_type(InstructionCR *inst) {
+            switch (inst->get_funct1()) {
+                case 0b0:
+                    switch (inst->get_rs2()) {
+                        case 0:
+                            if (reinterpret_cast<CJRInst *>(inst)->get_rs1() == 0)
+                                return sub_type()->illegal_instruction(inst);
+                            return sub_type()->visit_cjr_inst(reinterpret_cast<CJRInst *>(inst));
+                        default:
+                            return sub_type()->visit_cmv_inst(reinterpret_cast<CMVInst *>(inst));
+                    }
+                case 0b1:
+                    switch (inst->get_rs2()) {
+                        case 0:
+                            switch (reinterpret_cast<CJALRInst *>(inst)->get_rs1()) {
+                                case 0:
+                                    return sub_type()->visit_cebreak_inst(reinterpret_cast<CEBREAKInst *>(inst));
+                                default:
+                                    return sub_type()->visit_cjalr_inst(reinterpret_cast<CJALRInst *>(inst));
+                            }
+                        default:
+                            return sub_type()->visit_cadd_inst(reinterpret_cast<CADDInst *>(inst));
+                    }
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
         }
 
 #endif // defined(__RV_EXTENSION_C__)
@@ -431,6 +656,163 @@ namespace riscv_isa {
 
         RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(inst); }
 
+        RetT visit_caddi4spn_inst(CADDI4SPNInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+
+        RetT visit_cfld_inst(CFLDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+
+        RetT visit_clq_inst(CLQInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_clw_inst(CLWInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+
+        RetT visit_cflw_inst(CFLWInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_cld_inst(CLDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+
+        RetT visit_cfsd_inst(CFSDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+
+        RetT visit_csq_inst(CSQInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_csw_inst(CSWInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+
+        RetT visit_cfsw_inst(CFSWInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_cld_inst(CLDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_caddi_inst(CADDIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32
+
+        RetT visit_cjal_inst(CJALInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_caddiw_inst(CADDIWInst *) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_cli_inst(CLIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_caddi16sp_inst(CADDI16SPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_clui_inst(CLUIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_csrli_inst(CSRLIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_csrai_inst(CSRAIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_candi_inst(CANDIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_csub_inst(CSUBInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cxor_inst(CXORInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cor_inst(CORInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cand_inst(CANDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_csubw_inst(CSUBWInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_caddw_inst(CADDWInst *inst) { return sub_type()->visit_16_inst(inst); }
+#endif
+
+        RetT visit_cj_inst(CJInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cbeqz_inst(CBEQZInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cbnez_inst(CBNEZInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cslli_inst(CSLLIInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+
+        RetT visit_cfldsp_inst(CFLDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+
+        RetT visit_clqsp_inst(CLQSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_clwsp_inst(CLWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32
+
+        RetT visit_cflwsp_inst(CFLWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_cldsp_inst(CLDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_cjr_inst(CJRInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cmv_inst(CMVInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cebreak_inst(CEBREAKInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cjalr_inst(CJALRInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+        RetT visit_cadd_inst(CADDInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+
+        RetT visit_cfsdsp_inst(CFSDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+
+        RetT visit_csqsp_inst(CSQSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
+
+        RetT visit_cswsp_inst(CSWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#if __RV_BIT_WIDTH__ == 32
+
+        RetT visit_cfswsp_inst(CFSWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+
+        RetT visit_csdsp_inst(CSDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
+
+#endif
 #endif // defined(__RV_EXTENSION_C__)
 
         RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }

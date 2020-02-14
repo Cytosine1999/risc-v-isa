@@ -9,7 +9,7 @@
 namespace riscv_isa {
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
-        usize get_shift_amount() const { return slice_shift_amount(inner); }
+        usize get_shamt() const { return slice_shamt(inner); }
         usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
@@ -77,7 +77,7 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIWInst &inst) {
-            stream << "slliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "slliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };
@@ -88,7 +88,7 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIWInst &inst) {
-            stream << "srliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "srliw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };
@@ -98,7 +98,7 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIWInst &inst) {
-            stream << "sraiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "sraiw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };

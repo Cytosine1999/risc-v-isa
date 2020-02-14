@@ -10,6 +10,8 @@
 
 
 namespace riscv_isa {
+
+
     template<typename SubT, typename xlen=xlen_trait>
     class Hart : public InstructionVisitor<SubT, bool> {
     public:
@@ -132,7 +134,7 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
-                XLenT imm = inst->get_shift_amount();
+                XLenT imm = inst->get_shamt();
                 int_reg.set_x(rd, OP::op(int_reg.get_x(rs1), imm));
             }
             inc_pc(InstT::INST_WIDTH);
@@ -150,21 +152,20 @@ namespace riscv_isa {
                 pc{pc}, int_reg{reg}, csr_reg{hart_id}, inst_buffer{0}, cur_level{MACHINE_MODE} {}
 
         RetT visit() {
+            static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of visitor");
+
             inst_buffer = 0; // zeroing instruction buffer
 
-            if (!sub_type()->template mmu_load_inst_half<0>(get_pc()))
-                return false;
+            if (!sub_type()->template mmu_load_inst_half<0>(get_pc())) return false;
 
             if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
-                return this->visit_16(reinterpret_cast<Instruction16 *>(&this->buffer));
+                return this->visit_16(reinterpret_cast<Instruction16 *>(&this->inst_buffer));
 #else
                 return this->sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
 #endif // defined(__RV_EXTENSION_C__)
             } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
-                if (!sub_type()->template mmu_load_inst_half<1>(get_pc()))
-                    return false;
-
+                if (!sub_type()->template mmu_load_inst_half<1>(get_pc())) return false;
                 return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
             } else {
                 return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
@@ -292,11 +293,6 @@ namespace riscv_isa {
         RetT visit_or_inst(ORInst *inst) { return operate_reg<typename operators::OR<xlen>>(inst); }
 
         RetT visit_and_inst(ANDInst *inst) { return operate_reg<typename operators::AND<xlen>>(inst); }
-
-        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
-            inc_pc(FENCEInst::INST_WIDTH); // todo
-            return true;
-        }
 
         RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
             switch (cur_level) {

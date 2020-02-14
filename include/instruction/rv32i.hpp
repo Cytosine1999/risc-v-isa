@@ -13,7 +13,7 @@ namespace riscv_isa {
                 : InstructionArithImmSet{rd, funct3, rs1, imm} {}
 
     public:
-        usize get_shift_amount() const { return slice_shift_amount(inner); }
+        usize get_shamt() const { return slice_shamt(inner); }
 
         usize get_funct_shift() const { return slice_funct_shift(inner); }
     };
@@ -48,7 +48,7 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT7 = 0b0100000;
     };
 
-    class LUIInst : public Instruction32U {
+    class LUIInst : public InstructionU {
     public:
         using BaseT = Instruction32;
 
@@ -56,7 +56,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b01101;
 
-        LUIInst(usize rd, UInnerT imm) : Instruction32U{OP_CODE, rd, imm} {}
+        LUIInst(usize rd, UInnerT imm) : InstructionU{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const LUIInst &inst) {
             stream << "lui\tx" << inst.get_rd() << ", " << inst.get_imm();
@@ -64,7 +64,7 @@ namespace riscv_isa {
         }
     };
 
-    class AUIPCInst : public Instruction32U {
+    class AUIPCInst : public InstructionU {
     public:
         using BaseT = Instruction32;
 
@@ -72,7 +72,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b00101;
 
-        AUIPCInst(usize rd, UInnerT imm) : Instruction32U{OP_CODE, rd, imm} {}
+        AUIPCInst(usize rd, UInnerT imm) : InstructionU{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const AUIPCInst &inst) {
             stream << "auipc\tx" << inst.get_rd() << ", " << inst.get_imm();
@@ -80,7 +80,7 @@ namespace riscv_isa {
         }
     };
 
-    class JALInst : public Instruction32J {
+    class JALInst : public InstructionJ {
     public:
         using BaseT = Instruction32;
 
@@ -88,7 +88,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT OP_CODE = 0b11011;
 
-        JALInst(usize rd, UInnerT imm) : Instruction32J{OP_CODE, rd, imm} {}
+        JALInst(usize rd, UInnerT imm) : InstructionJ{OP_CODE, rd, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const JALInst &inst) {
             stream << "jal\tx" << inst.get_rd() << ", " << inst.get_imm();
@@ -96,19 +96,19 @@ namespace riscv_isa {
         }
     };
 
-    class JALRInst : public Instruction32I {
+    class JALRInst : public InstructionI {
     public:
         using BaseT = Instruction32;
 
         static bool is_self_type(BaseT *_self) {
-            Instruction32I *self = reinterpret_cast<Instruction32I *>(_self);
+            InstructionI *self = reinterpret_cast<InstructionI *>(_self);
             return self->get_op_code() == OP_CODE && self->get_funct3() == FUNCT3;
         }
 
         static constexpr UInnerT OP_CODE = 0b11001;
         static constexpr UInnerT FUNCT3 = 0b000;
 
-        JALRInst(usize rd, usize rs1, UInnerT imm) : Instruction32I{OP_CODE, rd, FUNCT3, rs1, imm} {}
+        JALRInst(usize rd, usize rs1, UInnerT imm) : InstructionI{OP_CODE, rd, FUNCT3, rs1, imm} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const JALRInst &inst) {
             stream << "jalr\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_imm();
@@ -454,7 +454,7 @@ namespace riscv_isa {
                                          (imm & bits_mask<UInnerT, xlen_trait::XLEN_INDEX, 0>::val) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SLLIInst &inst) {
-            stream << "slli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "slli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };
@@ -478,7 +478,7 @@ namespace riscv_isa {
                                               get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRLIInst &inst) {
-            stream << "srli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "srli\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };
@@ -502,7 +502,7 @@ namespace riscv_isa {
                                               get_bits<UInnerT, xlen_trait::XLEN_INDEX, 0>(imm) | FUNCT_SHIFT} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SRAIInst &inst) {
-            stream << "srai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shift_amount();
+            stream << "srai\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", " << inst.get_shamt();
             return stream;
         }
     };
