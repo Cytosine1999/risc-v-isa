@@ -103,6 +103,12 @@ public:
     RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) { return true; }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+
+    RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
+        inc_pc(FENCEInst::INST_WIDTH);
+        return true;
+    }
+
 #if defined(__RV_SUPERVISOR_MODE__)
 
     RetT visit_sret_inst(riscv_isa_unused SRETInst *inst) { return illegal_instruction(inst); }

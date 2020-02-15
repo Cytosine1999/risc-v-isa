@@ -9,6 +9,31 @@
 
 
 namespace riscv_isa {
+    constexpr usize R_INR = 13;
+    constexpr usize R_MAX = 0b100000;
+
+    constexpr usize IMM_I_INR = 1021;
+    constexpr usize IMM_I_MAX = 0b1000000000000;
+
+    constexpr usize IMM_U_INR = 99991;
+    constexpr usize IMM_U_MAX = 0b100000000000000000000;
+
+    constexpr usize IMM_S_1_INR = 13;
+    constexpr usize IMM_S_1_MAX = 0b100000;
+    constexpr usize IMM_S_2_INR = 31;
+    constexpr usize IMM_S_2_MAX = 0b10000000;
+
+    constexpr usize OP_CODE = 2;
+    constexpr usize RD = 7;
+    constexpr usize FUNCT3 = 12;
+    constexpr usize RS1 = 15;
+    constexpr usize RS2 = 20;
+    constexpr usize IMM_I = 20;
+    constexpr usize IMM_U = 12;
+    constexpr usize IMM_S_1 = 7;
+    constexpr usize IMM_S_2 = 25;
+    constexpr usize FUNCT7 = 25;
+
     template<typename InputT>
     class CheckVisitor : public InstructionVisitor<CheckVisitor<InputT>, void> {
     public:
@@ -18,173 +43,12 @@ namespace riscv_isa {
             ASSERT((std::is_same<void, InputT>::value));
         }
 
-        RetT visit_lui_inst(riscv_isa_unused LUIInst *inst) {
-            ASSERT((std::is_same<LUIInst, InputT>::value));
+#define _riscv_isa_check_instruction(NAME, name) \
+        RetT visit_##name##_inst(riscv_isa_unused NAME##Inst *inst) { \
+            ASSERT((std::is_same<NAME##Inst, InputT>::value)); \
         }
 
-        RetT visit_auipc_inst(riscv_isa_unused AUIPCInst *inst) {
-            ASSERT((std::is_same<AUIPCInst, InputT>::value));
-        }
-
-        RetT visit_jal_inst(riscv_isa_unused JALInst *inst) {
-            ASSERT((std::is_same<JALInst, InputT>::value));
-        }
-
-        RetT visit_jalr_inst(riscv_isa_unused JALRInst *inst) {
-            ASSERT((std::is_same<JALRInst, InputT>::value));
-        }
-
-        RetT visit_beq_inst(riscv_isa_unused BEQInst *inst) {
-            ASSERT((std::is_same<BEQInst, InputT>::value));
-        }
-
-        RetT visit_bne_inst(riscv_isa_unused BNEInst *inst) {
-            ASSERT((std::is_same<BNEInst, InputT>::value));
-        }
-
-        RetT visit_blt_inst(riscv_isa_unused BLTInst *inst) {
-            ASSERT((std::is_same<BLTInst, InputT>::value));
-        }
-
-        RetT visit_bge_inst(riscv_isa_unused BGEInst *inst) {
-            ASSERT((std::is_same<BGEInst, InputT>::value));
-        }
-
-        RetT visit_bltu_inst(riscv_isa_unused BLTUInst *inst) {
-            ASSERT((std::is_same<BLTUInst, InputT>::value));
-        }
-
-        RetT visit_bgeu_inst(riscv_isa_unused BGEUInst *inst) {
-            ASSERT((std::is_same<BGEUInst, InputT>::value));
-        }
-
-        RetT visit_lb_inst(riscv_isa_unused LBInst *inst) {
-            ASSERT((std::is_same<LBInst, InputT>::value));
-        }
-
-        RetT visit_lh_inst(riscv_isa_unused LHInst *inst) {
-            ASSERT((std::is_same<LHInst, InputT>::value));
-        }
-
-        RetT visit_lw_inst(riscv_isa_unused LWInst *inst) {
-            ASSERT((std::is_same<LWInst, InputT>::value));
-        }
-
-        RetT visit_lbu_inst(riscv_isa_unused LBUInst *inst) {
-            ASSERT((std::is_same<LBUInst, InputT>::value));
-        }
-
-        RetT visit_lhu_inst(riscv_isa_unused LHUInst *inst) {
-            ASSERT((std::is_same<LHUInst, InputT>::value));
-        }
-
-        RetT visit_sb_inst(riscv_isa_unused SBInst *inst) {
-            ASSERT((std::is_same<SBInst, InputT>::value));
-        }
-
-        RetT visit_sh_inst(riscv_isa_unused SHInst *inst) {
-            ASSERT((std::is_same<SHInst, InputT>::value));
-        }
-
-        RetT visit_sw_inst(riscv_isa_unused SWInst *inst) {
-            ASSERT((std::is_same<SWInst, InputT>::value));
-        }
-
-        RetT visit_addi_inst(riscv_isa_unused ADDIInst *inst) {
-            ASSERT((std::is_same<ADDIInst, InputT>::value));
-        }
-
-        RetT visit_slti_inst(riscv_isa_unused SLTIInst *inst) {
-            ASSERT((std::is_same<SLTIInst, InputT>::value));
-        }
-
-        RetT visit_sltiu_inst(riscv_isa_unused SLTIUInst *inst) {
-            ASSERT((std::is_same<SLTIUInst, InputT>::value));
-        }
-
-        RetT visit_xori_inst(riscv_isa_unused XORIInst *inst) {
-            ASSERT((std::is_same<XORIInst, InputT>::value));
-        }
-
-        RetT visit_ori_inst(riscv_isa_unused ORIInst *inst) {
-            ASSERT((std::is_same<ORIInst, InputT>::value));
-        }
-
-        RetT visit_andi_inst(riscv_isa_unused ANDIInst *inst) {
-            ASSERT((std::is_same<ANDIInst, InputT>::value));
-        }
-
-        RetT visit_slli_inst(riscv_isa_unused SLLIInst *inst) {
-            ASSERT((std::is_same<SLLIInst, InputT>::value));
-        }
-
-        RetT visit_srli_inst(riscv_isa_unused SRLIInst *inst) {
-            ASSERT((std::is_same<SRLIInst, InputT>::value));
-        }
-
-        RetT visit_srai_inst(riscv_isa_unused SRAIInst *inst) {
-            ASSERT((std::is_same<SRAIInst, InputT>::value));
-        }
-
-        RetT visit_add_inst(riscv_isa_unused ADDInst *inst) {
-            ASSERT((std::is_same<ADDInst, InputT>::value));
-        }
-
-        RetT visit_sub_inst(riscv_isa_unused SUBInst *inst) {
-            ASSERT((std::is_same<SUBInst, InputT>::value));
-        }
-
-        RetT visit_sll_inst(riscv_isa_unused SLLInst *inst) {
-            ASSERT((std::is_same<SLLInst, InputT>::value));
-        }
-
-        RetT visit_slt_inst(riscv_isa_unused SLTInst *inst) {
-            ASSERT((std::is_same<SLTInst, InputT>::value));
-        }
-
-        RetT visit_sltu_inst(riscv_isa_unused SLTUInst *inst) {
-            ASSERT((std::is_same<SLTUInst, InputT>::value));
-        }
-
-        RetT visit_xor_inst(riscv_isa_unused XORInst *inst) {
-            ASSERT((std::is_same<XORInst, InputT>::value));
-        }
-
-        RetT visit_srl_inst(riscv_isa_unused SRLInst *inst) {
-            ASSERT((std::is_same<SRLInst, InputT>::value));
-        }
-
-        RetT visit_sra_inst(riscv_isa_unused SRAInst *inst) {
-            ASSERT((std::is_same<SRAInst, InputT>::value));
-        }
-
-        RetT visit_or_inst(riscv_isa_unused ORInst *inst) {
-            ASSERT((std::is_same<ORInst, InputT>::value));
-        }
-
-        RetT visit_and_inst(riscv_isa_unused ANDInst *inst) {
-            ASSERT((std::is_same<ANDInst, InputT>::value));
-        }
-
-        RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
-            ASSERT((std::is_same<FENCEInst, InputT>::value));
-        }
-
-        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
-            ASSERT((std::is_same<ECALLInst, InputT>::value));
-        }
-
-        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
-            ASSERT((std::is_same<EBREAKInst, InputT>::value));
-        }
-
-        RetT visit_mret_inst(riscv_isa_unused MRETInst *inst) {
-            ASSERT((std::is_same<MRETInst, InputT>::value));
-        }
-
-        RetT visit_wfi_inst(riscv_isa_unused WFIInst *inst) {
-            ASSERT((std::is_same<WFIInst, InputT>::value));
-        }
+        riscv_isa_instruction_map(_riscv_isa_check_instruction)
     };
 
     template<typename T, typename U, bool flag = std::is_same<T, U>::value>
@@ -216,52 +80,131 @@ namespace riscv_isa {
 
     template<typename T>
     T *check_all_dyn_cast(Instruction *inst) {
-        check_dyn_cast<T, LUIInst>(inst);
-        check_dyn_cast<T, AUIPCInst>(inst);
-        check_dyn_cast<T, JALInst>(inst);
-        check_dyn_cast<T, JALRInst>(inst);
-        check_dyn_cast<T, BEQInst>(inst);
-        check_dyn_cast<T, BNEInst>(inst);
-        check_dyn_cast<T, BLTInst>(inst);
-        check_dyn_cast<T, BGEInst>(inst);
-        check_dyn_cast<T, BLTUInst>(inst);
-        check_dyn_cast<T, BGEUInst>(inst);
-        check_dyn_cast<T, LBInst>(inst);
-        check_dyn_cast<T, LHInst>(inst);
-        check_dyn_cast<T, LWInst>(inst);
-        check_dyn_cast<T, LBUInst>(inst);
-        check_dyn_cast<T, LHUInst>(inst);
-        check_dyn_cast<T, SBInst>(inst);
-        check_dyn_cast<T, SHInst>(inst);
-        check_dyn_cast<T, SWInst>(inst);
-        check_dyn_cast<T, ADDIInst>(inst);
-        check_dyn_cast<T, SLTIInst>(inst);
-        check_dyn_cast<T, SLTIUInst>(inst);
-        check_dyn_cast<T, XORIInst>(inst);
-        check_dyn_cast<T, ORIInst>(inst);
-        check_dyn_cast<T, ANDIInst>(inst);
-        check_dyn_cast<T, SLLIInst>(inst);
-        check_dyn_cast<T, SRLIInst>(inst);
-        check_dyn_cast<T, SRAIInst>(inst);
-        check_dyn_cast<T, ADDInst>(inst);
-        check_dyn_cast<T, SUBInst>(inst);
-        check_dyn_cast<T, SLLInst>(inst);
-        check_dyn_cast<T, SLTInst>(inst);
-        check_dyn_cast<T, SLTUInst>(inst);
-        check_dyn_cast<T, XORInst>(inst);
-        check_dyn_cast<T, SRLInst>(inst);
-        check_dyn_cast<T, SRAInst>(inst);
-        check_dyn_cast<T, ORInst>(inst);
-        check_dyn_cast<T, ANDInst>(inst);
-        check_dyn_cast<T, FENCEInst>(inst);
-        check_dyn_cast<T, ECALLInst>(inst);
-        check_dyn_cast<T, EBREAKInst>(inst);
-        check_dyn_cast<T, MRETInst>(inst);
-        check_dyn_cast<T, WFIInst>(inst);
+#define _riscv_isa_check_dyn_cast_instruction(NAME, name) \
+        check_dyn_cast<T, NAME##Inst>(inst);
+
+        riscv_isa_instruction_map(_riscv_isa_check_dyn_cast_instruction)
 
         return _dyn_cast_with_void<T>(inst);
     }
 
+    void check_invalid_16_op_code(usize op_code) {
+        for (u16 i = 0; i < 0b100000000000000; i += 5417) {
+            u16 val = op_code + (i << 2u);
+            auto _inst = reinterpret_cast<Instruction *>(&val);
+            CheckVisitor<void>{}.visit(_inst);
+            check_all_dyn_cast<void>(_inst);
+        }
+    }
+
+    void check_invalid_32_op_code(usize op_code) {
+        for (u32 i = 0; i < 0b10000000000000000000000000; i += 999983) {
+            u32 val = 0b11u + (op_code << OP_CODE) + (i << 7u);
+            auto _inst = reinterpret_cast<Instruction *>(&val);
+            CheckVisitor<void>{}.visit(_inst);
+            check_all_dyn_cast<void>(_inst);
+        }
+    }
+
+    template<typename T, usize op_code, usize funct3>
+    void check_i_type_inst(usize rd, usize rs1, usize imm_i) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (imm_i << IMM_I);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<T>{}.visit(_inst);
+        auto inst = check_all_dyn_cast<T>(_inst);
+
+        ASSERT_EQ(inst->get_op_code(), op_code);
+        ASSERT_EQ(inst->get_rd(), rd);
+        ASSERT_EQ(inst->get_funct3(), funct3);
+        ASSERT_EQ(inst->get_rs1(), rs1);
+        ASSERT_EQ(inst->get_imm(), static_cast<i32>(imm_i << IMM_I) >> IMM_I);
+    }
+
+    void check_i_type_invalid(usize op_code, usize rd, usize funct3, usize rs1, usize imm_i) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (imm_i << IMM_I);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<void>{}.visit(_inst);
+        check_all_dyn_cast<void>(_inst);
+    }
+
+    template<typename T, usize op_code, usize funct3>
+    void check_s_type_inst(usize imm_s_1, usize rs1, usize rs2, usize imm_s_2) {
+        u32 val =
+                0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
+                (imm_s_2 << IMM_S_2);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<T>{}.visit(_inst);
+        auto inst = check_all_dyn_cast<T>(_inst);
+
+        ASSERT_EQ(inst->get_op_code(), op_code);
+        ASSERT_EQ(inst->get_funct3(), funct3);
+        ASSERT_EQ(inst->get_rs1(), rs1);
+        ASSERT_EQ(inst->get_rs2(), rs2);
+        ASSERT_EQ(inst->get_imm(), static_cast<i32>((imm_s_1 | (imm_s_2 << 5u)) << IMM_I) >> IMM_I);
+    }
+
+    void check_s_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1, usize rs2, usize imm_s_2) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (rs2 << RS2) | (imm_s_2 << IMM_S_2);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<void>{}.visit(_inst);
+        check_all_dyn_cast<void>(_inst);
+    }
+
+    template<typename T, usize op_code, usize funct3>
+    void check_b_type_inst(usize imm_s_1, usize rs1, usize rs2, usize imm_s_2) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (rs2 << RS2) | (imm_s_2 << IMM_S_2);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<T>{}.visit(_inst);
+        auto inst = check_all_dyn_cast<T>(_inst);
+
+        ASSERT_EQ(inst->get_op_code(), op_code);
+        ASSERT_EQ(inst->get_funct3(), funct3);
+        ASSERT_EQ(inst->get_rs1(), rs1);
+        ASSERT_EQ(inst->get_rs2(), rs2);
+        ASSERT_EQ(inst->get_imm(), static_cast<i32>(
+                ((imm_s_1 & 0b11110u) | ((imm_s_1 & 0b00001u) << 11u) | ((imm_s_2 & 0b0111111u) << 5u) |
+                 ((imm_s_2 & 0b1000000u) << 6u)) << 19u) >> 19u);
+    }
+
+    void check_b_type_invalid(usize op_code, usize imm_s_1, usize funct3, usize rs1, usize rs2, usize imm_s_2) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (rs2 << RS2) | (imm_s_2 << IMM_S_2);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<void>{}.visit(_inst);
+        check_all_dyn_cast<void>(_inst);
+    }
+
+    template<typename T, usize op_code, usize funct3, usize funct7>
+    void check_r_type_inst(usize rd, usize rs1, usize rs2) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
+                  (rs2 << RS2) | (funct7 << FUNCT7);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<T>{}.visit(_inst);
+        auto inst = check_all_dyn_cast<T>(_inst);
+
+        ASSERT_EQ(inst->get_op_code(), op_code);
+        ASSERT_EQ(inst->get_rd(), rd);
+        ASSERT_EQ(inst->get_funct3(), funct3);
+        ASSERT_EQ(inst->get_rs1(), rs1);
+        ASSERT_EQ(inst->get_rs2(), rs2);
+        ASSERT_EQ(inst->get_funct7(), funct7);
+    }
+
+    template<typename T, usize op_code>
+    void check_u_type_inst(usize rd, typename xlen_32_trait::UXLenT imm_j) {
+        u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (imm_j << IMM_U);
+        auto _inst = reinterpret_cast<Instruction *>(&val);
+        CheckVisitor<T>{}.visit(_inst);
+        auto inst = check_all_dyn_cast<T>(_inst);
+
+        ASSERT_EQ(inst->get_op_code(), op_code);
+        ASSERT_EQ(inst->get_rd(), rd);
+        ASSERT_EQ(inst->get_imm(), static_cast<typename xlen_32_trait::XLenT>(imm_j << IMM_U));
+    }
 }
 
 

@@ -14,6 +14,17 @@
 #include "privileged_instruction.hpp"
 
 
+#define riscv_isa_instruction_map(func) \
+    riscv_isa_instruction_c_map(func) \
+    riscv_isa_instruction_32i_map(func) \
+    riscv_isa_instruction_32m_map(func) \
+    riscv_isa_instruction_64i_map(func) \
+    riscv_isa_instruction_64m_map(func) \
+    riscv_isa_instruction_zifencei_map(func) \
+    riscv_isa_instruction_zicsr_map(func) \
+    riscv_isa_instruction_privilege_map(func)
+
+
 namespace riscv_isa {
     template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
@@ -181,8 +192,10 @@ namespace riscv_isa {
                 case CLWSPInst::FUNCT3:
                     return sub_type()->visit_clwsp_inst(reinterpret_cast<CLWSPInst *>(inst));
 #if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
                 case CFLWSPInst::FUNCT3:
                     return sub_type()->visit_cflwsp_inst(reinterpret_cast<CFLWSPInst *>(inst));
+#endif // defined(__RV_EXTENSION_F__)
 #elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
                 case CLDSPInst::FUNCT3:
                     return sub_type()->visit_cldsp_inst();
@@ -201,8 +214,10 @@ namespace riscv_isa {
                 case CSWSPInst::FUNCT3:
                     return sub_type()->visit_cswsp_inst(reinterpret_cast<CSWSPInst *>(inst));
 #if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
                 case CFSWSPInst::FUNCT3:
                     return sub_type()->visit_cfswsp_inst(reinterpret_cast<CFSWSPInst *>(inst));
+#endif // defined(__RV_EXTENSION_F__)
 #elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
                 case CSDSPInst::FUNCT3:
                     return sub_type()->visit_csdsp_inst(reinterpret_cast<CSDSPInst *>(inst));
@@ -652,395 +667,11 @@ namespace riscv_isa {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");
 ///     }
 
-#if defined(__RV_EXTENSION_C__)
+#define _riscv_isa_visit_instruction(NAME, name) \
+        RetT visit_##name##_inst(NAME##Inst *inst) { return sub_type()->visit_inst(inst); }
 
-        RetT visit_16_inst(Instruction16 *inst) { return sub_type()->visit_inst(inst); }
+        riscv_isa_instruction_map(_riscv_isa_visit_instruction)
 
-        RetT visit_caddi4spn_inst(CADDI4SPNInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-
-        RetT visit_cfld_inst(CFLDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-
-        RetT visit_clq_inst(CLQInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_clw_inst(CLWInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-
-        RetT visit_cflw_inst(CFLWInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_cld_inst(CLDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-
-        RetT visit_cfsd_inst(CFSDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-
-        RetT visit_csq_inst(CSQInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_csw_inst(CSWInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-
-        RetT visit_cfsw_inst(CFSWInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_cld_inst(CLDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_caddi_inst(CADDIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32
-
-        RetT visit_cjal_inst(CJALInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_caddiw_inst(CADDIWInst *) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_cli_inst(CLIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_caddi16sp_inst(CADDI16SPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_clui_inst(CLUIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_csrli_inst(CSRLIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_csrai_inst(CSRAIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_candi_inst(CANDIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_csub_inst(CSUBInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cxor_inst(CXORInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cor_inst(CORInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cand_inst(CANDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_csubw_inst(CSUBWInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_caddw_inst(CADDWInst *inst) { return sub_type()->visit_16_inst(inst); }
-#endif
-
-        RetT visit_cj_inst(CJInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cbeqz_inst(CBEQZInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cbnez_inst(CBNEZInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cslli_inst(CSLLIInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-
-        RetT visit_cfldsp_inst(CFLDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-
-        RetT visit_clqsp_inst(CLQSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_clwsp_inst(CLWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32
-
-        RetT visit_cflwsp_inst(CFLWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_cldsp_inst(CLDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_cjr_inst(CJRInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cmv_inst(CMVInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cebreak_inst(CEBREAKInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cjalr_inst(CJALRInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-        RetT visit_cadd_inst(CADDInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-
-        RetT visit_cfsdsp_inst(CFSDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-
-        RetT visit_csqsp_inst(CSQSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-
-        RetT visit_cswsp_inst(CSWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#if __RV_BIT_WIDTH__ == 32
-
-        RetT visit_cfswsp_inst(CFSWSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-        RetT visit_csdsp_inst(CSDSPInst *inst) { return sub_type()->visit_16_inst(inst); }
-
-#endif
-#endif // defined(__RV_EXTENSION_C__)
-
-        RetT visit_32_inst(Instruction32 *inst) { return sub_type()->visit_inst(inst); }
-
-        RetT visit_branch_set_inst(InstructionBranchSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_load_set_inst(InstructionLoadSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_store_set_inst(InstructionStoreSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_arith_imm_set_inst(InstructionArithImmSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_arith_reg_set_inst(InstructionArithRegSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_fence_set_inst(InstructionFenceSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_system_set_inst(InstructionSystemSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_lui_inst(LUIInst *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_auipc_inst(AUIPCInst *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_jal_inst(JALInst *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_jalr_inst(JALRInst *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_beq_inst(BEQInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_bne_inst(BNEInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_blt_inst(BLTInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_bge_inst(BGEInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_bltu_inst(BLTUInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_bgeu_inst(BGEUInst *inst) { return sub_type()->visit_branch_set_inst(inst); }
-
-        RetT visit_lb_inst(LBInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_lh_inst(LHInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_lw_inst(LWInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_lbu_inst(LBUInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_lhu_inst(LHUInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_sb_inst(SBInst *inst) { return sub_type()->visit_store_set_inst(inst); }
-
-        RetT visit_sh_inst(SHInst *inst) { return sub_type()->visit_store_set_inst(inst); }
-
-        RetT visit_sw_inst(SWInst *inst) { return sub_type()->visit_store_set_inst(inst); }
-
-        RetT visit_addi_inst(ADDIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_slti_inst(SLTIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_sltiu_inst(SLTIUInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_xori_inst(XORIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_ori_inst(ORIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_andi_inst(ANDIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_slli_inst(SLLIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_srli_inst(SRLIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_srai_inst(SRAIInst *inst) { return sub_type()->visit_arith_imm_set_inst(inst); }
-
-        RetT visit_add_inst(ADDInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_sub_inst(SUBInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_sll_inst(SLLInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_slt_inst(SLTInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_sltu_inst(SLTUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_xor_inst(XORInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_srl_inst(SRLInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_sra_inst(SRAInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_or_inst(ORInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_and_inst(ANDInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_fence_inst(FENCEInst *inst) { return sub_type()->visit_fence_set_inst(inst); }
-
-        RetT visit_ecall_inst(ECALLInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_ebreak_inst(EBREAKInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#if defined(__RV_EXTENSION_M__)
-
-        RetT visit_mul_inst(MULInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_mulh_inst(MULHInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_mulhsu_inst(MULHSUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_mulhu_inst(MULHUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_div_inst(DIVInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_divu_inst(DIVUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_rem_inst(REMInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-        RetT visit_remu_inst(REMUInst *inst) { return sub_type()->visit_arith_reg_set_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_M__)
-#if __RV_BIT_WIDTH__ == 64
-
-        RetT visit_arith_imm_w_set_inst(InstructionArithImmWSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_arith_reg_w_set_inst(InstructionArithRegWSet *inst) { return sub_type()->visit_32_inst(inst); }
-
-        RetT visit_ld_inst(LDInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_lwu_inst(LWUInst *inst) { return sub_type()->visit_load_set_inst(inst); }
-
-        RetT visit_sd_inst(SDInst *inst) { return sub_type()->visit_store_set_inst(inst); }
-
-        RetT visit_addiw_inst(ADDIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
-
-        RetT visit_slliw_inst(SLLIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
-
-        RetT visit_srliw_inst(SRLIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
-
-        RetT visit_sraiw_inst(SRAIWInst *inst) { return sub_type()->visit_arith_imm_w_set_inst(inst); }
-
-        RetT visit_addw_inst(ADDWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_subw_inst(SUBWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_sllw_inst(SLLWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_srlw_inst(SRLWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_sraw_inst(SRAWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-#if defined(__RV_EXTENSION_M__)
-
-        RetT visit_mulw_inst(MULWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_divw_inst(DIVWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_divuw_inst(DIVUWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_remw_inst(REMWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-        RetT visit_remuw_inst(REMUWInst *inst) { return sub_type()->visit_arith_reg_w_set_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_M__)
-#endif // __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_ZIFENCEI__)
-
-        RetT visit_fencei_inst(FENCEIInst *inst) { return sub_type()->visit_fence_set_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_ZIFENCEI__)
-#if defined(__RV_EXTENSION_ZICSR__)
-
-        RetT visit_csrrw_inst(CSRRWInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_csrrs_inst(CSRRSInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_csrrc_inst(CSRRCInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_csrrwi_inst(CSRRWIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_csrrsi_inst(CSRRSIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_csrrci_inst(CSRRCIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_ZICSR__)
-#if defined(__RV_EXTENSION_N__)
-
-        RetT visit_uret_inst(URETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#endif // defined(__RV_EXTENSION_N__)
-#if defined(__RV_SUPERVISOR_MODE__)
-
-        RetT visit_sret_inst(SRETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#endif // defined(__RV_SUPERVISOR_MODE__)
-
-        RetT visit_mret_inst(MRETInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_wfi_inst(WFIInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#if defined(__RV_SUPERVISOR_MODE__)
-
-        RetT visit_sfencevma_inst(SFENCEVAMInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#endif // defined(__RV_SUPERVISOR_MODE__)
-#if defined(__RV_HYPERVISOR_MODE__)
-
-        RetT visit_hfencevvma_inst(HFENCEVVMAInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-        RetT visit_hfencegvma_inst(HFENCEGVMAInst *inst) { return sub_type()->visit_system_set_inst(inst); }
-
-#endif // defined(__RV_HYPERVISOR_MODE__)
-#if defined(__RV_CUSTOM_0__)
-
-        RetT visit_custom_0_inst(InstructionCustom0 *inst) { return sub_type()->visit_32_inst(inst); }
-
-#endif // defined(__RV_CUSTOM_0__)
-#if defined(__RV_CUSTOM_1__)
-
-        RetT visit_custom_1_inst(InstructionCustom1 *inst) { return sub_type()->visit_32_inst(inst); }
-
-#endif // defined(__RV_CUSTOM_1__)
-#if defined(__RV_CUSTOM_2__)
-
-        RetT visit_custom_2_inst(InstructionCustom2 *inst) { return sub_type()->visit_32_inst(inst); }
-
-#endif // defined(__RV_CUSTOM_2__)
-#if defined(__RV_CUSTOM_3__)
-
-        RetT visit_custom_3_inst(InstructionCustom3 *inst) { return sub_type()->visit_32_inst(inst); }
-
-#endif // defined(__RV_CUSTOM_3__)
     };
 }
 

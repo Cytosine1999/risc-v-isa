@@ -7,6 +7,157 @@
 
 #if defined(__RV_EXTENSION_C__)
 
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+#define riscv_isa_instruction_cfld_clq_map(func) \
+    func(CFLD, cfld)
+#else
+#define riscv_isa_instruction_cfld_clq_map(func)
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfld_clq_map(func) \
+    func(CLQ, clq)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+#define riscv_isa_instruction_cflw_cld_map(func) \
+        func(CFLW, cflw)
+#else
+#define riscv_isa_instruction_cflw_cld_map(func)
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cflw_cld_map(func) \
+        func(CLD, cld)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+#define riscv_isa_instruction_cfsd_csq_map(func) \
+    func(CFSD, cfsd)
+#else
+#define riscv_isa_instruction_cfsd_csq_map(func)
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfsd_csq_map(func) \
+    func(CSQ, csq)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+#define riscv_isa_instruction_cfsw_csd_map(func) \
+    func(CFSW, cfsw)
+#else
+#define riscv_isa_instruction_cfsw_csd_map(func)
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfsw_csd_map(func) \
+    func(CLD, cld)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#define riscv_isa_instruction_cjal_caddiw_map(func) \
+    func(CJAL, cjal)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cjal_caddiw_map(func) \
+    func(CADDIW, caddiw)
+#endif
+
+#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_arith_w_map(func) \
+        func(CSUBW, csubw) \
+        func(CADDW, caddw)
+#else
+#define riscv_isa_instruction_arith_w_map(func)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
+    func(CFLDSP, cfldp)
+#else
+#define riscv_isa_instruction_cfldsp_clqsp_map(func)
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
+    func(CLQSP, clqsp)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
+    func(CFLWSP, cflwsp)
+#else
+#define riscv_isa_instruction_cflwsp_cldsp_map(func)
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
+    func(CLDSP, cldsp)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+    func(CFSDSP, cfsdsp)
+#else
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func)
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+    func(CSQSP, csqsp)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
+    func(CFSWSP, cfswsp)
+#else
+#define riscv_isa_instruction_cfswsp_csdsp_map(func)
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
+    func(CSDSP, csdsp)
+#endif
+
+#define riscv_isa_instruction_c_map(func) \
+        func(CADDI4SPN, caddi4spn) \
+        riscv_isa_instruction_cfld_clq_map(func) \
+        func(CLW, clw) \
+        riscv_isa_instruction_cflw_cld_map(func) \
+        riscv_isa_instruction_cfsd_csq_map(func) \
+        func(CSW, csw) \
+        riscv_isa_instruction_cfsw_csd_map(func) \
+        func(CADDI, caddi) \
+        riscv_isa_instruction_cjal_caddiw_map(func) \
+        func(CLI, cli) \
+        func(CADDI16SP, caddi16sp) \
+        func(CLUI, clui) \
+        func(CSRLI, csrli) \
+        func(CSRAI, csrai) \
+        func(CANDI, candi) \
+        func(CSUB, csub) \
+        func(CXOR, cxor) \
+        func(COR, cor) \
+        func(CAND, cand) \
+        riscv_isa_instruction_arith_w_map(func) \
+        func(CJ, cj) \
+        func(CBEQZ, cbeqz) \
+        func(CBNEZ, cbnez) \
+        func(CSLLI, cslli) \
+        riscv_isa_instruction_cfldsp_clqsp_map(func) \
+        func(CLWSP, clwsp) \
+        riscv_isa_instruction_cflwsp_cldsp_map(func) \
+        func(CJR, cjr) \
+        func(CMV, cmv) \
+        func(CEBREAK, cebreak) \
+        func(CJALR, cjalr) \
+        func(CADD, cadd) \
+        riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+        func(CSWSP, cswsp) \
+        riscv_isa_instruction_cfswsp_csdsp_map(func)
+
+
 namespace riscv_isa {
     class InstructionCR : public Instruction16 {
     public:
@@ -577,6 +728,9 @@ namespace riscv_isa {
 
 }
 
+
+#else
+#define riscv_isa_instruction_c_map(func)
 #endif // defined(__RV_EXTENSION_C__)
 
 

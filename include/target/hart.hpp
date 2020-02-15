@@ -386,7 +386,7 @@ namespace riscv_isa {
         /// }
 
 #define _riscv_isa_get_csr(NAME, name, num) \
-    UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
+        UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
 
         riscv_isa_csr_reg_map(_riscv_isa_get_csr);
 

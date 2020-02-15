@@ -6,6 +6,17 @@
 
 
 #if defined(__RV_EXTENSION_M__)
+#define riscv_isa_instruction_32m_map(func) \
+    func(MUL, mul) \
+    func(MULH, mulh) \
+    func(MULHSU, mulhsu) \
+    func(MULHU, mulhu) \
+    func(DIV, div) \
+    func(DIVU, divu) \
+    func(REM, rem) \
+    func(REMU, remu)
+
+
 namespace riscv_isa {
     class InstructionMulDivSet : public InstructionArithRegSet {
     public:
@@ -92,6 +103,9 @@ namespace riscv_isa {
         }
     };
 }
+
+#else
+#define riscv_isa_instruction_32m_map(func)
 #endif // defined(__RV_EXTENSION_M__)
 
 

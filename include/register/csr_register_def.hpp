@@ -1,5 +1,5 @@
-#ifndef RISCV_ISA_CSR_REGISTER_DEF
-#define RISCV_ISA_CSR_REGISTER_DEF
+#ifndef RISCV_ISA_CSR_REGISTER_DEF_HPP
+#define RISCV_ISA_CSR_REGISTER_DEF_HPP
 
 
 #include "range.def"
@@ -208,4 +208,4 @@
     func(MIMPID, mimpid, 0xF13) \
     func(MHARTID, mhartid,  0xF14)
 
-#endif //RISCV_ISA_CSR_REGISTER_DEF
+#endif //RISCV_ISA_CSR_REGISTER_DEF_HPP

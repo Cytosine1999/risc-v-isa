@@ -6,6 +6,14 @@
 
 
 #if defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
+#define riscv_isa_instruction_64m_map(func) \
+    func(MULW, mulw) \
+    func(DIVW, divw) \
+    func(DIVUW, divuw) \
+    func(REMW, remw) \
+    func(REMUW, remuw)
+
+
 namespace riscv_isa {
     class InstructionMulDivWSet : public InstructionArithRegWSet {
     public:
@@ -61,9 +69,9 @@ namespace riscv_isa {
             return stream;
         }
     };
-
-
 }
+#else
+#define riscv_isa_instruction_64m_map(func)
 #endif // defined(__RV_EXTENSION_M__) && __RV_BIT_WIDTH__ == 64
 
 

@@ -3,7 +3,7 @@
 
 
 #include "utility.hpp"
-#include "csr_register.def"
+#include "csr_register_def.hpp"
 
 
 namespace riscv_isa {
@@ -63,7 +63,7 @@ namespace riscv_isa {
         /// VSATP,          vsatp,          0x280:  Virtual supervisor address translation and protection.
 #endif // defined(__RV_HYPERVISOR_MODE__)
         /// MSTATUS,        mstatus,        0x300:  Machine status register.
-        /// MISA,           misa,           0x301:  ISA and extensions.
+        /// MISA,           misa,           0x301:  Machine ISA and extensions.
         /// MEDELEG,        medeleg,        0x302:  Machine exception delegation register.
         /// MIDELEG,        mideleg,        0x303:  Machine interrupt delegation register.
         /// MIE,            mie,            0x304:  Machine interrupt-enable register.
@@ -75,7 +75,7 @@ namespace riscv_isa {
         /// MCOUNTINHIBIT,  mcountinhibit,  0x320:  Machine counter-inhibit register.
         /// MHPMEVENT3,     mhpmevent3,     0x323:  Machine performance-monitoring event selector.
         /// ...
-        /// MHPMEVENT31,    mhpmevent31,    0x33F.
+        /// MHPMEVENT31,    mhpmevent31,    0x33F:
         /// MSCRATCH,       mscratch,       0x340:  Machine trap handlers Scratch register.
         /// MEPC,           mepc,           0x341:  Machine exception program counter.
         /// MCAUSE,         mcause,         0x342:  Machine trap cause.
