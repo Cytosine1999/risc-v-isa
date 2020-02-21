@@ -25,7 +25,11 @@ namespace riscv_isa {
     private:
         xlen_trait::XLenT pc;
 
-        SubT *sub_type() { return static_cast<SubT *>(this); }
+        SubT *sub_type() {
+            static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of hart!");
+
+            return static_cast<SubT *>(this);
+        }
 
     protected:
         XLenT get_pc() const { return pc; }
@@ -375,6 +379,45 @@ namespace riscv_isa {
 #endif // defined(__RV_EXTENSION_M__)
 #endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_EXTENSION_ZICSR__)
+    private:
+        /// static wrapper enable putting into array
+#define _riscv_isa_static_get_csr(NAME, name, num) \
+        static UXLenT _get_##name##_csr_reg(Hart *self) { \
+            return self->sub_type()->get_##name##_csr_reg(); \
+        }
+        riscv_isa_csr_reg_map(_riscv_isa_static_get_csr);
+#undef _riscv_isa_static_get_csr
+
+        UXLenT (*get_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *) = {
+#define _riscv_isa_get_csr_table(NAME, name, num) \
+                _get_##name##_csr_reg,
+                riscv_isa_csr_reg_map(_riscv_isa_get_csr_table)
+#undef _riscv_isa_get_csr_table
+        };
+
+        UXLenT get_csr(usize index) { return get_csr_reg_table[index](this); }
+
+        /// static wrapper enable putting into array
+#define _riscv_isa_static_set_csr(NAME, name, num) \
+        static RetT _set_##name##_csr_reg(Hart *self, UXLenT val) { \
+            return self->sub_type()->set_##name##_csr_reg(val); \
+        }
+        riscv_isa_csr_reg_map(_riscv_isa_static_set_csr);
+#undef _riscv_isa_static_set_csr
+
+        RetT (*set_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *, UXLenT) = {
+#define _riscv_isa_set_csr_table(NAME, name, num) \
+                _set_##name##_csr_reg,
+                riscv_isa_csr_reg_map(_riscv_isa_set_csr_table)
+#undef _riscv_isa_set_csr_table
+        };
+
+        RetT set_csr(usize index, UXLenT val) { return set_csr_reg_table[index](this, val); }
+
+        usize check_csr(usize num) {
+            if (CSRRegT::get_privilege_bits(num) > cur_level) return CSRRegT::CSR_REGISTER_NUM;
+            else return CSRRegT::get_index(num);
+        }
 
     public:
         /// default implementation of get_##name##_csr, directly return the register.
@@ -387,8 +430,8 @@ namespace riscv_isa {
 
 #define _riscv_isa_get_csr(NAME, name, num) \
         UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
-
         riscv_isa_csr_reg_map(_riscv_isa_get_csr);
+#undef _riscv_isa_get_csr
 
         /// default implementation of set_##name##_csr, calls set_csr.
         /// used for implement default action for some csr.
@@ -400,50 +443,9 @@ namespace riscv_isa {
 
 #define _riscv_isa_set_csr(NAME, name, num) \
         RetT set_##name##_csr_reg(UXLenT val) { return sub_type()->set_csr_reg(CSRRegT::NAME, val); }
-
         riscv_isa_csr_reg_map(_riscv_isa_set_csr);
+#undef _riscv_isa_set_csr
 
-    private:
-        /// static wrapper enable putting into array
-#define _riscv_isa_static_get_csr(NAME, name, num) \
-        static UXLenT _get_##name##_csr_reg(Hart *self) { \
-            return self->sub_type()->get_##name##_csr_reg(); \
-        }
-
-        riscv_isa_csr_reg_map(_riscv_isa_static_get_csr);
-
-#define _riscv_isa_get_csr_table(NAME, name, num) \
-        _get_##name##_csr_reg,
-
-        UXLenT (*get_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *) = {
-                riscv_isa_csr_reg_map(_riscv_isa_get_csr_table)
-        };
-
-        UXLenT get_csr(usize index) { return get_csr_reg_table[index](this); }
-
-        /// static wrapper enable putting into array
-#define _riscv_isa_static_set_csr(NAME, name, num) \
-        static RetT _set_##name##_csr_reg(Hart *self, UXLenT val) { \
-            return self->sub_type()->set_##name##_csr_reg(val); \
-        }
-
-        riscv_isa_csr_reg_map(_riscv_isa_static_set_csr);
-
-#define _riscv_isa_set_csr_table(NAME, name, num) \
-        _set_##name##_csr_reg,
-
-        RetT (*set_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *, UXLenT) = {
-                riscv_isa_csr_reg_map(_riscv_isa_set_csr_table)
-        };
-
-        RetT set_csr(usize index, UXLenT val) { return set_csr_reg_table[index](this, val); }
-
-        usize check_csr(usize num) {
-            if (CSRRegT::get_privilege_bits(num) > cur_level) return CSRRegT::CSR_REGISTER_NUM;
-            else return CSRRegT::get_index(num);
-        }
-
-    public:
         RetT visit_csrrw_inst(CSRRWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();

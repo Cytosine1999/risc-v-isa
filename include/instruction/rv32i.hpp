@@ -9,8 +9,8 @@
 namespace riscv_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
-        InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UInnerT imm)
-                : InstructionArithImmSet{rd, funct3, rs1, imm} {}
+        InstructionShiftImmSet(usize rd, usize funct3, usize rs1, UInnerT imm) :
+                InstructionArithImmSet{rd, funct3, rs1, imm} {}
 
     public:
         usize get_shamt() const { return slice_shamt(inner); }
@@ -32,8 +32,8 @@ namespace riscv_isa {
 
     class InstructionIntegerRegSet : public InstructionArithRegSet {
     protected:
-        InstructionIntegerRegSet(usize rd, usize funct3, usize rs1, usize rs2)
-                : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
+        InstructionIntegerRegSet(usize rd, usize funct3, usize rs1, usize rs2) :
+                InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
 
     public:
         static constexpr UInnerT FUNCT7 = 0b0000000;
@@ -41,8 +41,8 @@ namespace riscv_isa {
 
     class InstructionIntegerRegModSet : public InstructionArithRegSet {
     protected:
-        InstructionIntegerRegModSet(usize rd, usize funct3, usize rs1, usize rs2)
-                : InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
+        InstructionIntegerRegModSet(usize rd, usize funct3, usize rs1, usize rs2) :
+                InstructionArithRegSet{rd, funct3, rs1, rs2, FUNCT7} {}
 
     public:
         static constexpr UInnerT FUNCT7 = 0b0100000;

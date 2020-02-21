@@ -47,8 +47,8 @@ namespace riscv_isa {
         RetT visit_##name##_inst(riscv_isa_unused NAME##Inst *inst) { \
             ASSERT((std::is_same<NAME##Inst, InputT>::value)); \
         }
-
         riscv_isa_instruction_map(_riscv_isa_check_instruction)
+#undef _riscv_isa_check_instruction
     };
 
     template<typename T, typename U, bool flag = std::is_same<T, U>::value>
@@ -82,8 +82,8 @@ namespace riscv_isa {
     T *check_all_dyn_cast(Instruction *inst) {
 #define _riscv_isa_check_dyn_cast_instruction(NAME, name) \
         check_dyn_cast<T, NAME##Inst>(inst);
-
         riscv_isa_instruction_map(_riscv_isa_check_dyn_cast_instruction)
+#undef _riscv_isa_check_dyn_cast_instruction
 
         return _dyn_cast_with_void<T>(inst);
     }

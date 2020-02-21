@@ -32,8 +32,8 @@ namespace riscv_isa {
 
 #define _riscv_isa_dump_instruction(NAME, name) \
         RetT visit_##name##_inst(NAME##Inst *inst) { return dump_inst(inst); }
-
         riscv_isa_instruction_map(_riscv_isa_dump_instruction)
+#undef _riscv_isa_dump_instruction
     };
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {

@@ -29,15 +29,16 @@ namespace riscv_isa {
     template<typename SubT, typename _RetT = void>
     class InstructionVisitor {
     private:
-        SubT *sub_type() { return static_cast<SubT *>(this); }
+        SubT *sub_type() {
+            static_assert(std::is_base_of<InstructionVisitor, SubT>::value, "not subtype of visitor");
+
+            return static_cast<SubT *>(this);
+        }
 
     public:
         using RetT = _RetT;
 
         RetT visit(Instruction *inst) {
-            static_assert(std::is_base_of<InstructionVisitor, SubT>::value, "not subtype of visitor");
-
-
             if ((*reinterpret_cast<u16 *>(inst) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
                 return visit_16(reinterpret_cast<Instruction16 *>(inst));
@@ -669,8 +670,8 @@ namespace riscv_isa {
 
 #define _riscv_isa_visit_instruction(NAME, name) \
         RetT visit_##name##_inst(NAME##Inst *inst) { return sub_type()->visit_inst(inst); }
-
         riscv_isa_instruction_map(_riscv_isa_visit_instruction)
+#undef _riscv_isa_visit_instruction
     };
 }
 
