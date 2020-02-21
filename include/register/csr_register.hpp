@@ -160,11 +160,13 @@ namespace riscv_isa {
 
         /// following macro defines index for all csr.
 
-#define _riscv_isa_declare_csr_index(NAME, name, num) \
-        NAME,
+
 
         enum CSRRegIndex : usize {
+#define _riscv_isa_declare_csr_index(NAME, name, num) \
+            NAME,
             riscv_isa_csr_reg_map(_riscv_isa_declare_csr_index)
+#undef _riscv_isa_declare_csr_index
             CSR_REGISTER_NUM,
         };
 
@@ -251,13 +253,13 @@ namespace riscv_isa {
         /// following function transfer csr number to real index.
         /// if csr not defined, csr_num will be returned.
 
-#define _riscv_isa_csr_get_index(NAME, name, num) \
-        case num: \
-            return NAME;
-
         static usize get_index(usize csr) {
             switch (csr) {
+#define _riscv_isa_csr_get_index(NAME, name, num) \
+                case num: \
+                    return NAME;
                 riscv_isa_csr_reg_map(_riscv_isa_csr_get_index)
+#undef _riscv_isa_csr_get_index
                 default:
                     return CSR_REGISTER_NUM;
             }

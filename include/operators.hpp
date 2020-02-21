@@ -309,5 +309,7 @@ namespace riscv_isa {
     }
 }
 
+#undef _riscv_isa_use_all_xlen
+
 
 #endif //RISCV_ISA_OPERATORS_HPP
