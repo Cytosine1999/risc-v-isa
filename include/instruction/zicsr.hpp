@@ -6,15 +6,6 @@
 
 
 #if defined(__RV_EXTENSION_ZICSR__)
-#define riscv_isa_instruction_zicsr_map(func) \
-    func(CSRRW, csrrw) \
-    func(CSRRS, csrrs) \
-    func(CSRRC, csrrc) \
-    func(CSRRWI, csrrwi) \
-    func(CSRRSI, csrrsi) \
-    func(CSRRCI, csrrci)
-
-
 namespace riscv_isa {
     class InstructionCSRSet : public InstructionSystemSet {
     public:
@@ -88,6 +79,14 @@ namespace riscv_isa {
     };
 }
 
+
+#define riscv_isa_instruction_zicsr_map(func) \
+    func(CSRRW, csrrw) \
+    func(CSRRS, csrrs) \
+    func(CSRRC, csrrc) \
+    func(CSRRWI, csrrwi) \
+    func(CSRRSI, csrrsi) \
+    func(CSRRCI, csrrci)
 #else
 #define riscv_isa_instruction_zicsr_map(func)
 #endif // defined(__RV_EXTENSION_ZICSR__)

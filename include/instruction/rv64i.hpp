@@ -19,8 +19,12 @@
     func(SLLW, sllw) \
     func(SRLW, srlw) \
     func(SRAW, sraw)
+#else
+#define riscv_isa_instruction_64i_map(func)
+#endif // __RV_BIT_WIDTH__ == 64
 
 
+#if __RV_BIT_WIDTH__ == 64
 namespace riscv_isa {
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:

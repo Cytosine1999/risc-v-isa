@@ -1,4 +1,5 @@
 #include "rv32i_test.hpp"
+#include "rv32c_test.hpp"
 
 using namespace riscv_isa;
 

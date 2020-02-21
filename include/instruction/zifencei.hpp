@@ -6,10 +6,6 @@
 
 
 #if defined(__RV_EXTENSION_ZIFENCEI__)
-#define riscv_isa_instruction_zifencei_map(func) \
-    func(FENCEI, fencei)
-
-
 namespace riscv_isa {
     class FENCEIInst : public InstructionFenceSet {
     public:
@@ -18,6 +14,8 @@ namespace riscv_isa {
 }
 
 
+#define riscv_isa_instruction_zifencei_map(func) \
+    func(FENCEI, fencei)
 #else
 #define riscv_isa_instruction_zifencei_map(func)
 #endif // defined(__RV_EXTENSION_ZIFENCEI__)

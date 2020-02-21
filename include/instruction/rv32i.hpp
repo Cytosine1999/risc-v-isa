@@ -6,49 +6,6 @@
 #include "instruction.hpp"
 
 
-#define riscv_isa_instruction_32i_map(func) \
-    func(LUI, lui) \
-    func(AUIPC, auipc) \
-    func(JAL, jal) \
-    func(JALR, jalr) \
-    func(BEQ, beq) \
-    func(BNE, bne) \
-    func(BLT, blt) \
-    func(BGE, bge) \
-    func(BLTU, bltu) \
-    func(BGEU, bgeu) \
-    func(LB, lb) \
-    func(LH, lh) \
-    func(LW, lw) \
-    func(LBU, lbu) \
-    func(LHU, lhu) \
-    func(SB, sb) \
-    func(SH, sh) \
-    func(SW, sw) \
-    func(ADDI, addi) \
-    func(SLTI, slti) \
-    func(SLTIU, sltiu) \
-    func(XORI, xori) \
-    func(ORI, ori) \
-    func(ANDI, andi) \
-    func(SLLI, slli) \
-    func(SRLI, srli) \
-    func(SRAI, srai) \
-    func(ADD, add) \
-    func(SUB, sub) \
-    func(SLL, sll) \
-    func(SLT, slt) \
-    func(SLTU, sltu) \
-    func(XOR, xor) \
-    func(SRL, srl) \
-    func(SRA, sra) \
-    func(OR, or) \
-    func(AND, and) \
-    func(FENCE, fence) \
-    func(ECALL, ecall) \
-    func(EBREAK, ebreak)
-
-
 namespace riscv_isa {
     class InstructionShiftImmSet : public InstructionArithImmSet {
     protected:
@@ -792,6 +749,49 @@ namespace riscv_isa {
         }
     };
 }
+
+
+#define riscv_isa_instruction_32i_map(func) \
+    func(LUI, lui) \
+    func(AUIPC, auipc) \
+    func(JAL, jal) \
+    func(JALR, jalr) \
+    func(BEQ, beq) \
+    func(BNE, bne) \
+    func(BLT, blt) \
+    func(BGE, bge) \
+    func(BLTU, bltu) \
+    func(BGEU, bgeu) \
+    func(LB, lb) \
+    func(LH, lh) \
+    func(LW, lw) \
+    func(LBU, lbu) \
+    func(LHU, lhu) \
+    func(SB, sb) \
+    func(SH, sh) \
+    func(SW, sw) \
+    func(ADDI, addi) \
+    func(SLTI, slti) \
+    func(SLTIU, sltiu) \
+    func(XORI, xori) \
+    func(ORI, ori) \
+    func(ANDI, andi) \
+    func(SLLI, slli) \
+    func(SRLI, srli) \
+    func(SRAI, srai) \
+    func(ADD, add) \
+    func(SUB, sub) \
+    func(SLL, sll) \
+    func(SLT, slt) \
+    func(SLTU, sltu) \
+    func(XOR, xor) \
+    func(SRL, srl) \
+    func(SRA, sra) \
+    func(OR, or) \
+    func(AND, and) \
+    func(FENCE, fence) \
+    func(ECALL, ecall) \
+    func(EBREAK, ebreak)
 
 
 #endif //RISCV_ISA_RV32I_HPP

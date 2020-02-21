@@ -4,13 +4,13 @@
 
 #include "utility.hpp"
 #include "instruction.hpp"
+#include "rvc.hpp"
 #include "rv32i.hpp"
+#include "rv32m.hpp"
 #include "rv64i.hpp"
+#include "rv64m.hpp"
 #include "zifencei.hpp"
 #include "zicsr.hpp"
-#include "rv32m.hpp"
-#include "rv64m.hpp"
-#include "rvc.hpp"
 #include "privileged_instruction.hpp"
 
 
@@ -671,7 +671,6 @@ namespace riscv_isa {
         RetT visit_##name##_inst(NAME##Inst *inst) { return sub_type()->visit_inst(inst); }
 
         riscv_isa_instruction_map(_riscv_isa_visit_instruction)
-
     };
 }
 

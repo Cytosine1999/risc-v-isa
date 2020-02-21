@@ -2,7 +2,7 @@
 #define RISCV_ISA_CSR_REGISTER_DEF_HPP
 
 
-#include "range.def"
+#include "range_def.hpp"
 
 
 #define _riscv_isa_declare_csr_n(func, NAME, name, base, n) \

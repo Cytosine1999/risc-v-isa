@@ -6,158 +6,6 @@
 
 
 #if defined(__RV_EXTENSION_C__)
-
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-#define riscv_isa_instruction_cfld_clq_map(func) \
-    func(CFLD, cfld)
-#else
-#define riscv_isa_instruction_cfld_clq_map(func)
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfld_clq_map(func) \
-    func(CLQ, clq)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-#define riscv_isa_instruction_cflw_cld_map(func) \
-        func(CFLW, cflw)
-#else
-#define riscv_isa_instruction_cflw_cld_map(func)
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cflw_cld_map(func) \
-        func(CLD, cld)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-#define riscv_isa_instruction_cfsd_csq_map(func) \
-    func(CFSD, cfsd)
-#else
-#define riscv_isa_instruction_cfsd_csq_map(func)
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfsd_csq_map(func) \
-    func(CSQ, csq)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-#define riscv_isa_instruction_cfsw_csd_map(func) \
-    func(CFSW, cfsw)
-#else
-#define riscv_isa_instruction_cfsw_csd_map(func)
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfsw_csd_map(func) \
-    func(CLD, cld)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32
-#define riscv_isa_instruction_cjal_caddiw_map(func) \
-    func(CJAL, cjal)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cjal_caddiw_map(func) \
-    func(CADDIW, caddiw)
-#endif
-
-#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_arith_w_map(func) \
-        func(CSUBW, csubw) \
-        func(CADDW, caddw)
-#else
-#define riscv_isa_instruction_arith_w_map(func)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
-    func(CFLDSP, cfldp)
-#else
-#define riscv_isa_instruction_cfldsp_clqsp_map(func)
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
-    func(CLQSP, clqsp)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
-    func(CFLWSP, cflwsp)
-#else
-#define riscv_isa_instruction_cflwsp_cldsp_map(func)
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
-    func(CLDSP, cldsp)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
-#if defined(__RV_EXTENSION_D__)
-#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
-    func(CFSDSP, cfsdsp)
-#else
-#define riscv_isa_instruction_cfsdsp_csqsp_map(func)
-#endif // defined(__RV_EXTENSION_D__)
-#elif __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
-    func(CSQSP, csqsp)
-#endif
-
-#if __RV_BIT_WIDTH__ == 32
-#if defined(__RV_EXTENSION_F__)
-#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
-    func(CFSWSP, cfswsp)
-#else
-#define riscv_isa_instruction_cfswsp_csdsp_map(func)
-#endif // defined(__RV_EXTENSION_F__)
-#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
-    func(CSDSP, csdsp)
-#endif
-
-#define riscv_isa_instruction_c_map(func) \
-        func(CADDI4SPN, caddi4spn) \
-        riscv_isa_instruction_cfld_clq_map(func) \
-        func(CLW, clw) \
-        riscv_isa_instruction_cflw_cld_map(func) \
-        riscv_isa_instruction_cfsd_csq_map(func) \
-        func(CSW, csw) \
-        riscv_isa_instruction_cfsw_csd_map(func) \
-        func(CADDI, caddi) \
-        riscv_isa_instruction_cjal_caddiw_map(func) \
-        func(CLI, cli) \
-        func(CADDI16SP, caddi16sp) \
-        func(CLUI, clui) \
-        func(CSRLI, csrli) \
-        func(CSRAI, csrai) \
-        func(CANDI, candi) \
-        func(CSUB, csub) \
-        func(CXOR, cxor) \
-        func(COR, cor) \
-        func(CAND, cand) \
-        riscv_isa_instruction_arith_w_map(func) \
-        func(CJ, cj) \
-        func(CBEQZ, cbeqz) \
-        func(CBNEZ, cbnez) \
-        func(CSLLI, cslli) \
-        riscv_isa_instruction_cfldsp_clqsp_map(func) \
-        func(CLWSP, clwsp) \
-        riscv_isa_instruction_cflwsp_cldsp_map(func) \
-        func(CJR, cjr) \
-        func(CMV, cmv) \
-        func(CEBREAK, cebreak) \
-        func(CJALR, cjalr) \
-        func(CADD, cadd) \
-        riscv_isa_instruction_cfsdsp_csqsp_map(func) \
-        func(CSWSP, cswsp) \
-        riscv_isa_instruction_cfswsp_csdsp_map(func)
-
-
 namespace riscv_isa {
     class InstructionCR : public Instruction16 {
     public:
@@ -285,13 +133,6 @@ namespace riscv_isa {
         static constexpr usize OP_CODE = 0b00;
     };
 
-    class CLWSPInst : public StackPointerLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b010;
-
-        u32 get_imm() const { return slice_imm<2>(inner); }
-    };
-
 #if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
 
     class CLDSPInst : public StackPointerLoadSet {
@@ -299,6 +140,27 @@ namespace riscv_isa {
         static constexpr usize FUNCT3 = 0b011;
 
         UInnerT get_imm() const { return slice_imm<3>(inner); }
+    };
+
+    class CSDSPInst : public StackPointerStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b111;
+
+        UInnerT get_imm() const { return slice_imm<3>(inner); }
+    };
+
+    class CLDInst : public RegisterLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b011;
+
+        UInnerT get_imm() const { return slice_imm_d(inner); }
+    };
+
+    class CSDInst : public RegisterStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b111;
+
+        UInnerT get_imm() const { return slice_imm_d(inner); }
     };
 
 #endif // __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
@@ -311,47 +173,6 @@ namespace riscv_isa {
         UInnerT get_imm() const { return slice_imm<4>(inner); }
     };
 
-#endif // __RV_BIT_WIDTH__ == 128
-#if defined(__RV_EXTENSION_F__)
-
-    class CFLWSPInst : public StackPointerLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b011;
-
-        UInnerT get_imm() const { return slice_imm<2>(inner); }
-    };
-
-#if defined(__RV_EXTENSION_D__)
-
-    class CFLDSPInst : public StackPointerLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b001;
-
-        UInnerT get_imm() const { return slice_imm<3>(inner); }
-    };
-
-#endif // defined(__RV_EXTENSION_D__)
-#endif // defined(__RV_EXTENSION_F__)
-
-    class CSWSPInst : public StackPointerStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b110;
-
-        UInnerT get_imm() const { return slice_imm<2>(inner); }
-    };
-
-#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-    class CSDSPInst : public StackPointerStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b111;
-
-        UInnerT get_imm() const { return slice_imm<3>(inner); }
-    };
-
-#endif // __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#if __RV_BIT_WIDTH__ == 128
-
     class CSQSPInst : public StackPointerStoreSet {
     public:
         static constexpr usize FUNCT3 = 0b101;
@@ -359,94 +180,12 @@ namespace riscv_isa {
         UInnerT get_imm() const { return slice_imm<4>(inner); }
     };
 
-#endif // __RV_BIT_WIDTH__ == 128
-#if defined(__RV_EXTENSION_F__)
-
-    class CFSWSPInst : public StackPointerStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b111;
-
-        UInnerT get_imm() const { return slice_imm<2>(inner); }
-    };
-
-#if defined(__RV_EXTENSION_D__)
-
-    class CFSDSPInst : public StackPointerStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b101;
-
-        UInnerT get_imm() const { return slice_imm<3>(inner); }
-    };
-
-#endif // defined(__RV_EXTENSION_D__)
-#endif // defined(__RV_EXTENSION_F__)
-
-    class CLWInst : public RegisterLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b010;
-
-        UInnerT get_imm() const { return slice_imm_w(inner); }
-    };
-
-#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-    class CLDInst : public RegisterLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b011;
-
-        UInnerT get_imm() const { return slice_imm_d(inner); }
-    };
-
-#endif // __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#if __RV_BIT_WIDTH__ == 128
-
     class CLQInst : public RegisterLoadSet {
     public:
         static constexpr usize FUNCT3 = 0b001;
 
         UInnerT get_imm() const { return slice_imm_q(inner); }
     };
-
-#endif // __RV_BIT_WIDTH__ == 128
-#if defined(__RV_EXTENSION_F__)
-
-    class CFLWInst : public RegisterLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b011;
-
-        UInnerT get_imm() const { return slice_imm_w(inner); }
-    };
-
-#if defined(__RV_EXTENSION_D__)
-
-    class CFLDInst : public RegisterLoadSet {
-    public:
-        static constexpr usize FUNCT3 = 0b001;
-
-        UInnerT get_imm() const { return slice_imm_d(inner); }
-    };
-
-#endif // defined(__RV_EXTENSION_D__)
-#endif // defined(__RV_EXTENSION_F__)
-
-    class CSWInst : public RegisterStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b110;
-
-        UInnerT get_imm() const { return slice_imm_w(inner); }
-    };
-
-#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-
-    class CSDInst : public RegisterStoreSet {
-    public:
-        static constexpr usize FUNCT3 = 0b111;
-
-        UInnerT get_imm() const { return slice_imm_d(inner); }
-    };
-
-#endif // __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
-#if __RV_BIT_WIDTH__ == 128
 
     class CSQInst : public RegisterStoreSet {
     public:
@@ -458,6 +197,27 @@ namespace riscv_isa {
 #endif // __RV_BIT_WIDTH__ == 128
 #if defined(__RV_EXTENSION_F__)
 
+    class CFLWSPInst : public StackPointerLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b011;
+
+        UInnerT get_imm() const { return slice_imm<2>(inner); }
+    };
+
+    class CFSWSPInst : public StackPointerStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b111;
+
+        UInnerT get_imm() const { return slice_imm<2>(inner); }
+    };
+
+        class CFLWInst : public RegisterLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b011;
+
+        UInnerT get_imm() const { return slice_imm_w(inner); }
+    };
+
     class CFSWInst : public RegisterStoreSet {
     public:
         static constexpr usize FUNCT3 = 0b111;
@@ -466,6 +226,27 @@ namespace riscv_isa {
     };
 
 #if defined(__RV_EXTENSION_D__)
+
+    class CFLDSPInst : public StackPointerLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b001;
+
+        UInnerT get_imm() const { return slice_imm<3>(inner); }
+    };
+
+    class CFSDSPInst : public StackPointerStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b101;
+
+        UInnerT get_imm() const { return slice_imm<3>(inner); }
+    };
+
+    class CFLDInst : public RegisterLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b001;
+
+        UInnerT get_imm() const { return slice_imm_d(inner); }
+    };
 
     class CFSDInst : public RegisterStoreSet {
     public:
@@ -476,6 +257,34 @@ namespace riscv_isa {
 
 #endif // defined(__RV_EXTENSION_D__)
 #endif // defined(__RV_EXTENSION_F__)
+
+    class CLWSPInst : public StackPointerLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b010;
+
+        u32 get_imm() const { return slice_imm<2>(inner); }
+    };
+
+    class CSWSPInst : public StackPointerStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b110;
+
+        UInnerT get_imm() const { return slice_imm<2>(inner); }
+    };
+
+    class CLWInst : public RegisterLoadSet {
+    public:
+        static constexpr usize FUNCT3 = 0b010;
+
+        UInnerT get_imm() const { return slice_imm_w(inner); }
+    };
+
+    class CSWInst : public RegisterStoreSet {
+    public:
+        static constexpr usize FUNCT3 = 0b110;
+
+        UInnerT get_imm() const { return slice_imm_w(inner); }
+    };
 
     class CJInst : public InstructionCJ {
     public:
@@ -725,10 +534,115 @@ namespace riscv_isa {
     public:
         static constexpr usize FUNCT1 = 0b1;
     };
-
 }
 
 
+#if __RV_BIT_WIDTH__ == 32 || __RV_BIT_WIDTH__ == 64
+#if defined(__RV_EXTENSION_D__)
+#define riscv_isa_instruction_cfld_clq_map(func) \
+    func(CFLD, cfld)
+#define riscv_isa_instruction_cfsd_csq_map(func) \
+    func(CFSD, cfsd)
+#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
+    func(CFLDSP, cfldp)
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+    func(CFSDSP, cfsdsp)
+#else
+#define riscv_isa_instruction_cfld_clq_map(func)
+#define riscv_isa_instruction_cfsd_csq_map(func)
+#define riscv_isa_instruction_cfldsp_clqsp_map(func)
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func)
+#endif // defined(__RV_EXTENSION_D__)
+#elif __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cfld_clq_map(func) \
+    func(CLQ, clq)
+#define riscv_isa_instruction_cfsd_csq_map(func) \
+    func(CSQ, csq)
+#define riscv_isa_instruction_cfldsp_clqsp_map(func) \
+    func(CLQSP, clqsp)
+#define riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+    func(CSQSP, csqsp)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#if defined(__RV_EXTENSION_F__)
+#define riscv_isa_instruction_cflw_cld_map(func) \
+    func(CFLW, cflw)
+#define riscv_isa_instruction_cfsw_csd_map(func) \
+    func(CFSW, cfsw)
+#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
+    func(CFLWSP, cflwsp)
+#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
+    func(CFSWSP, cfswsp)
+#else
+#define riscv_isa_instruction_cflw_cld_map(func)
+#define riscv_isa_instruction_cfsw_csd_map(func)
+#define riscv_isa_instruction_cflwsp_cldsp_map(func)
+#define riscv_isa_instruction_cfswsp_csdsp_map(func)
+#endif // defined(__RV_EXTENSION_F__)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cflw_cld_map(func) \
+    func(CLD, cld)
+#define riscv_isa_instruction_cfsw_csd_map(func) \
+    func(CLD, cld)
+#define riscv_isa_instruction_cflwsp_cldsp_map(func) \
+    func(CLDSP, cldsp)
+#define riscv_isa_instruction_cfswsp_csdsp_map(func) \
+    func(CSDSP, csdsp)
+#endif
+
+#if __RV_BIT_WIDTH__ == 32
+#define riscv_isa_instruction_cjal_caddiw_map(func) \
+    func(CJAL, cjal)
+#elif __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_cjal_caddiw_map(func) \
+    func(CADDIW, caddiw)
+#endif
+
+#if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
+#define riscv_isa_instruction_arith_w_map(func) \
+        func(CSUBW, csubw) \
+        func(CADDW, caddw)
+#else
+#define riscv_isa_instruction_arith_w_map(func)
+#endif
+
+#define riscv_isa_instruction_c_map(func) \
+        func(CADDI4SPN, caddi4spn) \
+        riscv_isa_instruction_cfld_clq_map(func) \
+        func(CLW, clw) \
+        riscv_isa_instruction_cflw_cld_map(func) \
+        riscv_isa_instruction_cfsd_csq_map(func) \
+        func(CSW, csw) \
+        riscv_isa_instruction_cfsw_csd_map(func) \
+        func(CADDI, caddi) \
+        riscv_isa_instruction_cjal_caddiw_map(func) \
+        func(CLI, cli) \
+        func(CADDI16SP, caddi16sp) \
+        func(CLUI, clui) \
+        func(CSRLI, csrli) \
+        func(CSRAI, csrai) \
+        func(CANDI, candi) \
+        func(CSUB, csub) \
+        func(CXOR, cxor) \
+        func(COR, cor) \
+        func(CAND, cand) \
+        riscv_isa_instruction_arith_w_map(func) \
+        func(CJ, cj) \
+        func(CBEQZ, cbeqz) \
+        func(CBNEZ, cbnez) \
+        func(CSLLI, cslli) \
+        riscv_isa_instruction_cfldsp_clqsp_map(func) \
+        func(CLWSP, clwsp) \
+        riscv_isa_instruction_cflwsp_cldsp_map(func) \
+        func(CJR, cjr) \
+        func(CMV, cmv) \
+        func(CEBREAK, cebreak) \
+        func(CJALR, cjalr) \
+        func(CADD, cadd) \
+        riscv_isa_instruction_cfsdsp_csqsp_map(func) \
+        func(CSWSP, cswsp) \
+        riscv_isa_instruction_cfswsp_csdsp_map(func)
 #else
 #define riscv_isa_instruction_c_map(func)
 #endif // defined(__RV_EXTENSION_C__)

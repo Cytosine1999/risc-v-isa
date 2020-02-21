@@ -1,5 +1,5 @@
-#ifndef RISCV_ISA_RAGE_DEF
-#define RISCV_ISA_RAGE_DEF
+#ifndef RISCV_ISA_RAGE_DEF_HPP
+#define RISCV_ISA_RAGE_DEF_HPP
 
 #define _riscv_isa_range_0_16(func, ...) \
     func(__VA_ARGS__, 0) \
@@ -53,4 +53,4 @@
 #define _riscv_isa_range(begin, end, func, ...) \
     _riscv_isa_range_##begin##_##end(func, __VA_ARGS__)
 
-#endif //RISCV_ISA_RAGE_DEF
+#endif // RISCV_ISA_RAGE_DEF_HPP

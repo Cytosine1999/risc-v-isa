@@ -5,40 +5,6 @@
 #include "instruction.hpp"
 
 
-#if defined(__RV_EXTENSION_N__)
-#define riscv_isa_instruction_uret_map(func) \
-    func(URET, uret)
-#else
-#define riscv_isa_instruction_uret_map(func)
-#endif // defined(__RV_EXTENSION_N__)
-
-#if defined(__RV_SUPERVISOR_MODE__)
-#define riscv_isa_instruction_privilege_supervisor_map(func) \
-    func(SRET, sret) \
-    func(SFENCEVAM, sfencevma)
-#else
-#define riscv_isa_instruction_privilege_supervisor_map(func)
-#endif // defined(__RV_SUPERVISOR_MODE__)
-
-#if defined(__RV_HYPERVISOR_MODE__)
-#define riscv_isa_instruction_privilege_hypervisor_map(func) \
-    func(HFENCEVVMA, hfencevvma) \
-    func(HFENCEGVMA, hfencegvma)
-#else
-#define riscv_isa_instruction_privilege_hypervisor_map(func)
-#endif // defined(__RV_HYPERVISOR_MODE__)
-
-#define riscv_isa_instruction_privilege_machine_map(func) \
-    func(MRET, mret) \
-    func(WFI, wfi)
-
-#define riscv_isa_instruction_privilege_map(func) \
-    riscv_isa_instruction_uret_map(func) \
-    riscv_isa_instruction_privilege_supervisor_map(func) \
-    riscv_isa_instruction_privilege_hypervisor_map(func) \
-    riscv_isa_instruction_privilege_machine_map(func)
-
-
 namespace riscv_isa {
 #if defined(__RV_EXTENSION_N__)
 
@@ -184,6 +150,40 @@ namespace riscv_isa {
 
 #endif // defined(__RV_HYPERVISOR_MODE__)
 }
+
+
+#if defined(__RV_EXTENSION_N__)
+#define riscv_isa_instruction_uret_map(func) \
+    func(URET, uret)
+#else
+#define riscv_isa_instruction_uret_map(func)
+#endif // defined(__RV_EXTENSION_N__)
+
+#if defined(__RV_SUPERVISOR_MODE__)
+#define riscv_isa_instruction_privilege_supervisor_map(func) \
+    func(SRET, sret) \
+    func(SFENCEVAM, sfencevma)
+#else
+#define riscv_isa_instruction_privilege_supervisor_map(func)
+#endif // defined(__RV_SUPERVISOR_MODE__)
+
+#if defined(__RV_HYPERVISOR_MODE__)
+#define riscv_isa_instruction_privilege_hypervisor_map(func) \
+    func(HFENCEVVMA, hfencevvma) \
+    func(HFENCEGVMA, hfencegvma)
+#else
+#define riscv_isa_instruction_privilege_hypervisor_map(func)
+#endif // defined(__RV_HYPERVISOR_MODE__)
+
+#define riscv_isa_instruction_privilege_machine_map(func) \
+    func(MRET, mret) \
+    func(WFI, wfi)
+
+#define riscv_isa_instruction_privilege_map(func) \
+    riscv_isa_instruction_uret_map(func) \
+    riscv_isa_instruction_privilege_supervisor_map(func) \
+    riscv_isa_instruction_privilege_hypervisor_map(func) \
+    riscv_isa_instruction_privilege_machine_map(func)
 
 
 #endif //RISCV_ISA_PRIVILEGED_INSTRUCTION_HPP
