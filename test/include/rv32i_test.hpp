@@ -4,7 +4,7 @@
 
 #include "test.hpp"
 #include "instruction_test.hpp"
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "instruction/instruction.hpp"
 #include "instruction/rv32i.hpp"
 #include "instruction/instruction_visitor.hpp"

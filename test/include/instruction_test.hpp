@@ -2,7 +2,7 @@
 #define RISCV_ISA_INSTRUCTION_TEST_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "instruction/instruction.hpp"
 #include "instruction/rv32i.hpp"
 #include "instruction/instruction_visitor.hpp"

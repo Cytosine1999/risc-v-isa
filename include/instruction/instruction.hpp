@@ -2,7 +2,7 @@
 #define RISCV_ISA_INSTRUCTION_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 
 
 namespace riscv_isa {

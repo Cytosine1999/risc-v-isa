@@ -4,7 +4,7 @@
 
 #include <ostream>
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "instruction/instruction_visitor.hpp"
 
 
@@ -22,8 +22,30 @@ namespace riscv_isa {
 
     public:
         std::ostream &stream;
+        ILenT inst_buffer;
 
-        explicit Dump(std::ostream &stream) : stream{stream} {}
+        explicit Dump(std::ostream &stream) : stream{stream}, inst_buffer{0} {}
+
+        RetT visit(Instruction *inst, usize length) {
+            inst_buffer = 0;
+
+            if (length < 2) stream << "[instruction exceed length limit]";
+            *(reinterpret_cast<u16 *>(&inst_buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
+
+            if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
+#if defined(__RV_EXTENSION_C__)
+                return this->visit_16(reinterpret_cast<Instruction16 *>(&this->inst_buffer));
+#else
+                return illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
+#endif // defined(__RV_EXTENSION_C__)
+            } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+                if (length < 4) stream << "[instruction exceed length limit]";
+                *(reinterpret_cast<u16 *>(&inst_buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
+                return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
+            } else {
+                return illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
+            }
+        }
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
             stream << "[unknown instruction]";
@@ -38,7 +60,7 @@ namespace riscv_isa {
 
     std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {
         Dump dump{stream};
-        dump.visit(const_cast<Instruction *>(&inst));
+        dump.visit(const_cast<Instruction *>(&inst), RISCV_ILEN / 8);
         return stream;
     }
 }

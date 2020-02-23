@@ -2,7 +2,7 @@
 #define RISCV_ISA_RV32I_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "instruction.hpp"
 
 

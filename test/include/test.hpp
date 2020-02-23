@@ -3,7 +3,7 @@
 
 
 #include <iostream>
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 
 
 template<typename T>

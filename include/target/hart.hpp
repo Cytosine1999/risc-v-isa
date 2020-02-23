@@ -2,7 +2,7 @@
 #define RISCV_ISA_HART_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "operators.hpp"
 #include "instruction/instruction_visitor.hpp"
 #include "register/register.hpp"
@@ -385,7 +385,9 @@ namespace riscv_isa {
         static UXLenT _get_##name##_csr_reg(Hart *self) { \
             return self->sub_type()->get_##name##_csr_reg(); \
         }
-        riscv_isa_csr_reg_map(_riscv_isa_static_get_csr);
+
+        riscv_isa_csr_reg_map(_riscv_isa_static_get_csr)
+
 #undef _riscv_isa_static_get_csr
 
         UXLenT (*get_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *) = {
@@ -402,7 +404,9 @@ namespace riscv_isa {
         static RetT _set_##name##_csr_reg(Hart *self, UXLenT val) { \
             return self->sub_type()->set_##name##_csr_reg(val); \
         }
-        riscv_isa_csr_reg_map(_riscv_isa_static_set_csr);
+
+        riscv_isa_csr_reg_map(_riscv_isa_static_set_csr)
+
 #undef _riscv_isa_static_set_csr
 
         RetT (*set_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *, UXLenT) = {
@@ -430,7 +434,9 @@ namespace riscv_isa {
 
 #define _riscv_isa_get_csr(NAME, name, num) \
         UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
-        riscv_isa_csr_reg_map(_riscv_isa_get_csr);
+
+        riscv_isa_csr_reg_map(_riscv_isa_get_csr)
+
 #undef _riscv_isa_get_csr
 
         /// default implementation of set_##name##_csr, calls set_csr.
@@ -443,7 +449,9 @@ namespace riscv_isa {
 
 #define _riscv_isa_set_csr(NAME, name, num) \
         RetT set_##name##_csr_reg(UXLenT val) { return sub_type()->set_csr_reg(CSRRegT::NAME, val); }
-        riscv_isa_csr_reg_map(_riscv_isa_set_csr);
+
+        riscv_isa_csr_reg_map(_riscv_isa_set_csr)
+
 #undef _riscv_isa_set_csr
 
         RetT visit_csrrw_inst(CSRRWInst *inst) {

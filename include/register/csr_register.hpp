@@ -2,7 +2,7 @@
 #define RISCV_ISA_CSR_REGISTER_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "csr_register_def.hpp"
 
 
@@ -173,62 +173,62 @@ namespace riscv_isa {
     private:
         static constexpr xlen_trait::UXLenT MISA_INIT =
                 get_bits<UXLenT, 2, 0, xlen::XLEN - 2>(xlen::XLEN_INDEX - 4)
-#ifdef __RV_EXTENSION_A__
+                #ifdef __RV_EXTENSION_A__
                 | bit_mask<UXLenT, 0>::val
-#endif
-#ifdef __RV_EXTENSION_B__
+                #endif
+                #ifdef __RV_EXTENSION_B__
                 | bit_mask<UXLenT, 1>::val
-#endif
-#ifdef __RV_EXTENSION_C__
+                #endif
+                #ifdef __RV_EXTENSION_C__
                 | bit_mask<UXLenT, 2>::val
-#endif
-#ifdef __RV_EXTENSION_D__
+                #endif
+                #ifdef __RV_EXTENSION_D__
                 | bit_mask<UXLenT, 3>::val
-#endif
-#ifdef __RV_BASE_E__
+                #endif
+                #ifdef __RV_BASE_E__
                 | bit_mask<UXLenT, 4>::val
-#endif
-#ifdef __RV_EXTENSION_F__
+                #endif
+                #ifdef __RV_EXTENSION_F__
                 | bit_mask<UXLenT, 5>::val
-#endif
-#ifdef __RV_HYPERVISOR_MODE__
+                #endif
+                #ifdef __RV_HYPERVISOR_MODE__
                 | bit_mask<UXLenT, 7>::val
-#endif
-#ifdef __RV_BASE_I__
+                #endif
+                #ifdef __RV_BASE_I__
                 | bit_mask<UXLenT, 8>::val
-#endif
-#ifdef __RV_EXTENSION_J__
+                #endif
+                #ifdef __RV_EXTENSION_J__
                 | bit_mask<UXLenT, 9>::val
-#endif
-#ifdef __RV_EXTENSION_L__
+                #endif
+                #ifdef __RV_EXTENSION_L__
                 | bit_mask<UXLenT, 11>::val
-#endif
-#ifdef __RV_EXTENSION_M__
+                #endif
+                #ifdef __RV_EXTENSION_M__
                 | bit_mask<UXLenT, 12>::val
-#endif
-#ifdef __RV_EXTENSION_N__
+                #endif
+                #ifdef __RV_EXTENSION_N__
                 | bit_mask<UXLenT, 13>::val
-#endif
-#ifdef __RV_EXTENSION_P__
+                #endif
+                #ifdef __RV_EXTENSION_P__
                 | bit_mask<UXLenT, 15>::val
-#endif
-#ifdef __RV_EXTENSION_Q__
+                #endif
+                #ifdef __RV_EXTENSION_Q__
                 | bit_mask<UXLenT, 16>::val
-#endif
-#ifdef __RV_SUPERVISOR_MODE__
+                #endif
+                #ifdef __RV_SUPERVISOR_MODE__
                 | bit_mask<UXLenT, 18>::val
-#endif
-#ifdef __RV_EXTENSION_T__
+                #endif
+                #ifdef __RV_EXTENSION_T__
                 | bit_mask<UXLenT, 19>::val
-#endif
-#ifdef __RV_USER_MODE__
+                #endif
+                #ifdef __RV_USER_MODE__
                 | bit_mask<UXLenT, 20>::val
 #endif
 #ifdef __RV_EXTENSION_V__
-                | bit_mask<UXLenT, 21>::val
+        | bit_mask<UXLenT, 21>::val
 #endif
 #ifdef __RV_NON_STANDARD__
-                | bit_mask<UXLenT, 23>::val
+        | bit_mask<UXLenT, 23>::val
 #endif
         ;
 

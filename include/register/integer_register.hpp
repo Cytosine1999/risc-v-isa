@@ -2,7 +2,7 @@
 #define RISCV_ISA_INTEGER_REGISTER_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 
 
 namespace riscv_isa {
@@ -57,6 +57,8 @@ namespace riscv_isa {
             T6 = 31,
 #endif // !defined(__RV_EXTENSION_E__)
         };
+
+        static bool is_link(usize reg) { return reg == 1 || reg == 5; }
 
         IntegerRegister() : x{} {}
 

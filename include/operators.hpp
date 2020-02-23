@@ -2,7 +2,7 @@
 #define RISCV_ISA_OPERATORS_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 
 
 #define _riscv_isa_use_all_xlen(xlen) \

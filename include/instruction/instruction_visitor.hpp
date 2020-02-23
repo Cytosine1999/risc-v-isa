@@ -2,7 +2,7 @@
 #define RISCV_ISA_INSTRUCTION_VISITOR_HPP
 
 
-#include "utility.hpp"
+#include "riscv_isa_utility.hpp"
 #include "instruction.hpp"
 #include "rvc.hpp"
 #include "rv32i.hpp"
@@ -670,7 +670,9 @@ namespace riscv_isa {
 
 #define _riscv_isa_visit_instruction(NAME, name) \
         RetT visit_##name##_inst(NAME##Inst *inst) { return sub_type()->visit_inst(inst); }
+
         riscv_isa_instruction_map(_riscv_isa_visit_instruction)
+
 #undef _riscv_isa_visit_instruction
     };
 }
