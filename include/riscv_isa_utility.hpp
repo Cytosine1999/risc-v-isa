@@ -3,8 +3,6 @@
 
 
 #include <iostream>
-#include <zconf.h>
-#include <cstdint>
 #include <cstddef>
 #include <type_traits>
 
@@ -65,6 +63,12 @@ namespace riscv_isa {
 #define riscv_isa_unreachable(msg) riscv_isa::_unreachable(__FILE__, __LINE__, msg)
 
 #define riscv_isa_unused __attribute__((unused))
+
+#if defined(DEBUG)
+#define riscv_isa_inline
+#else
+#define riscv_isa_inline inline __attribute__((__always_inline__))
+#endif
 
     using i8 = int8_t;
     using u8 = u_int8_t;

@@ -69,7 +69,7 @@ public:
         if (ptr == nullptr) {
             return internal_interrupt(trap::LOAD_PAGE_FAULT, addr);
         } else {
-            if (dest != 0) int_reg.set_x(dest, *ptr);
+            if (dest != 0) set_x(dest, *ptr);
             return true;
         }
     }
@@ -80,7 +80,7 @@ public:
         if (ptr == nullptr) {
             return internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
         } else {
-            *ptr = static_cast<ValT>(int_reg.get_x(src));
+            *ptr = static_cast<ValT>(get_x(src));
             return true;
         }
     }
@@ -126,13 +126,13 @@ public:
 #endif // defined(__RV_SUPERVISOR_MODE__)
 
     bool system_call() {
-        switch (int_reg.get_x(IntRegT::A0)) {
+        switch (get_x(IntRegT::A0)) {
             case 1:
-                std::cout << std::dec << int_reg.get_x(IntRegT::A1);
+                std::cout << std::dec << get_x(IntRegT::A1);
 
                 return true;
             case 11:
-                std::cout << static_cast<char>(int_reg.get_x(IntRegT::A1));
+                std::cout << static_cast<char>(get_x(IntRegT::A1));
 
                 return true;
             case 10:
@@ -141,7 +141,7 @@ public:
                 return false;
             default:
                 std::cerr << "Invalid enviroment call number at " << std::hex << get_pc()
-                          << ", call number " << std::dec << int_reg.get_x(IntRegT::A7)
+                          << ", call number " << std::dec << get_x(IntRegT::A7)
                           << std::endl;
 
                 return false;

@@ -39,13 +39,15 @@ namespace riscv_isa {
         using RetT = _RetT;
 
         RetT visit(Instruction *inst) {
-            if ((*reinterpret_cast<u16 *>(inst) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
+            u16 half = *reinterpret_cast<u16 *>(inst);
+            
+            if ((half & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
                 return visit_16(reinterpret_cast<Instruction16 *>(inst));
 #else
                 return sub_type()->illegal_instruction(inst);
 #endif // defined(__RV_EXTENSION_C__)
-            } else if ((*reinterpret_cast<u16 *>(inst) & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+            } else if ((half & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
                 return visit_32(reinterpret_cast<Instruction32 *>(inst));
             } else {
                 return sub_type()->illegal_instruction(inst);
@@ -662,7 +664,7 @@ namespace riscv_isa {
         }
 
     public:
-///     this function is required to be implemented.
+///     this function is required to be implemented if any of visit_##name##_inst function is not being overwritten.
 ///
 ///     RetT visit_inst(riscv_isa_unused Instruction *inst) {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");

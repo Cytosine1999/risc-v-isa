@@ -10,8 +10,6 @@
 
 
 namespace riscv_isa {
-
-
     template<typename SubT, typename xlen=xlen_trait>
     class Hart : public InstructionVisitor<SubT, bool> {
     public:
@@ -24,7 +22,14 @@ namespace riscv_isa {
 
     private:
         xlen_trait::XLenT pc;
+        IntRegT int_reg;
 
+    protected:
+        CSRRegT csr_reg;
+        ILenT inst_buffer;
+        PrivilegeLevel cur_level;
+
+    private:
         SubT *sub_type() {
             static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of hart!");
 
@@ -36,7 +41,11 @@ namespace riscv_isa {
 
         void set_pc(XLenT val) { pc = val; }
 
-        void inc_pc(XLenT val) { set_pc(get_pc() + val); }
+        void inc_pc(XLenT val) { pc += val; }
+
+        XLenT get_x(usize index) const { return int_reg.get_x(index); }
+
+        void set_x(usize index, XLenT val) { int_reg.set_x(index, val); }
 
 ///     these functions are required to be implemented.
 ///
@@ -45,7 +54,7 @@ namespace riscv_isa {
 ///     }
 ///
 ///     if interrupt generates in following three memory related functions, false should be returned and internal
-///     intterupt should be taken explicitly.
+///         interrupt should be taken explicitly.
 ///
 ///     template<typename ValT>
 ///     RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
@@ -73,7 +82,7 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 usize rs2 = inst->get_rs2();
-                int_reg.set_x(rd, OP::op(int_reg.get_x(rs1), int_reg.get_x(rs2)));
+                set_x(rd, OP::op(get_x(rs1), get_x(rs2)));
             }
             inc_pc(InstT::INST_WIDTH);
 
@@ -86,7 +95,7 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 XLenT imm = inst->get_imm();
-                int_reg.set_x(rd, OP::op(int_reg.get_x(rs1), imm));
+                set_x(rd, OP::op(get_x(rs1), imm));
             }
             inc_pc(InstT::INST_WIDTH);
 
@@ -98,7 +107,7 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
 
-            if (OP::op(int_reg.get_x(rs1), int_reg.get_x(rs2))) {
+            if (OP::op(get_x(rs1), get_x(rs2))) {
                 XLenT imm = inst->get_imm();
                 UXLenT target = imm + get_pc();
 #if RISCV_IALIGN == 32
@@ -118,7 +127,7 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            if (!sub_type()->template mmu_load_int_reg<ValT>(rd, int_reg.get_x(rs1) + imm)) return false;
+            if (!sub_type()->template mmu_load_int_reg<ValT>(rd, get_x(rs1) + imm)) return false;
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
@@ -128,7 +137,7 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
             XLenT imm = inst->get_imm();
-            if (!sub_type()->template mmu_store_int_reg<ValT>(rs2, int_reg.get_x(rs1) + imm)) return false;
+            if (!sub_type()->template mmu_store_int_reg<ValT>(rs2, get_x(rs1) + imm)) return false;
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
@@ -139,17 +148,12 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 XLenT imm = inst->get_shamt();
-                int_reg.set_x(rd, OP::op(int_reg.get_x(rs1), imm));
+                set_x(rd, OP::op(get_x(rs1), imm));
             }
             inc_pc(InstT::INST_WIDTH);
 
             return true;
         }
-
-        IntRegT int_reg;
-        CSRRegT csr_reg;
-        ILenT inst_buffer;
-        PrivilegeLevel cur_level;
 
     public:
         Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
@@ -184,7 +188,7 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
-                int_reg.set_x(rd, imm);
+                set_x(rd, imm);
             }
             inc_pc(LUIInst::INST_WIDTH);
 
@@ -195,7 +199,7 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
-                int_reg.set_x(rd, imm + get_pc());
+                set_x(rd, imm + get_pc());
             }
             inc_pc(LUIInst::INST_WIDTH);
 
@@ -211,7 +215,7 @@ namespace riscv_isa {
                 return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
 #endif
 
-            if (rd != 0) int_reg.set_x(rd, get_pc() + JALInst::INST_WIDTH);
+            if (rd != 0) set_x(rd, get_pc() + JALInst::INST_WIDTH);
             set_pc(target);
 
             return true;
@@ -221,12 +225,12 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(int_reg.get_x(rs1) + imm);
+            UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(get_x(rs1) + imm);
 #if RISCV_IALIGN == 32
             if (get_bits<UXLenT, 2, 0>(target) != 0)
                 return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
 #endif
-            if (rd != 0) int_reg.set_x(rd, get_pc() + JALRInst::INST_WIDTH);
+            if (rd != 0) set_x(rd, get_pc() + JALRInst::INST_WIDTH);
             set_pc(target);
 
             return true;
@@ -390,14 +394,9 @@ namespace riscv_isa {
 
 #undef _riscv_isa_static_get_csr
 
-        UXLenT (*get_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *) = {
-#define _riscv_isa_get_csr_table(NAME, name, num) \
-                _get_##name##_csr_reg,
-                riscv_isa_csr_reg_map(_riscv_isa_get_csr_table)
-#undef _riscv_isa_get_csr_table
-        };
+        static UXLenT (*const _get_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *);
 
-        UXLenT get_csr(usize index) { return get_csr_reg_table[index](this); }
+        UXLenT get_csr(usize index) { return _get_csr_reg_table[index](this); }
 
         /// static wrapper enable putting into array
 #define _riscv_isa_static_set_csr(NAME, name, num) \
@@ -409,14 +408,9 @@ namespace riscv_isa {
 
 #undef _riscv_isa_static_set_csr
 
-        RetT (*set_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *, UXLenT) = {
-#define _riscv_isa_set_csr_table(NAME, name, num) \
-                _set_##name##_csr_reg,
-                riscv_isa_csr_reg_map(_riscv_isa_set_csr_table)
-#undef _riscv_isa_set_csr_table
-        };
+        static RetT (*const _set_csr_reg_table[CSRRegT::CSR_REGISTER_NUM])(Hart *, UXLenT);
 
-        RetT set_csr(usize index, UXLenT val) { return set_csr_reg_table[index](this, val); }
+        RetT set_csr(usize index, UXLenT val) { return _set_csr_reg_table[index](this, val); }
 
         usize check_csr(usize num) {
             if (CSRRegT::get_privilege_bits(num) > cur_level) return CSRRegT::CSR_REGISTER_NUM;
@@ -424,13 +418,13 @@ namespace riscv_isa {
         }
 
     public:
-        /// default implementation of get_##name##_csr, directly return the register.
-        /// used for implement default action for some csr.
-        /// the get_csr function needed to be defined to enable this.
-        ///
-        /// RetT get_csr_reg(riscv_isa_unused UXLenT index) {
-        ///     riscv_isa_unreachable("get csr register undefined");
-        /// }
+///     default implementation of get_##name##_csr, directly return the register.
+///     used for implement default action for some csr.
+///     the get_csr function needed to be defined to enable this.
+///
+///     RetT get_csr_reg(riscv_isa_unused UXLenT index) {
+///         riscv_isa_unreachable("get csr register undefined");
+///     }
 
 #define _riscv_isa_get_csr(NAME, name, num) \
         UXLenT get_##name##_csr_reg() { return sub_type()->get_csr_reg(CSRRegT::NAME); }
@@ -439,13 +433,13 @@ namespace riscv_isa {
 
 #undef _riscv_isa_get_csr
 
-        /// default implementation of set_##name##_csr, calls set_csr.
-        /// used for implement default action for some csr.
-        /// the set_csr function needed to be defined to enable this.
-        ///
-        /// RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) {
-        ///     riscv_isa_unreachable("write csr register undefined");
-        /// }
+///     default implementation of set_##name##_csr, calls set_csr.
+///     used for implement default action for some csr.
+///     the set_csr function needed to be defined to enable this.
+///
+///     RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) {
+///         riscv_isa_unreachable("write csr register undefined");
+///     }
 
 #define _riscv_isa_set_csr(NAME, name, num) \
         RetT set_##name##_csr_reg(UXLenT val) { return sub_type()->set_csr_reg(CSRRegT::NAME, val); }
@@ -462,8 +456,8 @@ namespace riscv_isa {
             usize index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
-            if (rd != 0) int_reg.set_x(rd, get_csr(index));
-            return set_csr(index, int_reg.get_x(rs1));
+            if (rd != 0) set_x(rd, get_csr(index));
+            return set_csr(index, get_x(rs1));
         }
 
         RetT visit_csrrs_inst(CSRRSInst *inst) {
@@ -475,11 +469,12 @@ namespace riscv_isa {
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
-            if (rd != 0) int_reg.set_x(rd, csr_val);
             if (rs1 != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
-                return set_csr(index, csr_val | int_reg.get_x(rs1));
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
+                if (rd != 0) set_x(rd, csr_val);
+                return set_csr(index, csr_val | get_x(rs1));
             } else {
+                if (rd != 0) set_x(rd, csr_val);
                 return true;
             }
         }
@@ -493,11 +488,12 @@ namespace riscv_isa {
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
-            if (rd != 0) int_reg.set_x(rd, csr_val);
             if (rs1 != 0) {
                 if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
-                return set_csr(index, csr_val & ~int_reg.get_x(rs1));
+                if (rd != 0) set_x(rd, csr_val);
+                return set_csr(index, csr_val & ~get_x(rs1));
             } else {
+                if (rd != 0) set_x(rd, csr_val);
                 return true;
             }
         }
@@ -510,7 +506,7 @@ namespace riscv_isa {
             usize index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
-            if (rd != 0) int_reg.set_x(rd, get_csr(index));
+            if (rd != 0) set_x(rd, get_csr(index));
             return set_csr(index, imm);
         }
 
@@ -523,11 +519,13 @@ namespace riscv_isa {
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
-            if (rd != 0) int_reg.set_x(rd, csr_val);
+
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
+                if (rd != 0) set_x(rd, csr_val);
                 return set_csr(index, csr_val | imm);
             } else {
+                if (rd != 0) set_x(rd, csr_val);
                 return true;
             }
         }
@@ -541,16 +539,33 @@ namespace riscv_isa {
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
-            int_reg.set_x(rd, csr_val);
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) illegal_instruction(inst);
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
+                set_x(rd, csr_val);
                 return set_csr(index, csr_val & ~imm);
             } else {
+                set_x(rd, csr_val);
                 return true;
             }
         }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+    };
+
+    template<typename SubT, typename xlen>
+    typename xlen::UXLenT (*const Hart<SubT, xlen>::_get_csr_reg_table[])(Hart *) = {
+#define _riscv_isa_get_csr_table(NAME, name, num) \
+            _get_##name##_csr_reg,
+            riscv_isa_csr_reg_map(_riscv_isa_get_csr_table)
+#undef _riscv_isa_get_csr_table
+    };
+
+    template<typename SubT, typename xlen>
+    typename Hart<SubT, xlen>::RetT (*const Hart<SubT, xlen>::_set_csr_reg_table[])(Hart *, UXLenT) = {
+#define _riscv_isa_set_csr_table(NAME, name, num) \
+            _set_##name##_csr_reg,
+            riscv_isa_csr_reg_map(_riscv_isa_set_csr_table)
+#undef _riscv_isa_set_csr_table
     };
 }
 
