@@ -54,7 +54,7 @@ namespace riscv_isa {
 ///     }
 ///
 ///     if interrupt generates in following three memory related functions, false should be returned and internal
-///         interrupt should be taken explicitly.
+///     interrupt should be invoked explicitly.
 ///
 ///     template<typename ValT>
 ///     RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {

@@ -26,7 +26,7 @@
 
 
 namespace riscv_isa {
-    template<typename SubT, typename _RetT = void>
+    template<typename SubT, typename RetT_ = void>
     class InstructionVisitor {
     private:
         SubT *sub_type() {
@@ -36,7 +36,7 @@ namespace riscv_isa {
         }
 
     public:
-        using RetT = _RetT;
+        using RetT = RetT_;
 
         RetT visit(Instruction *inst) {
             u16 half = *reinterpret_cast<u16 *>(inst);

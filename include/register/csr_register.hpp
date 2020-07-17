@@ -230,8 +230,6 @@ namespace riscv_isa {
 #endif
         ;
 
-        static const xlen_trait::UXLenT CSR_INIT[CSR_REGISTER_NUM];
-
         xlen_trait::UXLenT inner[CSR_REGISTER_NUM];
 
     public:
@@ -244,7 +242,12 @@ namespace riscv_isa {
         CSRRegister(xlen_trait::UXLenT hart_id) { init_csr(hart_id); }
 
         void init_csr(xlen_trait::UXLenT hart_id) {
-            for (usize i = 0; i < CSR_REGISTER_NUM; ++i) inner[i] = CSR_INIT[i];
+            for (usize i = 0; i < CSR_REGISTER_NUM; ++i) inner[i] = 0;
+
+            inner[MISA] = MISA_INIT;
+            inner[MVENDORID] = RISCV_VENDOR_ID;
+            inner[MARCHID] = RISCV_ARCH_ID;
+            inner[MIMPID] = RISCV_IMP_ID;
             inner[MHARTID] = hart_id;
         }
 
@@ -273,19 +276,6 @@ namespace riscv_isa {
             return inner[index];
         }
     };
-
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Winitializer-overrides"
-    template<typename xlen>
-    const typename xlen_trait::UXLenT CSRRegister<xlen>::CSR_INIT[] = {
-            [0 ... (CSR_REGISTER_NUM - 1)] = 0,
-            [MISA] = MISA_INIT,
-            [MVENDORID] = RISCV_VENDOR_ID,
-            [MARCHID] = RISCV_ARCH_ID,
-            [MIMPID] = RISCV_IMP_ID,
-    };
-#pragma GCC diagnostic pop
 }
 
 
