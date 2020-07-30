@@ -9,7 +9,7 @@ namespace riscv_isa {
     template<typename xlen=xlen_trait>
     class IntegerRegister {
     private:
-        using XlenT = typename xlen::XLenT;
+        using XLenT = typename xlen::XLenT;
 
 #if defined(__RV_BASE_E__)
         static constexpr usize INTEGER_REGISTER_NUM = 16;
@@ -62,12 +62,12 @@ namespace riscv_isa {
 
         IntegerRegister() : x{} {}
 
-        void set_x(usize index, XlenT val) {
+        void set_x(usize index, XLenT val) {
             if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
             if (index != 0) x[index] = val;
         }
 
-        XlenT get_x(usize index) const {
+        XLenT get_x(usize index) const {
             if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
             return x[index];
         }
