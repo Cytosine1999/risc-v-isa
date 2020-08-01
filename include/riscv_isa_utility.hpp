@@ -234,6 +234,19 @@ namespace riscv_isa {
 #endif
         MACHINE_MODE = 0b11,
     };
+
+    static constexpr xlen_trait::UXLenT R_BIT = 2;
+    static constexpr xlen_trait::UXLenT W_BIT = 4;
+    static constexpr xlen_trait::UXLenT X_BIT = 8;
+
+    enum MemoryProtection : xlen_trait::UXLenT {
+        NOT_PRESENT = 0,
+        READ = R_BIT,
+        READ_WRITE = R_BIT | W_BIT,
+        EXECUTE = X_BIT,
+        EXECUTE_READ = X_BIT | R_BIT,
+        EXECUTE_READ_WRITE = X_BIT | R_BIT | W_BIT,
+    };
 }
 
 
