@@ -2,6 +2,7 @@
 #define RISCV_ISA_DUMP_HPP
 
 
+#include <cstring>
 #include <ostream>
 
 #include "riscv_isa_utility.hpp"
@@ -30,7 +31,7 @@ namespace riscv_isa {
             inst_buffer = 0;
 
             if (length < 2) stream << "[instruction exceed length limit]";
-            *(reinterpret_cast<u16 *>(&inst_buffer) + 0) = *(reinterpret_cast<u16 *>(inst) + 0);
+            memcpy(reinterpret_cast<u8 *>(&inst_buffer) + 0, reinterpret_cast<u8 *>(inst) + 0, 2);
 
             if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
@@ -40,7 +41,7 @@ namespace riscv_isa {
 #endif // defined(__RV_EXTENSION_C__)
             } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
                 if (length < 4) stream << "[instruction exceed length limit]";
-                *(reinterpret_cast<u16 *>(&inst_buffer) + 1) = *(reinterpret_cast<u16 *>(inst) + 1);
+                memcpy(reinterpret_cast<u8 *>(&inst_buffer) + 2, reinterpret_cast<u8 *>(inst) + 2, 2);
                 return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
             } else {
                 return illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));

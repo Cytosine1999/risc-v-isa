@@ -16,6 +16,60 @@
 namespace riscv_isa {
     namespace operators {
         template<typename xlen=xlen_trait>
+        struct SELECT1 {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(XLenT a, riscv_isa_unused XLenT b) { return a; }
+        };
+
+        template<typename xlen=xlen_trait>
+        struct SELECT2 {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(riscv_isa_unused XLenT a, XLenT b) { return b; }
+        };
+
+        template<typename xlen=xlen_trait>
+        struct MIN {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(XLenT a, XLenT b) { return std::min(a, b); }
+        };
+
+        template<typename xlen=xlen_trait>
+        struct MAX {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(XLenT a, XLenT b) { return std::max(a, b); }
+        };
+
+        template<typename xlen=xlen_trait>
+        struct MINU {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(UXLenT a, UXLenT b) { return std::min(a, b); }
+        };
+
+        template<typename xlen=xlen_trait>
+        struct MAXU {
+        private:
+            _riscv_isa_use_all_xlen(xlen);
+
+        public:
+            static bool op(UXLenT a, UXLenT b) { return std::max(a, b); }
+        };
+
+        template<typename xlen=xlen_trait>
         struct EQ {
         private:
             _riscv_isa_use_all_xlen(xlen);

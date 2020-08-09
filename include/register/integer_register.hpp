@@ -8,7 +8,7 @@
 namespace riscv_isa {
     template<typename xlen=xlen_trait>
     class IntegerRegister {
-    private:
+    public:
         using XLenT = typename xlen::XLenT;
 
 #if defined(__RV_BASE_E__)
@@ -16,6 +16,8 @@ namespace riscv_isa {
 #else
         static constexpr usize INTEGER_REGISTER_NUM = 32;
 #endif
+
+    private:
         /// register size is controlled by macro
         typename xlen_trait::XLenT x[INTEGER_REGISTER_NUM];
 

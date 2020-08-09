@@ -387,6 +387,26 @@ namespace riscv_isa {
         static constexpr UInnerT FUNCT3 = 0b000;
     };
 
+#if defined(__RV_EXTENSION_A__)
+    class InstructionAtomicSet : public InstructionR {
+    protected:
+        InstructionAtomicSet(usize rd, usize funct3, usize rs1, usize rs2, bool aq, bool rl, usize funct_atomic) :
+                InstructionR{OP_CODE, rd, funct3, rs1, rs2,
+                             get_bit<UInnerT, 0, 0>(aq) |
+                             get_bit<UInnerT, 0, 1>(rl) |
+                             get_bits<UInnerT, 5, 0, 2>(funct_atomic)} {}
+
+    public:
+        static constexpr UInnerT OP_CODE = 0b01011;
+
+        bool get_rl() const { return get_bit<UInnerT, 25>(inner); }
+
+        bool get_aq() const { return get_bit<UInnerT, 26>(inner); }
+
+        usize get_funct_atomic() const { return get_bits<UInnerT, 32, 27>(inner); }
+    };
+#endif
+
 #if __RV_BIT_WIDTH__ == 64
 
     class InstructionArithImmWSet : public InstructionI {

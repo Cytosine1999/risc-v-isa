@@ -91,7 +91,7 @@ public:
         if (ptr == nullptr) {
             return internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
         } else {
-            *(reinterpret_cast<u16 *>(&this->inst_buffer) + offset) = *ptr;
+            memcpy(reinterpret_cast<u16 *>(&this->inst_buffer) + offset, ptr, 2);
             return true;
         }
     }
@@ -156,7 +156,7 @@ public:
                 case trap::INSTRUCTION_ADDRESS_MISALIGNED:
                 case trap::INSTRUCTION_ACCESS_FAULT:
                     std::cerr << "Instruction address misaligned at "
-                              << std::hex << get_pc() << std::endl;
+                              << std::hex << get_pc() << std::dec << std::endl;
 
                     return;
                 case trap::ILLEGAL_INSTRUCTION:
@@ -166,7 +166,7 @@ public:
 
                     return;
                 case trap::BREAKPOINT:
-                    std::cerr << "Break point at " << std::hex << get_pc() << std::endl;
+                    std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
                     inc_pc(ECALLInst::INST_WIDTH);
 
                     break;
@@ -194,15 +194,15 @@ public:
                 case trap::M_MODE_ENVIRONMENT_CALL:
                     riscv_isa_unreachable("no machine mode interrupt!");
                 case trap::INSTRUCTION_PAGE_FAULT:
-                    std::cerr << "Instruction page fault at " << std::hex << get_pc() << std::endl;
+                    std::cerr << "Instruction page fault at " << std::hex << get_pc() << std::dec << std::endl;
 
                     return;
                 case trap::LOAD_PAGE_FAULT:
-                    std::cerr << "Load page fault at " << std::hex << get_pc() << std::endl;
+                    std::cerr << "Load page fault at " << std::hex << get_pc() << std::dec << std::endl;
 
                     return;
                 case trap::STORE_AMO_PAGE_FAULT:
-                    std::cerr << "Store or AMO page fault at " << std::hex << get_pc() << std::endl;
+                    std::cerr << "Store or AMO page fault at " << std::hex << get_pc() << std::dec << std::endl;
 
                     return;
                 default:

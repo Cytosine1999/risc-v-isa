@@ -342,6 +342,81 @@ namespace riscv_isa {
         RetT visit_remu_inst(REMUInst *inst) { return operate_reg<typename operators::REMU<xlen>>(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
+#if defined(__RV_EXTENSION_A__)
+///     this functions are required to be implemented.
+///
+///     template<typename ValT>
+///     RetT mmu_store_xlen(XLenT val, riscv_isa_unused XLenT addr) {
+///         riscv_isa_unreachable("memory management unit store integer register undefined!");
+///     }
+
+        template<typename OP, typename InstT>
+        RetT operate_atomic(const InstT *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            usize rs2 = inst->get_rs2();
+            if (!sub_type()->template mmu_load_int_reg<i32>(rd, get_x(rs1))) return false;
+            if (!sub_type()->template mmu_store_xlen<i32>(OP::op(rd, rs2), get_x(rs1))) return false;
+            inc_pc(InstT::INST_WIDTH);
+            return true;
+        }
+
+        // todo: implement for single thread, assuming success, even incorrect for single thread.
+        RetT visit_lrw_inst(LRWInst *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            if (!sub_type()->template mmu_load_int_reg<i32>(rd, get_x(rs1))) return false;
+            inc_pc(LRWInst::INST_WIDTH);
+            return true;
+        }
+
+        RetT visit_scw_inst(SCWInst *inst) {
+            usize rd = inst->get_rd();
+            usize rs1 = inst->get_rs1();
+            usize rs2 = inst->get_rs2();
+            if (!sub_type()->template mmu_store_int_reg<i32>(rs2, get_x(rs1))) return false;
+            set_x(rd, 0);
+            inc_pc(SCWInst::INST_WIDTH);
+            return true;
+        }
+
+        RetT visit_amoswapw_inst(AMOSWAPWInst *inst) {
+            return operate_atomic<typename operators::SELECT2<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amoaddw_inst(AMOADDWInst *inst) {
+            return operate_atomic<typename operators::ADD<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amoxorw_inst(AMOXORWInst *inst) {
+            return operate_atomic<typename operators::XOR<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amoandw_inst(AMOANDWInst *inst) {
+            return operate_atomic<typename operators::AND<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amoorw_inst(AMOORWInst *inst) {
+            return operate_atomic<typename operators::OR<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amominw_inst(AMOMINWInst *inst) {
+            return operate_atomic<typename operators::MIN<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amomaxw_inst(AMOMAXWInst *inst) {
+            return operate_atomic<typename operators::MAX<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amominuw_inst(AMOMINUWInst *inst) {
+            return operate_atomic<typename operators::MINU<xlen_32_trait>>(inst);
+        }
+
+        RetT visit_amomaxuw_inst(AMOMAXUWInst *inst) {
+            return operate_atomic<typename operators::MAXU<xlen_32_trait>>(inst);
+        }
+
+#endif // defined(__RV_EXTENSION_A__)
 #if __RV_BIT_WIDTH__ == 64
 
         RetT visit_ld_inst(LDInst *inst) { return operate_load<i64>(inst); }
@@ -550,6 +625,128 @@ namespace riscv_isa {
         }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
+
+        RetT instruction_address_misaligned_handler(UXLenT addr) {
+            std::cerr << "Instruction address misaligned at " << std::hex
+                      << get_pc() << ", jump to: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT instruction_address_fault_handler(UXLenT addr) {
+            std::cerr << "Instruction address misaligned at " << std::hex
+                      << get_pc() << ", jump to: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT illegal_instruction_handler(UXLenT inst) {
+            std::cerr << "Illegal instruction at " << std::hex << get_pc() << ": " << std::dec
+                      << *reinterpret_cast<Instruction *>(inst) << std::endl;
+            return false;
+        }
+
+        RetT break_point_handler(UXLenT addr) {
+            std::cerr << "Break point at " << std::hex << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT load_address_misaligned_handler(UXLenT addr) {
+            std::cerr << "Load address misaligned at " << std::hex
+                      << get_pc() << ", load at: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT load_address_fault_handler(UXLenT addr) {
+            std::cerr << "Load address misaligned at " << std::hex
+                      << get_pc() << ", load at: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT store_amo_address_misaligned_handler(UXLenT addr) {
+            std::cerr << "Store or AMO address misaligned at " << std::hex
+                      << get_pc() << ", store or AMO at: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT store_amo_address_fault_handler(UXLenT addr) {
+            std::cerr << "Store or AMO address misaligned at " << std::hex
+                      << get_pc() << ", store or AMO at: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT u_mode_environment_call_handler() {
+            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            return false;
+        }
+
+        RetT s_mode_environment_call_handler() {
+            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            return false;
+        }
+
+        RetT m_mode_environment_call_handler() {
+            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            return false;
+        }
+
+        RetT instruction_page_fault_handler(UXLenT addr) {
+            std::cerr << "Instruction page fault at " << std::hex << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT load_page_fault_handler(UXLenT addr) {
+            std::cerr << "Load page fault at " << std::hex
+                      << get_pc() << ", load address: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT store_amo_page_fault_handler(UXLenT addr) {
+            std::cerr << "Store or AMO fault at " << std::hex
+                      << get_pc() << ", load address: " << addr << std::dec << std::endl;
+            return false;
+        }
+
+        RetT platformed_specifined_trap_handler(UXLenT cause, UXLenT trap_value) {
+            std::cerr << "Unknown internal interrupt at " << std::hex
+                      << get_pc() << std::dec << ", cause: " << cause
+                      << ", trap value" << trap_value << std::endl;
+            return false;
+        }
+
+        bool trap_handler() {
+            switch (csr_reg[CSRRegT::SCAUSE]) {
+                case trap::INSTRUCTION_ADDRESS_MISALIGNED:
+                    return sub_type()->instruction_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::INSTRUCTION_ACCESS_FAULT:
+                    return sub_type()->instruction_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::ILLEGAL_INSTRUCTION:
+                    return sub_type()->illegal_instruction_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::BREAKPOINT:
+                    return sub_type()->break_point_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::LOAD_ADDRESS_MISALIGNED:
+                    return sub_type()->load_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::LOAD_ACCESS_FAULT:
+                    return sub_type()->load_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::STORE_AMO_ADDRESS_MISALIGNED:
+                    return sub_type()->store_amo_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::STORE_AMO_ACCESS_FAULT:
+                    return sub_type()->store_amo_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::U_MODE_ENVIRONMENT_CALL:
+                    return sub_type()->u_mode_environment_call_handler();
+                case trap::S_MODE_ENVIRONMENT_CALL:
+                    return sub_type()->s_mode_environment_call_handler();
+                case trap::M_MODE_ENVIRONMENT_CALL:
+                    return sub_type()->m_mode_environment_call_handler();
+                case trap::INSTRUCTION_PAGE_FAULT:
+                    return sub_type()->instruction_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::LOAD_PAGE_FAULT:
+                    return sub_type()->load_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                case trap::STORE_AMO_PAGE_FAULT:
+                    return sub_type()->store_amo_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                default:
+                    return sub_type()->platformed_specifined_trap_handler(csr_reg[CSRRegT::SCAUSE],
+                                                                          csr_reg[CSRRegT::STVAL]);
+            }
+        }
     };
 
     template<typename SubT, typename xlen>

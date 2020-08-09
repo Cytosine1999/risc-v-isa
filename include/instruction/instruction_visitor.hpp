@@ -7,6 +7,7 @@
 #include "rvc.hpp"
 #include "rv32i.hpp"
 #include "rv32m.hpp"
+#include "rv32a.hpp"
 #include "rv64i.hpp"
 #include "rv64m.hpp"
 #include "zifencei.hpp"
@@ -18,6 +19,7 @@
     riscv_isa_instruction_c_map(func) \
     riscv_isa_instruction_32i_map(func) \
     riscv_isa_instruction_32m_map(func) \
+    riscv_isa_instruction_32a_map(func) \
     riscv_isa_instruction_64i_map(func) \
     riscv_isa_instruction_64m_map(func) \
     riscv_isa_instruction_zifencei_map(func) \
@@ -40,7 +42,7 @@ namespace riscv_isa {
 
         RetT visit(Instruction *inst) {
             u16 half = *reinterpret_cast<u16 *>(inst);
-            
+
             if ((half & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
 #if defined(__RV_EXTENSION_C__)
                 return visit_16(reinterpret_cast<Instruction16 *>(inst));
@@ -317,27 +319,31 @@ namespace riscv_isa {
                     return visit_fence_set(reinterpret_cast<InstructionFenceSet *>(inst));
                 case InstructionSystemSet::OP_CODE:
                     return visit_system_set(reinterpret_cast<InstructionSystemSet *>(inst));
+#if defined(__RV_EXTENSION_A__)
+                case InstructionAtomicSet::OP_CODE:
+                    return visit_atomic_set(reinterpret_cast<InstructionAtomicSet *>(inst));
+#endif
 #if __RV_BIT_WIDTH__ == 64
-                case InstructionArithImmWSet::OP_CODE:
-                    return visit_arith_imm_w_set(reinterpret_cast<InstructionArithImmWSet *>(inst));
-                case InstructionArithRegWSet::OP_CODE:
-                    return visit_arith_reg_w_set(reinterpret_cast<InstructionArithRegWSet *>(inst));
+                    case InstructionArithImmWSet::OP_CODE:
+                        return visit_arith_imm_w_set(reinterpret_cast<InstructionArithImmWSet *>(inst));
+                    case InstructionArithRegWSet::OP_CODE:
+                        return visit_arith_reg_w_set(reinterpret_cast<InstructionArithRegWSet *>(inst));
 #endif // __RV_BIT_WIDTH__ == 64
 #if defined(__RV_CUSTOM_0__)
-                case InstructionCustome0::OP_CODE:
-                    return sub_type()->visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    case InstructionCustome0::OP_CODE:
+                        return sub_type()->visit_custom_0_inst(reinterpret_cast<InstructionCustome0 *>(inst));
 #endif // defined(__RV_CUSTOM_0__)
 #if defined(__RV_CUSTOM_1__)
-                case InstructionCustome1::OP_CODE:
-                    return sub_type()->visit_custom_1_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    case InstructionCustome1::OP_CODE:
+                        return sub_type()->visit_custom_1_inst(reinterpret_cast<InstructionCustome0 *>(inst));
 #endif // defined(__RV_CUSTOM_1__)
 #if defined(__RV_CUSTOM_2__)
-                case InstructionCustome2::OP_CODE:
-                    return sub_type()->visit_custom_2_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    case InstructionCustome2::OP_CODE:
+                        return sub_type()->visit_custom_2_inst(reinterpret_cast<InstructionCustome0 *>(inst));
 #endif // defined(__RV_CUSTOM_2__)
 #if defined(__RV_CUSTOM_3__)
-                case InstructionCustome3::OP_CODE:
-                    return sub_type()->visit_custom_3_inst(reinterpret_cast<InstructionCustome0 *>(inst));
+                    case InstructionCustome3::OP_CODE:
+                        return sub_type()->visit_custom_3_inst(reinterpret_cast<InstructionCustome0 *>(inst));
 #endif // defined(__RV_CUSTOM_3__)
                 default:
                     return sub_type()->illegal_instruction(inst);
@@ -376,10 +382,10 @@ namespace riscv_isa {
                 case LHUInst::FUNCT3:
                     return sub_type()->visit_lhu_inst(reinterpret_cast<LHUInst *>(inst));
 #if __RV_BIT_WIDTH__ == 64
-                case LDInst::FUNCT3:
-                    return sub_type()->visit_ld_inst(reinterpret_cast<LDInst *>(inst));
-                case LWUInst::FUNCT3:
-                    return sub_type()->visit_lwu_inst(reinterpret_cast<LWUInst *>(inst));
+                    case LDInst::FUNCT3:
+                        return sub_type()->visit_ld_inst(reinterpret_cast<LDInst *>(inst));
+                    case LWUInst::FUNCT3:
+                        return sub_type()->visit_lwu_inst(reinterpret_cast<LWUInst *>(inst));
 #endif // __RV_BIT_WIDTH__ == 64
                 default:
                     return sub_type()->illegal_instruction(inst);
@@ -395,8 +401,8 @@ namespace riscv_isa {
                 case SWInst::FUNCT3:
                     return sub_type()->visit_sw_inst(reinterpret_cast<SWInst *>(inst));
 #if __RV_BIT_WIDTH__ == 64
-                case SDInst::FUNCT3:
-                    return sub_type()->visit_sd_inst(reinterpret_cast<SDInst *>(inst));
+                    case SDInst::FUNCT3:
+                        return sub_type()->visit_sd_inst(reinterpret_cast<SDInst *>(inst));
 #endif // __RV_BIT_WIDTH__ == 64
                 default:
                     return sub_type()->illegal_instruction(inst);
@@ -503,8 +509,8 @@ namespace riscv_isa {
                 case FENCEInst::FUNCT3:
                     return sub_type()->visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
 #if defined(__RV_EXTENSION_ZIFENCEI__)
-                case FENCEIInst::FUNCT3:
-                    return sub_type()->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
+                    case FENCEIInst::FUNCT3:
+                        return sub_type()->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
 #endif // defined(__RV_EXTENSION_ZIFENCEI__)
                 default:
                     return sub_type()->illegal_instruction(inst);
@@ -545,8 +551,8 @@ namespace riscv_isa {
                         case EBREAKInst::FUNCT_PRIVILEGE:
                             return sub_type()->visit_ebreak_inst(reinterpret_cast<EBREAKInst *>(inst));
 #if defined(__RV_EXTENSION_N__)
-                        case URETInst::FUNCT_PRIVILEGE:
-                            return sub_type()->visit_uret_inst(reinterpret_cast<URETInst *>(inst));
+                            case URETInst::FUNCT_PRIVILEGE:
+                                return sub_type()->visit_uret_inst(reinterpret_cast<URETInst *>(inst));
 #endif // defined(__RV_EXTENSION_N__)
                         default:
                             return sub_type()->illegal_instruction(inst);
@@ -574,18 +580,38 @@ namespace riscv_isa {
                     return sub_type()->visit_sfencevma_inst(reinterpret_cast<SFENCEVAMInst *>(inst));
 #endif // defined(__RV_SUPERVISOR_MODE__)
 #if defined(__RV_HYPERVISOR_MODE__)
-                case HFENCEVVMAInst::FUNCT7:
-                    if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
-                    return sub_type()->visit_hfencevvma_inst(reinterpret_cast<HFENCEVVMAInst *>(inst));
-                case HFENCEGVMAInst::FUNCT7:
-                    if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
-                    return sub_type()->visit_hfencegvma_inst(reinterpret_cast<HFENCEGVMAInst *>(inst));
+                    case HFENCEVVMAInst::FUNCT7:
+                        if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
+                        return sub_type()->visit_hfencevvma_inst(reinterpret_cast<HFENCEVVMAInst *>(inst));
+                    case HFENCEGVMAInst::FUNCT7:
+                        if (inst->get_rd() != 0) return sub_type()->illegal_instruction(inst);
+                        return sub_type()->visit_hfencegvma_inst(reinterpret_cast<HFENCEGVMAInst *>(inst));
 #endif
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
         }
 
+#if defined(__RV_EXTENSION_A__)
+
+        RetT visit_atomic_set(InstructionAtomicSet *inst) {
+            switch (inst->get_funct3()) {
+                case InstructionAtomicWSet::FUNCT3:
+                    switch (inst->get_funct_atomic()) {
+#define _riscv_isa_visit_instruction(NAME, name) \
+                        case NAME##Inst::FUNCT_ATOMIC: \
+                            return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
+                        riscv_isa_instruction_32a_map(_riscv_isa_visit_instruction)
+#undef _riscv_isa_visit_instruction
+                        default:
+                            return sub_type()->illegal_instruction(inst);
+                    }
+                default:
+                    return sub_type()->illegal_instruction(inst);
+            }
+        }
+
+#endif
 #if __RV_BIT_WIDTH__ == 64
 
         RetT visit_arith_imm_w_set(InstructionArithImmWSet *inst) {
