@@ -7,10 +7,10 @@
 
 
 template<typename T>
-void _assert(T expr, riscv_isa_unused const char *file, riscv_isa_unused int line,
+riscv_isa_static_inline void _assert(T expr, riscv_isa_unused const char *file, riscv_isa_unused int line,
              riscv_isa_unused const char *msg) {
     if (!expr) {
-#if defined(DEBUG)
+#if defined(__DEBUG__)
         std::cout << "Assert failed at file " << file << ", line " << line << ":\n\t"
                   << msg << " = " << expr << std::endl;
         abort();
@@ -18,7 +18,7 @@ void _assert(T expr, riscv_isa_unused const char *file, riscv_isa_unused int lin
         std::cout << 'X' << std::flush;
 #endif
     } else {
-#if !defined(DEBUG)
+#if !defined(__DEBUG__)
         std::cout << '.' << std::flush;
 #endif
     }
@@ -27,10 +27,10 @@ void _assert(T expr, riscv_isa_unused const char *file, riscv_isa_unused int lin
 #define ASSERT(expr) _assert(expr, __FILE__, __LINE__, #expr)
 
 template<typename T, typename U>
-void _assert_eq(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_unused int line,
+riscv_isa_static_inline void _assert_eq(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_unused int line,
                 riscv_isa_unused const char *msg1, riscv_isa_unused const char *msg2) {
     if (expr1 != expr2) {
-#if defined(DEBUG)
+#if defined(__DEBUG__)
         std::cout << "Assert euqal failed at file " << file << ", line " << line << ":\n\t"
                   << msg1 << " = " << expr1 << "\n\t"
                   << msg2 << " = " << expr2 << std::endl;
@@ -39,7 +39,7 @@ void _assert_eq(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_u
         std::cout << 'X' << std::flush;
 #endif
     } else {
-#if !defined(DEBUG)
+#if !defined(__DEBUG__)
         std::cout << '.' << std::flush;
 #endif
     }
@@ -48,10 +48,10 @@ void _assert_eq(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_u
 #define ASSERT_EQ(expr1, expr2) _assert_eq(expr1, expr2, __FILE__, __LINE__, #expr1, #expr2)
 
 template<typename T, typename U>
-void _assert_ne(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_unused int line,
+riscv_isa_static_inline void _assert_ne(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_unused int line,
                 riscv_isa_unused const char *msg1, riscv_isa_unused const char *msg2) {
     if (expr1 == expr2) {
-#if defined(DEBUG)
+#if defined(__DEBUG__)
         std::cout << "Assert not equal failed at file " << file << ", line " << line << ":\n\t"
                   << msg1 << " = " << expr1 << "\n\t"
                   << msg2 << " = " << expr2 << std::endl;
@@ -60,7 +60,7 @@ void _assert_ne(T expr1, U expr2, riscv_isa_unused const char *file, riscv_isa_u
         std::cout << 'X' << std::flush;
 #endif
     } else {
-#if !defined(DEBUG)
+#if !defined(__DEBUG__)
         std::cout << '.' << std::flush;
 #endif
     }

@@ -147,6 +147,8 @@ namespace riscv_isa {
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
         usize get_op_code() const { return get_bits<UInnerT, 7, 2>(inner); }
+
+        u32 to_u32() const { return inner; }
     };
 
     class InstructionR : public Instruction32 {

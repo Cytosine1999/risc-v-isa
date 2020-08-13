@@ -479,22 +479,11 @@ namespace riscv_isa {
 #if defined(__RV_EXTENSION_M__)
                 case InstructionMulDivSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case MULInst::FUNCT_3:
-                            return sub_type()->visit_mul_inst(reinterpret_cast<MULInst *>(inst));
-                        case MULHInst::FUNCT_3:
-                            return sub_type()->visit_mulh_inst(reinterpret_cast<MULHInst *>(inst));
-                        case MULHSUInst::FUNCT_3:
-                            return sub_type()->visit_mulhsu_inst(reinterpret_cast<MULHSUInst *>(inst));
-                        case MULHUInst::FUNCT_3:
-                            return sub_type()->visit_mulhu_inst(reinterpret_cast<MULHUInst *>(inst));
-                        case DIVInst::FUNCT_3:
-                            return sub_type()->visit_div_inst(reinterpret_cast<DIVInst *>(inst));
-                        case DIVUInst::FUNCT_3:
-                            return sub_type()->visit_divu_inst(reinterpret_cast<DIVUInst *>(inst));
-                        case REMInst::FUNCT_3:
-                            return sub_type()->visit_rem_inst(reinterpret_cast<REMInst *>(inst));
-                        case REMUInst::FUNCT_3:
-                            return sub_type()->visit_remu_inst(reinterpret_cast<REMUInst *>(inst));
+#define _riscv_isa_visit_32m_instruction(NAME, name) \
+                        case NAME##Inst::FUNCT3: \
+                            return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
+                        riscv_isa_instruction_32m_map(_riscv_isa_visit_32m_instruction)
+#undef _riscv_isa_visit_32m_instruction
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
@@ -508,10 +497,11 @@ namespace riscv_isa {
             switch (inst->get_funct3()) {
                 case FENCEInst::FUNCT3:
                     return sub_type()->visit_fence_inst(reinterpret_cast<FENCEInst *>(inst));
-#if defined(__RV_EXTENSION_ZIFENCEI__)
-                    case FENCEIInst::FUNCT3:
-                        return sub_type()->visit_fencei_inst(reinterpret_cast<FENCEIInst *>(inst));
-#endif // defined(__RV_EXTENSION_ZIFENCEI__)
+#define _riscv_isa_visit_zifencei_instruction(NAME, name) \
+                        case NAME##Inst::FUNCT3: \
+                            return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
+                    riscv_isa_instruction_zifencei_map(_riscv_isa_visit_zifencei_instruction)
+#undef _riscv_isa_visit_zifencei_instruction
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
@@ -521,20 +511,11 @@ namespace riscv_isa {
             switch (inst->get_funct3()) {
                 case InstructionPrivilegedSet::FUNCT3:
                     return visit_privilege_set(reinterpret_cast<InstructionPrivilegedSet *>(inst));
-#if defined(__RV_EXTENSION_ZICSR__)
-                case CSRRWInst::FUNCT3:
-                    return sub_type()->visit_csrrw_inst(reinterpret_cast<CSRRWInst *>(inst));
-                case CSRRSInst::FUNCT3:
-                    return sub_type()->visit_csrrs_inst(reinterpret_cast<CSRRSInst *>(inst));
-                case CSRRCInst::FUNCT3:
-                    return sub_type()->visit_csrrc_inst(reinterpret_cast<CSRRCInst *>(inst));
-                case CSRRWIInst::FUNCT3:
-                    return sub_type()->visit_csrrwi_inst(reinterpret_cast<CSRRWIInst *>(inst));
-                case CSRRSIInst::FUNCT3:
-                    return sub_type()->visit_csrrsi_inst(reinterpret_cast<CSRRSIInst *>(inst));
-                case CSRRCIInst::FUNCT3:
-                    return sub_type()->visit_csrrci_inst(reinterpret_cast<CSRRCIInst *>(inst));
-#endif // defined(__RV_EXTENSION_ZICSR__)
+#define _riscv_isa_visit_zicsr_instruction(NAME, name) \
+                        case NAME##Inst::FUNCT3: \
+                            return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
+                riscv_isa_instruction_zicsr_map(_riscv_isa_visit_zicsr_instruction)
+#undef _riscv_isa_visit_zicsr_instruction
                 default:
                     return sub_type()->illegal_instruction(inst);
             }
@@ -598,11 +579,11 @@ namespace riscv_isa {
             switch (inst->get_funct3()) {
                 case InstructionAtomicWSet::FUNCT3:
                     switch (inst->get_funct_atomic()) {
-#define _riscv_isa_visit_instruction(NAME, name) \
+#define _riscv_isa_visit_32a_instruction(NAME, name) \
                         case NAME##Inst::FUNCT_ATOMIC: \
                             return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
-                        riscv_isa_instruction_32a_map(_riscv_isa_visit_instruction)
-#undef _riscv_isa_visit_instruction
+                        riscv_isa_instruction_32a_map(_riscv_isa_visit_32a_instruction)
+#undef _riscv_isa_visit_32a_instruction
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }
@@ -664,16 +645,11 @@ namespace riscv_isa {
 #if defined(__RV_EXTENSION_M__)
                 case InstructionMulDivWSet::FUNCT7:
                     switch (inst->get_funct3()) {
-                        case MULWInst::FUNCT_3:
-                            return sub_type()->visit_mulw_inst(reinterpret_cast<MULWInst *>(inst));
-                        case DIVWInst::FUNCT_3:
-                            return sub_type()->visit_divw_inst(reinterpret_cast<DIVWInst *>(inst));
-                        case DIVUWInst::FUNCT_3:
-                            return sub_type()->visit_divuw_inst(reinterpret_cast<DIVUWInst *>(inst));
-                        case REMWInst::FUNCT_3:
-                            return sub_type()->visit_remw_inst(reinterpret_cast<REMWInst *>(inst));
-                        case REMUWInst::FUNCT_3:
-                            return sub_type()->visit_remuw_inst(reinterpret_cast<REMUWInst *>(inst));
+#define _riscv_isa_visit_64m_instruction(NAME, name) \
+                        case NAME##Inst::FUNCT3: \
+                            return sub_type()->visit_##name##_inst(reinterpret_cast<NAME##Inst *>(inst));
+                        riscv_isa_instruction_64m_map(_riscv_isa_visit_64m_instruction)
+#undef _riscv_isa_visit_64m_instruction
                         default:
                             return sub_type()->illegal_instruction(inst);
                     }

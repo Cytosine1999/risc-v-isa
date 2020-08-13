@@ -8,6 +8,9 @@
 #define _riscv_isa_use_all_xlen(xlen) \
     using XLenT = typename xlen::XLenT; \
     using UXLenT = typename xlen::UXLenT; \
+    using WLenT = typename xlen::WLenT; \
+    using UWLenT = typename xlen::UWLenT; \
+    static constexpr usize XLEN = xlen::XLEN; \
     static constexpr usize HALF_WIDTH = xlen::HALF_WIDTH; \
     static constexpr UXLenT HALF_MASK = xlen::HALF_MASK; \
     static constexpr XLenT XLenTMin = xlen::XLenTMin
@@ -230,32 +233,7 @@ namespace riscv_isa {
             _riscv_isa_use_all_xlen(xlen);
 
         public:
-            static XLenT op(XLenT a, XLenT b) {
-                UXLenT as = a < 0;
-                UXLenT au = (~as + 1) ^(a - as);
-                UXLenT bs = b < 0;
-                UXLenT bu = (~bs + 1) ^(b - bs);
-                UXLenT a0 = au & HALF_MASK;
-                UXLenT a1 = au >> HALF_WIDTH;
-                UXLenT b0 = bu & HALF_MASK;
-                UXLenT b1 = bu >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT lh = (d1 << HALF_WIDTH) + (c0 & HALF_MASK);
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                UXLenT s = as ^bs;
-                UXLenT lhs = lh - s;
-                UXLenT hhs = -s ^(hh - (lhs > lh));
-
-                return hhs;
-            }
+            static XLenT op(XLenT a, XLenT b) { return (static_cast<WLenT>(a) * b) >> XLEN; }
         };
 
         template<typename xlen=xlen_trait>
@@ -264,30 +242,7 @@ namespace riscv_isa {
             _riscv_isa_use_all_xlen(xlen);
 
         public:
-            static XLenT op(XLenT a, UXLenT b) {
-                UXLenT as = a < 0;
-                UXLenT au = (~as + 1) ^(a - as);
-                UXLenT a0 = au & HALF_MASK;
-                UXLenT a1 = au >> HALF_WIDTH;
-                UXLenT b0 = b & HALF_MASK;
-                UXLenT b1 = b >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT lh = (d1 << HALF_WIDTH) + (c0 & HALF_MASK);
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                UXLenT s = as;
-                UXLenT lhs = lh - s;
-                UXLenT hhs = -s ^(hh - (lhs > lh));
-
-                return hhs;
-            }
+            static XLenT op(XLenT a, UXLenT b) { return (static_cast<WLenT>(a) * b) >> XLEN; }
         };
 
         template<typename xlen=xlen_trait>
@@ -296,23 +251,7 @@ namespace riscv_isa {
             _riscv_isa_use_all_xlen(xlen);
 
         public:
-            static XLenT op(UXLenT a, UXLenT b) {
-                UXLenT a0 = a & HALF_MASK;
-                UXLenT a1 = a >> HALF_WIDTH;
-                UXLenT b0 = b & HALF_MASK;
-                UXLenT b1 = b >> HALF_WIDTH;
-
-                UXLenT c0 = a0 * b0;
-                UXLenT c1 = a1 * b0;
-                UXLenT c2 = a0 * b1;
-                UXLenT c3 = a1 * b1;
-
-                UXLenT d0 = (c0 >> HALF_WIDTH) + c1;
-                UXLenT d1 = (d0 & HALF_MASK) + c2;
-                UXLenT hh = (d0 >> HALF_WIDTH) + (d1 >> HALF_WIDTH) + c3;
-
-                return hh;
-            }
+            static XLenT op(UXLenT a, UXLenT b) { return (static_cast<UWLenT>(a) * b) >> XLEN; }
         };
 
         template<typename xlen=xlen_trait>

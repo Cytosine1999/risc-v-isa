@@ -65,12 +65,12 @@ namespace riscv_isa {
         IntegerRegister() : x{} {}
 
         void set_x(usize index, XLenT val) {
-            if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
+            riscv_isa_assert(index < INTEGER_REGISTER_NUM);
             if (index != 0) x[index] = val;
         }
 
         XLenT get_x(usize index) const {
-            if (index >= INTEGER_REGISTER_NUM) riscv_isa_abort("Integer register index exceed.");
+            riscv_isa_assert(index < INTEGER_REGISTER_NUM);
             return x[index];
         }
     };

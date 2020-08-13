@@ -71,6 +71,11 @@ namespace riscv_isa {
 ///         riscv_isa_unreachable("memory management unit load instruction two byte undefined!");
 ///     }
 
+        void internal_interrupt_action(UXLenT interrupt, UXLenT trap_value) {
+            csr_reg[CSRRegT::SCAUSE] = interrupt;
+            csr_reg[CSRRegT::STVAL] = trap_value;
+        }
+
         RetT internal_interrupt(UXLenT interrupt, UXLenT trap_value) {
             sub_type()->internal_interrupt_action(interrupt, trap_value);
             return false;
@@ -640,13 +645,13 @@ namespace riscv_isa {
 
         RetT illegal_instruction_handler(UXLenT inst) {
             std::cerr << "Illegal instruction at " << std::hex << get_pc() << ": " << std::dec
-                      << *reinterpret_cast<Instruction *>(inst) << std::endl;
+                      << *reinterpret_cast<Instruction *>(&inst) << std::endl;
             return false;
         }
 
-        RetT break_point_handler(UXLenT addr) {
-            std::cerr << "Break point at " << std::hex << addr << std::dec << std::endl;
-            return false;
+        bool break_point_handler(neutron_unused UXLenT addr) {
+            this->inc_pc(riscv_isa::ECALLInst::INST_WIDTH); // todo: c extension
+            return true;
         }
 
         RetT load_address_misaligned_handler(UXLenT addr) {
@@ -674,17 +679,17 @@ namespace riscv_isa {
         }
 
         RetT u_mode_environment_call_handler() {
-            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "User mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
             return false;
         }
 
         RetT s_mode_environment_call_handler() {
-            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "Supervisor mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
             return false;
         }
 
         RetT m_mode_environment_call_handler() {
-            std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "Machine mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
             return false;
         }
 
@@ -705,7 +710,7 @@ namespace riscv_isa {
             return false;
         }
 
-        RetT platformed_specifined_trap_handler(UXLenT cause, UXLenT trap_value) {
+        RetT platformed_specified_trap_handler(UXLenT cause, UXLenT trap_value) {
             std::cerr << "Unknown internal interrupt at " << std::hex
                       << get_pc() << std::dec << ", cause: " << cause
                       << ", trap value" << trap_value << std::endl;
@@ -743,8 +748,8 @@ namespace riscv_isa {
                 case trap::STORE_AMO_PAGE_FAULT:
                     return sub_type()->store_amo_page_fault_handler(csr_reg[CSRRegT::STVAL]);
                 default:
-                    return sub_type()->platformed_specifined_trap_handler(csr_reg[CSRRegT::SCAUSE],
-                                                                          csr_reg[CSRRegT::STVAL]);
+                    return sub_type()->platformed_specified_trap_handler(csr_reg[CSRRegT::SCAUSE],
+                                                                         csr_reg[CSRRegT::STVAL]);
             }
         }
     };

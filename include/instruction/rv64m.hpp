@@ -14,7 +14,7 @@ namespace riscv_isa {
 
     class MULWInst : public InstructionMulDivWSet {
     public:
-        static constexpr InnerT FUNCT_3 = 0b000;
+        static constexpr InnerT FUNCT3 = 0b000;
 
         friend std::ostream &operator<<(std::ostream &stream, const MULWInst &inst) {
             stream << "mulw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -24,7 +24,7 @@ namespace riscv_isa {
 
     class DIVWInst : public InstructionMulDivWSet {
     public:
-        static constexpr InnerT FUNCT_3 = 0b100;
+        static constexpr InnerT FUNCT3 = 0b100;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVWInst &inst) {
             stream << "divw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -34,7 +34,7 @@ namespace riscv_isa {
 
     class DIVUWInst : public InstructionMulDivWSet {
     public:
-        static constexpr InnerT FUNCT_3 = 0b101;
+        static constexpr InnerT FUNCT3 = 0b101;
 
         friend std::ostream &operator<<(std::ostream &stream, const DIVUWInst &inst) {
             stream << "divuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -44,7 +44,7 @@ namespace riscv_isa {
 
     class REMWInst : public InstructionMulDivWSet {
     public:
-        static constexpr InnerT FUNCT_3 = 0b110;
+        static constexpr InnerT FUNCT3 = 0b110;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMWInst &inst) {
             stream << "remw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();
@@ -54,7 +54,7 @@ namespace riscv_isa {
 
     class REMUWInst : public InstructionMulDivWSet {
     public:
-        static constexpr InnerT FUNCT_3 = 0b111;
+        static constexpr InnerT FUNCT3 = 0b111;
 
         friend std::ostream &operator<<(std::ostream &stream, const REMUWInst &inst) {
             stream << "remuw\tx" << inst.get_rd() << ", x" << inst.get_rs1() << ", x" << inst.get_rs2();

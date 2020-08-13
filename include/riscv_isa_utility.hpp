@@ -40,13 +40,23 @@
 #endif
 
 namespace riscv_isa {
-    void _warn(const char *file, int line, const char *msg) {
+#define riscv_isa_static_inline static inline __attribute__((always_inline))
+#define riscv_isa_force_inline inline __attribute__((always_inline))
+#define riscv_isa_unused __attribute__((unused))
+#define riscv_isa_no_return __attribute__((noreturn))
+#if defined(__DEBUG__)
+#define riscv_isa_inline
+#else
+#define riscv_isa_inline inline __attribute__((__always_inline__))
+#endif
+
+    riscv_isa_static_inline void _warn(const char *file, int line, const char *msg) {
         std::cerr << "Warn at file " << file << ", line " << line << ": " << msg << std::endl;
     }
 
 #define riscv_isa_warn(msg) riscv_isa::_warn(__FILE__, __LINE__, msg)
 
-    __attribute__((noreturn)) void _abort(const char *file, int line, const char *msg) {
+    riscv_isa_static_inline riscv_isa_no_return void _abort(const char *file, int line, const char *msg) {
         std::cerr << "Abort at file " << file << ", line " << line << ": " << msg << std::endl;
 
         abort();
@@ -54,21 +64,27 @@ namespace riscv_isa {
 
 #define riscv_isa_abort(msg) riscv_isa::_abort(__FILE__, __LINE__, msg)
 
-    __attribute__((noreturn)) void _unreachable(const char *file, int line, const char *msg) {
+    riscv_isa_static_inline riscv_isa_no_return void _unreachable(const char *file, int line, const char *msg) {
         std::cerr << "Unreachable at file " << file << ", line " << line << ": " << msg << std::endl;
 
         abort();
     }
 
-#define riscv_isa_unreachable(msg) riscv_isa::_unreachable(__FILE__, __LINE__, msg)
+    riscv_isa_static_inline void _assert(const char *file, int line, bool result, const char *msg) {
+        if (!result) {
+            std::cerr << "Assert failed at file " << file << ", line " << line << ": " << msg << std::endl;
 
-#define riscv_isa_unused __attribute__((unused))
+            abort();
+        }
+    }
 
-#if defined(DEBUG)
-#define riscv_isa_inline
+#if defined(__DEBUG__)
+#define riscv_isa_assert(expr) riscv_isa::_assert(__FILE__, __LINE__, expr, #expr)
 #else
-#define riscv_isa_inline inline __attribute__((__always_inline__))
+#define riscv_isa_assert(expr)
 #endif
+
+#define riscv_isa_unreachable(msg) riscv_isa::_unreachable(__FILE__, __LINE__, msg)
 
     using i8 = int8_t;
     using u8 = u_int8_t;
@@ -78,6 +94,8 @@ namespace riscv_isa {
     using u32 = u_int32_t;
     using i64 = int64_t;
     using u64 = u_int64_t;
+    using i128 = __int128;
+    using u128 = unsigned __int128;
 #if defined(__x86_64__)
     using isize = int64_t;
     using usize = u_int64_t;
@@ -137,19 +155,21 @@ namespace riscv_isa {
     public:
         using XLenT = i32;
         using UXLenT = u32;
+        using WLenT = i64;
+        using UWLenT = u64;
         static constexpr usize XLEN_INDEX = 5;
         static constexpr usize UXLenMax = INT32_MAX;
     };
 
-#if __RV_BIT_WIDTH__ == 64
     struct _xlen_64_trait {
     public:
         using XLenT = i64;
         using UXLenT = u64;
+        using WLenT = i128;
+        using UWLenT = u128;
         static constexpr usize XLEN_INDEX = 6;
         static constexpr usize UXLenMax = INT64_MAX;
     };
-#endif
 
     template<typename T>
     struct _xlen_trait : public T {
@@ -162,9 +182,7 @@ namespace riscv_isa {
     };
 
     using xlen_32_trait = _xlen_trait<_xlen_32_trait>;
-#if __RV_BIT_WIDTH__ == 64
     using xlen_64_trait = _xlen_trait<_xlen_64_trait>;
-#endif
 
 #if __RV_BIT_WIDTH__ == 32
     using xlen_trait = xlen_32_trait;
