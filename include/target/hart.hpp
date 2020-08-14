@@ -360,8 +360,10 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
+            UXLenT rs2_value = get_x(rs2);
             if (!sub_type()->template mmu_load_int_reg<i32>(rd, get_x(rs1))) return false;
-            if (!sub_type()->template mmu_store_xlen<i32>(OP::op(rd, rs2), get_x(rs1))) return false;
+            UXLenT result = OP::op(get_x(rd), rs2_value);
+            if (!sub_type()->template mmu_store_xlen<i32>(result, get_x(rs1))) return false;
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
@@ -637,8 +639,8 @@ namespace riscv_isa {
             return false;
         }
 
-        RetT instruction_address_fault_handler(UXLenT addr) {
-            std::cerr << "Instruction address misaligned at " << std::hex
+        RetT instruction_access_fault_handler(UXLenT addr) {
+            std::cerr << "Instruction access fault at " << std::hex
                       << get_pc() << ", jump to: " << addr << std::dec << std::endl;
             return false;
         }
@@ -660,8 +662,8 @@ namespace riscv_isa {
             return false;
         }
 
-        RetT load_address_fault_handler(UXLenT addr) {
-            std::cerr << "Load address misaligned at " << std::hex
+        RetT load_access_fault_handler(UXLenT addr) {
+            std::cerr << "Load address access fault at " << std::hex
                       << get_pc() << ", load at: " << addr << std::dec << std::endl;
             return false;
         }
@@ -672,8 +674,8 @@ namespace riscv_isa {
             return false;
         }
 
-        RetT store_amo_address_fault_handler(UXLenT addr) {
-            std::cerr << "Store or AMO address misaligned at " << std::hex
+        RetT store_amo_access_fault_handler(UXLenT addr) {
+            std::cerr << "Store or AMO access fault at " << std::hex
                       << get_pc() << ", store or AMO at: " << addr << std::dec << std::endl;
             return false;
         }
@@ -722,7 +724,7 @@ namespace riscv_isa {
                 case trap::INSTRUCTION_ADDRESS_MISALIGNED:
                     return sub_type()->instruction_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::INSTRUCTION_ACCESS_FAULT:
-                    return sub_type()->instruction_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    return sub_type()->instruction_access_fault_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::ILLEGAL_INSTRUCTION:
                     return sub_type()->illegal_instruction_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::BREAKPOINT:
@@ -730,11 +732,11 @@ namespace riscv_isa {
                 case trap::LOAD_ADDRESS_MISALIGNED:
                     return sub_type()->load_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::LOAD_ACCESS_FAULT:
-                    return sub_type()->load_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    return sub_type()->load_access_fault_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::STORE_AMO_ADDRESS_MISALIGNED:
                     return sub_type()->store_amo_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::STORE_AMO_ACCESS_FAULT:
-                    return sub_type()->store_amo_address_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    return sub_type()->store_amo_access_fault_handler(csr_reg[CSRRegT::STVAL]);
                 case trap::U_MODE_ENVIRONMENT_CALL:
                     return sub_type()->u_mode_environment_call_handler();
                 case trap::S_MODE_ENVIRONMENT_CALL:
