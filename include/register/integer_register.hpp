@@ -6,7 +6,7 @@
 
 
 namespace riscv_isa {
-    template<typename xlen=xlen_trait>
+    template<typename xlen>
     class IntegerRegister {
     public:
         using XLenT = typename xlen::XLenT;

@@ -18,248 +18,221 @@
 
 namespace riscv_isa {
     namespace operators {
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SELECT1 {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, riscv_isa_unused XLenT b) { return a; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SELECT2 {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(riscv_isa_unused XLenT a, XLenT b) { return b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MIN {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return std::min(a, b); }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MAX {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return std::max(a, b); }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MINU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(UXLenT a, UXLenT b) { return std::min(a, b); }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MAXU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(UXLenT a, UXLenT b) { return std::max(a, b); }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct EQ {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return a == b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct NE {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return a != b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct LT {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return a < b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct GE {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(XLenT a, XLenT b) { return a >= b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct LTU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(UXLenT a, UXLenT b) { return a < b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct GEU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static bool op(UXLenT a, UXLenT b) { return a >= b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct ADD {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) { return a + b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SUB {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) { return a - b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SLT {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) { return a < b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SLTU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a < b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct XOR {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a ^ b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct OR {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a | b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct AND {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a & b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SLL {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a << b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SRL {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return a >> b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct SRA {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, UXLenT b) { return a >> b; }
         };
 
 #if defined(__RV_EXTENSION_M__)
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MUL {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) { return a * b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MULH {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) { return (static_cast<WLenT>(a) * b) >> XLEN; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MULHSU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, UXLenT b) { return (static_cast<WLenT>(a) * b) >> XLEN; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct MULHU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return (static_cast<UWLenT>(a) * b) >> XLEN; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct DIV {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) {
                 if (b == 0) return -1;
                 else if (a == XLenTMin && b == -1) return XLenTMin;
@@ -267,21 +240,19 @@ namespace riscv_isa {
             }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct DIVU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return b == 0 ? -1 : a / b; }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct REM {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(XLenT a, XLenT b) {
                 if (b == 0) return a;
                 else if (a == XLenTMin && b == -1) return 0;
@@ -289,12 +260,11 @@ namespace riscv_isa {
             }
         };
 
-        template<typename xlen=xlen_trait>
+        template<typename xlen>
         struct REMU {
-        private:
-            _riscv_isa_use_all_xlen(xlen);
-
         public:
+            _riscv_isa_use_all_xlen(xlen);
+            
             static XLenT op(UXLenT a, UXLenT b) { return b == 0 ? a : a % b; }
         };
 

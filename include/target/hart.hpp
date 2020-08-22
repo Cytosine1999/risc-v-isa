@@ -10,7 +10,7 @@
 
 
 namespace riscv_isa {
-    template<typename SubT, typename xlen=xlen_trait>
+    template<typename SubT, typename xlen>
     class Hart : public InstructionVisitor<SubT, bool> {
     public:
         using RetT = bool;
@@ -26,12 +26,11 @@ namespace riscv_isa {
 
     protected:
         CSRRegT csr_reg;
-        ILenT inst_buffer;
         PrivilegeLevel cur_level;
 
     private:
         SubT *sub_type() {
-            static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of hart!");
+            static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of visitor");
 
             return static_cast<SubT *>(this);
         }
@@ -57,18 +56,18 @@ namespace riscv_isa {
 ///     interrupt should be invoked explicitly.
 ///
 ///     template<typename ValT>
-///     RetT mmu_load_int_reg(riscv_isa_unused usize dest, riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit load integer register undefined!");
+///     const ValT *address_load(UXLenT addr) {
+///         riscv_isa_unreachable("address load permission undefined!");
 ///     }
 ///
 ///     template<typename ValT>
-///     RetT mmu_store_int_reg(riscv_isa_unused usize src, riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit store integer register undefined!");
+///     ValT *address_store(UXLenT addr) {
+///         riscv_isa_unreachable("address store permission undefined!");
 ///     }
 ///
-///     template<usize offset>
-///     RetT mmu_load_inst_half(riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit load instruction two byte undefined!");
+///     template<typename ValT>
+///     const ValT *address_execute(UXLenT addr) {
+///         riscv_isa_unreachable("address execute permission undefined!");
 ///     }
 
         void internal_interrupt_action(UXLenT interrupt, UXLenT trap_value) {
@@ -129,20 +128,48 @@ namespace riscv_isa {
 
         template<typename ValT, typename InstT>
         RetT operate_load(const InstT *inst) {
+            static_assert(sizeof(ValT) <= sizeof(UXLenT), "load width exceed bit width!");
+
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            if (!sub_type()->template mmu_load_int_reg<ValT>(rd, get_x(rs1) + imm)) return false;
+            UXLenT addr = get_x(rs1) + imm;
+
+            if ((addr & (sizeof(ValT) - 1)) != 0) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+            }
+
+            auto *ptr = sub_type()->template address_load<ValT>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_PAGE_FAULT, addr);
+            } else {
+                if (rd != 0) { sub_type()->set_x(rd, *ptr); }
+            }
+
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
         template<typename ValT, typename InstT>
         RetT operate_store(const InstT *inst) {
+            static_assert(sizeof(ValT) <= sizeof(UXLenT), "store width exceed bit width!");
+
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
             XLenT imm = inst->get_imm();
-            if (!sub_type()->template mmu_store_int_reg<ValT>(rs2, get_x(rs1) + imm)) return false;
+            UXLenT addr = get_x(rs1) + imm;
+
+            if ((addr & (sizeof(ValT) - 1)) != 0) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
+            }
+
+            auto *ptr = sub_type()->template address_store<ValT>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+            } else {
+                *ptr = static_cast<ValT>(get_x(rs2));
+            }
+
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
@@ -162,31 +189,41 @@ namespace riscv_isa {
 
     public:
         Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
-                pc{pc}, int_reg{reg}, csr_reg{hart_id}, inst_buffer{0}, cur_level{MACHINE_MODE} {}
+                pc{pc}, int_reg{reg}, csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
 
         RetT visit() {
-            static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of visitor");
+            UXLenT inst_buffer = 0; // zeroing instruction buffer
 
-            inst_buffer = 0; // zeroing instruction buffer
+            UXLenT addr = get_pc();
 
-            if (!sub_type()->template mmu_load_inst_half<0>(get_pc())) return false;
-
-            if ((this->inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
-#if defined(__RV_EXTENSION_C__)
-                return this->visit_16(reinterpret_cast<Instruction16 *>(&this->inst_buffer));
-#else
-                return this->sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
-#endif // defined(__RV_EXTENSION_C__)
-            } else if ((this->inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
-                if (!sub_type()->template mmu_load_inst_half<1>(get_pc())) return false;
-                return this->visit_32(reinterpret_cast<Instruction32 *>(&this->inst_buffer));
-            } else {
-                return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&this->inst_buffer));
+            auto *ptr = sub_type()->template address_execute<u16>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::INSTRUCTION_PAGE_FAULT, addr);
             }
+
+            inst_buffer = *ptr;
+
+#if defined(__RV_EXTENSION_C__)
+            if ((inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
+                return this->visit_16(reinterpret_cast<Instruction16 *>(&inst_buffer));
+            }
+#endif // defined(__RV_EXTENSION_C__)
+            if ((inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
+                ptr = sub_type()->template address_execute<u16>(addr + sizeof(u16));
+                if (ptr == nullptr) {
+                    return sub_type()->internal_interrupt(riscv_isa::trap::INSTRUCTION_PAGE_FAULT, addr);
+                }
+
+                inst_buffer += static_cast<u32>(*ptr) << 16u;
+
+                return this->visit_32(reinterpret_cast<Instruction32 *>(&inst_buffer));
+            }
+
+            return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&inst_buffer));
         }
 
         RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
-            return internal_interrupt(trap::ILLEGAL_INSTRUCTION, inst_buffer);
+            return internal_interrupt(trap::ILLEGAL_INSTRUCTION, *reinterpret_cast<UXLenT *>(inst));
         }
 
         RetT visit_lui_inst(LUIInst *inst) {
@@ -348,22 +385,30 @@ namespace riscv_isa {
 
 #endif // defined(__RV_EXTENSION_M__)
 #if defined(__RV_EXTENSION_A__)
-///     this functions are required to be implemented.
-///
-///     template<typename ValT>
-///     RetT mmu_store_xlen(XLenT val, riscv_isa_unused XLenT addr) {
-///         riscv_isa_unreachable("memory management unit store integer register undefined!");
-///     }
 
         template<typename OP, typename InstT>
         RetT operate_atomic(const InstT *inst) {
+            using ValT = typename OP::XLenT;
+            static_assert(sizeof(ValT) <= sizeof(UXLenT), "load width exceed bit width!");
+
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
             UXLenT rs2_value = get_x(rs2);
-            if (!sub_type()->template mmu_load_int_reg<i32>(rd, get_x(rs1))) return false;
-            UXLenT result = OP::op(get_x(rd), rs2_value);
-            if (!sub_type()->template mmu_store_xlen<i32>(result, get_x(rs1))) return false;
+            UXLenT addr = get_x(rs1);
+
+            if ((addr & (sizeof(ValT) - 1)) != 0) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+            }
+
+            auto *ptr = sub_type()->template address_store<ValT>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+            }
+
+            set_x(rd, *ptr);
+            *ptr = OP::op(*ptr, rs2_value);
+
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
@@ -372,7 +417,19 @@ namespace riscv_isa {
         RetT visit_lrw_inst(LRWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
-            if (!sub_type()->template mmu_load_int_reg<i32>(rd, get_x(rs1))) return false;
+            UXLenT addr = get_x(rs1);
+
+            if ((addr & (sizeof(u32) - 1)) != 0) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+            }
+
+            auto *ptr = sub_type()->template address_load<u32>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_PAGE_FAULT, addr);
+            } else {
+                if (rd != 0) { set_x(rd, *ptr); }
+            }
+
             inc_pc(LRWInst::INST_WIDTH);
             return true;
         }
@@ -381,8 +438,21 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
-            if (!sub_type()->template mmu_store_int_reg<i32>(rs2, get_x(rs1))) return false;
+            UXLenT addr = get_x(rs1);
+
+            if ((addr & (sizeof(u32) - 1)) != 0) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
+            }
+
+            auto *ptr = sub_type()->template address_store<u32>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+            } else {
+                *ptr = static_cast<u32>(get_x(rs2));
+            }
+
             set_x(rd, 0);
+
             inc_pc(SCWInst::INST_WIDTH);
             return true;
         }
@@ -652,7 +722,7 @@ namespace riscv_isa {
         }
 
         bool break_point_handler(neutron_unused UXLenT addr) {
-            this->inc_pc(riscv_isa::ECALLInst::INST_WIDTH); // todo: c extension
+            inc_pc(riscv_isa::ECALLInst::INST_WIDTH); // todo: c extension
             return true;
         }
 

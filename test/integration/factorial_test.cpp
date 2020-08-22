@@ -6,7 +6,7 @@
 using namespace riscv_isa;
 
 
-template<typename xlen=xlen_trait>
+template<typename xlen>
 class Memory {
 private:
     using XLenT = typename xlen::UXLenT;
@@ -47,9 +47,9 @@ public:
 };
 
 
-class NoneHart : public Hart<NoneHart> {
+class NoneHart : public Hart<NoneHart, xlen_trait> {
 public:
-    using MemT = Memory<>;
+    using MemT = Memory<xlen_trait>;
 
 protected:
     MemT &mem;

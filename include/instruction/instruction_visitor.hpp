@@ -31,6 +31,8 @@ namespace riscv_isa {
     template<typename SubT, typename RetT_ = void>
     class InstructionVisitor {
     private:
+
+
         SubT *sub_type() {
             static_assert(std::is_base_of<InstructionVisitor, SubT>::value, "not subtype of visitor");
 

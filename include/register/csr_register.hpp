@@ -7,7 +7,7 @@
 
 
 namespace riscv_isa {
-    template<typename xlen=xlen_trait>
+    template<typename xlen>
     class CSRRegister {
     public:
         using XLenT = typename xlen::XLenT;
