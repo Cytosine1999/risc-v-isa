@@ -2,6 +2,8 @@
 #define RISCV_ISA_OPERATORS_HPP
 
 
+#include <atomic>
+
 #include "riscv_isa_utility.hpp"
 
 
@@ -18,54 +20,6 @@
 
 namespace riscv_isa {
     namespace operators {
-        template<typename xlen>
-        struct SELECT1 {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(XLenT a, riscv_isa_unused XLenT b) { return a; }
-        };
-
-        template<typename xlen>
-        struct SELECT2 {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(riscv_isa_unused XLenT a, XLenT b) { return b; }
-        };
-
-        template<typename xlen>
-        struct MIN {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(XLenT a, XLenT b) { return std::min(a, b); }
-        };
-
-        template<typename xlen>
-        struct MAX {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(XLenT a, XLenT b) { return std::max(a, b); }
-        };
-
-        template<typename xlen>
-        struct MINU {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(UXLenT a, UXLenT b) { return std::min(a, b); }
-        };
-
-        template<typename xlen>
-        struct MAXU {
-        public:
-            _riscv_isa_use_all_xlen(xlen);
-            
-            static bool op(UXLenT a, UXLenT b) { return std::max(a, b); }
-        };
-
         template<typename xlen>
         struct EQ {
         public:
@@ -269,6 +223,105 @@ namespace riscv_isa {
         };
 
 #endif // defined(__RV_EXTENSION_M__)
+#if defined(__RV_EXTENSION_A__)
+        // todo: memory order
+
+        template<typename xlen>
+        struct AMOSWAP {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) { return a->exchange(b); }
+        };
+
+        template<typename xlen>
+        struct AMOADD {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) { return a->fetch_add(b); }
+        };
+
+        template<typename xlen>
+        struct AMOAND {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) { return a->fetch_and(b); }
+        };
+
+        template<typename xlen>
+        struct AMOOR {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) { return a->fetch_or(b); }
+        };
+
+        template<typename xlen>
+        struct AMOXOR {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) { return a->fetch_xor(b); }
+        };
+
+        template<typename xlen>
+        struct AMOMIN {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) {
+                XLenT ret = a->load();
+
+                while(ret > b && !a->compare_exchange_weak(ret, b)) {}
+
+                return ret;
+            }
+        };
+
+        template<typename xlen>
+        struct AMOMAX {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, XLenT b) {
+                XLenT ret = a->load();
+
+                while(ret < b && !a->compare_exchange_weak(ret, b)) {}
+
+                return ret;
+            }
+        };
+
+        template<typename xlen>
+        struct AMOMINU {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, UXLenT b) {
+                XLenT ret = a->load();
+
+                while(static_cast<UXLenT>(ret) > b && !a->compare_exchange_weak(ret, b)) {}
+
+                return ret;
+            }
+        };
+
+        template<typename xlen>
+        struct AMOMAXU {
+        public:
+            _riscv_isa_use_all_xlen(xlen);
+
+            static XLenT op(std::atomic<XLenT> *a, UXLenT b) {
+                XLenT ret = a->load();
+
+                while(static_cast<UXLenT>(ret) < b && !a->compare_exchange_weak(ret, b)) {}
+
+                return ret;
+            }
+        };
+#endif
     }
 }
 

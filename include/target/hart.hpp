@@ -2,6 +2,8 @@
 #define RISCV_ISA_HART_HPP
 
 
+#include <atomic>
+
 #include "riscv_isa_utility.hpp"
 #include "operators.hpp"
 #include "instruction/instruction_visitor.hpp"
@@ -23,6 +25,9 @@ namespace riscv_isa {
     private:
         xlen_trait::XLenT pc;
         IntRegT int_reg;
+#if defined(__RV_EXTENSION_A__)
+        UXLenT reserve_address, reserve_value;
+#endif
 
     protected:
         CSRRegT csr_reg;
@@ -189,7 +194,8 @@ namespace riscv_isa {
 
     public:
         Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
-                pc{pc}, int_reg{reg}, csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
+                pc{pc}, int_reg{reg}, reserve_address{0}, reserve_value{0},
+                csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
 
         RetT visit() {
             UXLenT inst_buffer = 0; // zeroing instruction buffer
@@ -398,22 +404,21 @@ namespace riscv_isa {
             UXLenT addr = get_x(rs1);
 
             if ((addr & (sizeof(ValT) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
             }
 
-            auto *ptr = sub_type()->template address_store<ValT>(addr);
+            auto *ptr = sub_type()->template address_store<std::atomic<ValT>>(addr);
             if (ptr == nullptr) {
                 return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
             }
 
-            set_x(rd, *ptr);
-            *ptr = OP::op(*ptr, rs2_value);
+            set_x(rd, OP::op(ptr, rs2_value));
 
             inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
-        // todo: implement for single thread, assuming success, even incorrect for single thread.
+        // todo: only comare the value, memory ordering.
         RetT visit_lrw_inst(LRWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
@@ -427,7 +432,10 @@ namespace riscv_isa {
             if (ptr == nullptr) {
                 return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_PAGE_FAULT, addr);
             } else {
-                if (rd != 0) { set_x(rd, *ptr); }
+                auto value = *ptr;
+                reserve_address = addr;
+                reserve_value = value;
+                if (rd != 0) { set_x(rd, value); }
             }
 
             inc_pc(LRWInst::INST_WIDTH);
@@ -444,53 +452,55 @@ namespace riscv_isa {
                 return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
             }
 
-            auto *ptr = sub_type()->template address_store<u32>(addr);
+            auto *ptr = sub_type()->template address_store<std::atomic<u32>>(addr);
             if (ptr == nullptr) {
                 return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
             } else {
-                *ptr = static_cast<u32>(get_x(rs2));
+                if (reserve_address == addr && ptr->compare_exchange_weak(reserve_value, get_x(rs2))) {
+                    set_x(rd, 0);
+                } else {
+                    set_x(rd, 1);
+                }
             }
-
-            set_x(rd, 0);
 
             inc_pc(SCWInst::INST_WIDTH);
             return true;
         }
 
         RetT visit_amoswapw_inst(AMOSWAPWInst *inst) {
-            return operate_atomic<typename operators::SELECT2<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOSWAP<xlen_32_trait>>(inst);
         }
 
         RetT visit_amoaddw_inst(AMOADDWInst *inst) {
-            return operate_atomic<typename operators::ADD<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOADD<xlen_32_trait>>(inst);
         }
 
         RetT visit_amoxorw_inst(AMOXORWInst *inst) {
-            return operate_atomic<typename operators::XOR<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOXOR<xlen_32_trait>>(inst);
         }
 
         RetT visit_amoandw_inst(AMOANDWInst *inst) {
-            return operate_atomic<typename operators::AND<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOAND<xlen_32_trait>>(inst);
         }
 
         RetT visit_amoorw_inst(AMOORWInst *inst) {
-            return operate_atomic<typename operators::OR<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOOR<xlen_32_trait>>(inst);
         }
 
         RetT visit_amominw_inst(AMOMINWInst *inst) {
-            return operate_atomic<typename operators::MIN<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOMIN<xlen_32_trait>>(inst);
         }
 
         RetT visit_amomaxw_inst(AMOMAXWInst *inst) {
-            return operate_atomic<typename operators::MAX<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOMAX<xlen_32_trait>>(inst);
         }
 
         RetT visit_amominuw_inst(AMOMINUWInst *inst) {
-            return operate_atomic<typename operators::MINU<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOMINU<xlen_32_trait>>(inst);
         }
 
         RetT visit_amomaxuw_inst(AMOMAXUWInst *inst) {
-            return operate_atomic<typename operators::MAXU<xlen_32_trait>>(inst);
+            return operate_atomic<typename operators::AMOMAXU<xlen_32_trait>>(inst);
         }
 
 #endif // defined(__RV_EXTENSION_A__)
