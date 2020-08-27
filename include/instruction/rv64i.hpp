@@ -28,8 +28,8 @@
 namespace riscv_isa {
     class InstructionShiftImmWSet : public InstructionArithImmWSet {
     public:
-        usize get_shamt() const { return slice_shamt(inner); }
-        usize get_funct_shift() const { return slice_funct_shift(inner); }
+        UInnerT get_shamt() const { return slice_shamt(inner); }
+        UInnerT get_funct_shift() const { return slice_funct_shift(inner); }
     };
 
     class InstructionShiftRightImmWSet : public InstructionShiftImmWSet {

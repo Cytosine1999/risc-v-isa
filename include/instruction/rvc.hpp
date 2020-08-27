@@ -9,54 +9,54 @@
 namespace riscv_isa {
     class InstructionCR : public Instruction16 {
     public:
-        static constexpr usize OP_CODE = 0b10;
-        static constexpr usize FUNCT3 = 0b100;
+        static constexpr UInnerT OP_CODE = 0b10;
+        static constexpr UInnerT FUNCT3 = 0b100;
 
-        usize get_rs2() const { return slice_rs2(inner); }
+        UInnerT get_rs2() const { return slice_rs2(inner); }
 
-        usize get_funct1() const { return slice_funct1(inner); }
+        UInnerT get_funct1() const { return slice_funct1(inner); }
     };
 
     class InstructionCI : public Instruction16 {};
 
     class InstructionCSS : public Instruction16 {
     public:
-        usize get_rs2() const { return slice_rs2(inner); }
+        UInnerT get_rs2() const { return slice_rs2(inner); }
     };
 
     class InstructionCIW : public Instruction16 {};
 
     class InstructionCL : public Instruction16 {
     public:
-        usize get_rdc() const { return slice_rdc_rs2c(inner); }
+        UInnerT get_rdc() const { return slice_rdc_rs2c(inner); }
 
-        usize get_rs1c() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1c() const { return slice_rdc_rs1c(inner); }
     };
 
     class InstructionCS : public Instruction16 {
     public:
-        usize get_rs2c() const { return slice_rdc_rs2c(inner); }
+        UInnerT get_rs2c() const { return slice_rdc_rs2c(inner); }
 
-        usize get_rs1c() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1c() const { return slice_rdc_rs1c(inner); }
     };
 
     class InstructionCA : public Instruction16 {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b100;
-        static constexpr usize FUNCT2 = 0b11;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b100;
+        static constexpr UInnerT FUNCT2 = 0b11;
 
-        usize get_rs2c() const { return slice_rdc_rs2c(inner); }
+        UInnerT get_rs2c() const { return slice_rdc_rs2c(inner); }
 
-        usize get_rd() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rd() const { return slice_rdc_rs1c(inner); }
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
-        usize get_funct2() const { return slice_funct2(inner); }
+        UInnerT get_funct2() const { return slice_funct2(inner); }
 
-        usize get_funct1() const { return slice_funct1(inner); }
+        UInnerT get_funct1() const { return slice_funct1(inner); }
 
-        usize get_funct_arith() const { return get_bits<UInnerT, 7, 5>(inner); }
+        UInnerT get_funct_arith() const { return get_bits<UInnerT, 7, 5>(inner); }
     };
 
     class InstructionCB : public Instruction16 {
@@ -72,14 +72,14 @@ namespace riscv_isa {
         }
 
     public:
-        static constexpr usize OP_CODE = 0b01;
+        static constexpr UInnerT OP_CODE = 0b01;
 
-        usize get_rs1c() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1c() const { return slice_rdc_rs1c(inner); }
     };
 
     class InstructionCJ : public Instruction16 {
     public:
-        static constexpr usize OP_CODE = 0b01;
+        static constexpr UInnerT OP_CODE = 0b01;
 
         InnerT get_imm() const {
             UInnerT imm_4_1 = get_bits<UInnerT, 6, 3, 1>(inner);
@@ -96,7 +96,7 @@ namespace riscv_isa {
 
     class StackPointerLoadSet : public InstructionCI {
     protected:
-        template<usize align>
+        template<UInnerT align>
         static UInnerT slice_imm(UInnerT val) {
             UInnerT imm_5_x = get_bits<UInnerT, 7, 2 + align, align>(val);
             UInnerT imm_6_5 = get_bits<UInnerT, 13, 12, 5>(val);
@@ -105,14 +105,14 @@ namespace riscv_isa {
         }
 
     public:
-        static constexpr usize OP_CODE = 0b10;
+        static constexpr UInnerT OP_CODE = 0b10;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
     };
 
     class StackPointerStoreSet : public InstructionCSS {
     protected:
-        template<usize align>
+        template<UInnerT align>
         static UInnerT slice_imm(UInnerT val) {
             UInnerT imm_6_x = get_bits<UInnerT, 13, 7 + align, align>(val);
             UInnerT imm_x_6 = get_bits<UInnerT, 7 + align, 7, 6>(val);
@@ -120,45 +120,45 @@ namespace riscv_isa {
         }
 
     public:
-        static constexpr usize OP_CODE = 0b10;
+        static constexpr UInnerT OP_CODE = 0b10;
     };
 
     class RegisterLoadSet : public InstructionCL {
     public:
-        static constexpr usize OP_CODE = 0b00;
+        static constexpr UInnerT OP_CODE = 0b00;
     };
 
     class RegisterStoreSet : public InstructionCS {
     public:
-        static constexpr usize OP_CODE = 0b00;
+        static constexpr UInnerT OP_CODE = 0b00;
     };
 
 #if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
 
     class CLDSPInst : public StackPointerLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         UInnerT get_imm() const { return slice_imm<3>(inner); }
     };
 
     class CSDSPInst : public StackPointerStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
 
         UInnerT get_imm() const { return slice_imm<3>(inner); }
     };
 
     class CLDInst : public RegisterLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         UInnerT get_imm() const { return slice_imm_d(inner); }
     };
 
     class CSDInst : public RegisterStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
 
         UInnerT get_imm() const { return slice_imm_d(inner); }
     };
@@ -168,28 +168,28 @@ namespace riscv_isa {
 
     class CLQSPInst : public StackPointerLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
         UInnerT get_imm() const { return slice_imm<4>(inner); }
     };
 
     class CSQSPInst : public StackPointerStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         UInnerT get_imm() const { return slice_imm<4>(inner); }
     };
 
     class CLQInst : public RegisterLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
         UInnerT get_imm() const { return slice_imm_q(inner); }
     };
 
     class CSQInst : public RegisterStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         UInnerT get_imm() const { return slice_imm_q(inner); }
     };
@@ -199,28 +199,28 @@ namespace riscv_isa {
 
     class CFLWSPInst : public StackPointerLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         UInnerT get_imm() const { return slice_imm<2>(inner); }
     };
 
     class CFSWSPInst : public StackPointerStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
 
         UInnerT get_imm() const { return slice_imm<2>(inner); }
     };
 
         class CFLWInst : public RegisterLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
         UInnerT get_imm() const { return slice_imm_w(inner); }
     };
 
     class CFSWInst : public RegisterStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
 
         UInnerT get_imm() const { return slice_imm_w(inner); }
     };
@@ -229,28 +229,28 @@ namespace riscv_isa {
 
     class CFLDSPInst : public StackPointerLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
         UInnerT get_imm() const { return slice_imm<3>(inner); }
     };
 
     class CFSDSPInst : public StackPointerStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         UInnerT get_imm() const { return slice_imm<3>(inner); }
     };
 
     class CFLDInst : public RegisterLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
         UInnerT get_imm() const { return slice_imm_d(inner); }
     };
 
     class CFSDInst : public RegisterStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
 
         UInnerT get_imm() const { return slice_imm_d(inner); }
     };
@@ -260,90 +260,90 @@ namespace riscv_isa {
 
     class CLWSPInst : public StackPointerLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
 
         u32 get_imm() const { return slice_imm<2>(inner); }
     };
 
     class CSWSPInst : public StackPointerStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
 
         UInnerT get_imm() const { return slice_imm<2>(inner); }
     };
 
     class CLWInst : public RegisterLoadSet {
     public:
-        static constexpr usize FUNCT3 = 0b010;
+        static constexpr UInnerT FUNCT3 = 0b010;
 
         UInnerT get_imm() const { return slice_imm_w(inner); }
     };
 
     class CSWInst : public RegisterStoreSet {
     public:
-        static constexpr usize FUNCT3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
 
         UInnerT get_imm() const { return slice_imm_w(inner); }
     };
 
     class CJInst : public InstructionCJ {
     public:
-        static constexpr usize FUNCT3 = 0b101;
+        static constexpr UInnerT FUNCT3 = 0b101;
     };
 
     class CJALInst : public InstructionCJ {
     public:
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT FUNCT3 = 0b001;
     };
 
     class CJRInst : public InstructionCR {
     public:
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT1 = 0b0;
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
     };
 
     class CJALRInst : public InstructionCR {
     public:
-        static constexpr usize FUNCT1 = 0b1;
+        static constexpr UInnerT FUNCT1 = 0b1;
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
     };
 
     class CBEQZInst : public InstructionCB {
     public:
-        static constexpr usize FUNCT3 = 0b110;
+        static constexpr UInnerT FUNCT3 = 0b110;
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
         InnerT get_imm() const { return slice_imm(inner); }
     };
 
     class CBNEZInst : public InstructionCB {
     public:
-        static constexpr usize FUNCT3 = 0b111;
+        static constexpr UInnerT FUNCT3 = 0b111;
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
         InnerT get_imm() const { return slice_imm(inner); }
     };
 
     class CLIInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b010;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b010;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
         InnerT get_imm() const { return slice_imm_low(inner); }
     };
 
     class CLUIInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
         i32 get_imm() const {
             u32 imm_17_12 = get_bits<u32, 7, 2, 12>(inner);
@@ -355,12 +355,12 @@ namespace riscv_isa {
 
     class CADDIInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b000;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
 
         InnerT get_imm() const { return slice_imm_low(inner); }
     };
@@ -369,12 +369,12 @@ namespace riscv_isa {
 
     class CADDIWInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b001;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b001;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
 
         InnerT get_imm() const { return slice_imm_low(inner); }
     };
@@ -383,12 +383,12 @@ namespace riscv_isa {
 
     class CADDI16SPInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b01;
-        static constexpr usize FUNCT3 = 0b011;
+        static constexpr UInnerT OP_CODE = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b011;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
 
         InnerT get_imm() const {
             UInnerT imm_5_4 = get_bits<UInnerT, 7, 6, 4>(inner);
@@ -403,12 +403,12 @@ namespace riscv_isa {
 
     class CADDI4SPNInst : public InstructionCIW {
     public:
-        static constexpr usize OP_CODE = 0b00;
-        static constexpr usize FUNCT3 = 0b000;
+        static constexpr UInnerT OP_CODE = 0b00;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
-        usize get_rd() const { return slice_rdc_rs2c(inner); }
+        UInnerT get_rd() const { return slice_rdc_rs2c(inner); }
 
-        usize get_imm() const {
+        UInnerT get_imm() const {
             UInnerT imm_3_2 = get_bits<UInnerT, 7, 6, 2>(inner);
             UInnerT imm_4_3 = get_bits<UInnerT, 6, 5, 3>(inner);
             UInnerT imm_6_4 = get_bits<UInnerT, 13, 11, 4>(inner);
@@ -420,119 +420,119 @@ namespace riscv_isa {
 
     class CSLLIInst : public InstructionCI {
     public:
-        static constexpr usize OP_CODE = 0b10;
-        static constexpr usize FUNCT3 = 0b000;
+        static constexpr UInnerT OP_CODE = 0b10;
+        static constexpr UInnerT FUNCT3 = 0b000;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
 
         UInnerT get_shamt() const { return slice_shamt(inner); }
     };
 
     class CSRLIInst : public InstructionCB {
     public:
-        static constexpr usize FUNCT3 = 0b100;
-        static constexpr usize FUNCT2 = 0b00;
+        static constexpr UInnerT FUNCT3 = 0b100;
+        static constexpr UInnerT FUNCT2 = 0b00;
 
-        usize get_rd() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rd() const { return slice_rdc_rs1c(inner); }
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
-        usize get_funct2() const { return slice_funct2(inner); }
+        UInnerT get_funct2() const { return slice_funct2(inner); }
 
         UInnerT get_shamt() const { return slice_shamt(inner); }
     };
 
     class CSRAIInst : public InstructionCB {
     public:
-        static constexpr usize FUNCT3 = 0b100;
-        static constexpr usize FUNCT2 = 0b01;
+        static constexpr UInnerT FUNCT3 = 0b100;
+        static constexpr UInnerT FUNCT2 = 0b01;
 
-        usize get_rd() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rd() const { return slice_rdc_rs1c(inner); }
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
-        usize get_funct2() const { return slice_funct2(inner); }
+        UInnerT get_funct2() const { return slice_funct2(inner); }
 
         UInnerT get_shamt() const { return slice_shamt(inner); }
     };
 
     class CANDIInst : public InstructionCB {
     public:
-        static constexpr usize FUNCT3 = 0b100;
-        static constexpr usize FUNCT2 = 0b10;
+        static constexpr UInnerT FUNCT3 = 0b100;
+        static constexpr UInnerT FUNCT2 = 0b10;
 
-        usize get_rd() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rd() const { return slice_rdc_rs1c(inner); }
 
-        usize get_rs1() const { return slice_rdc_rs1c(inner); }
+        UInnerT get_rs1() const { return slice_rdc_rs1c(inner); }
 
-        usize get_funct2() const { return slice_funct2(inner); }
+        UInnerT get_funct2() const { return slice_funct2(inner); }
 
         InnerT get_imm() const { return slice_imm_low(inner); }
     };
 
     class CMVInst : public InstructionCR {
     public:
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT1 = 0b0;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
     };
 
     class CADDInst : public InstructionCR {
     public:
-        static constexpr usize FUNCT1 = 0b1;
+        static constexpr UInnerT FUNCT1 = 0b1;
 
-        usize get_rd() const { return slice_rd_rs1(inner); }
+        UInnerT get_rd() const { return slice_rd_rs1(inner); }
 
-        usize get_rs1() const { return slice_rd_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rd_rs1(inner); }
     };
 
     class CANDInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b11;
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT_ARITH = 0b11;
+        static constexpr UInnerT FUNCT1 = 0b0;
     };
 
     class CORInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b10;
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT_ARITH = 0b10;
+        static constexpr UInnerT FUNCT1 = 0b0;
     };
 
     class CXORInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b01;
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT_ARITH = 0b01;
+        static constexpr UInnerT FUNCT1 = 0b0;
     };
 
     class CSUBInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b00;
-        static constexpr usize FUNCT1 = 0b0;
+        static constexpr UInnerT FUNCT_ARITH = 0b00;
+        static constexpr UInnerT FUNCT1 = 0b0;
     };
 
 #if __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
 
     class CADDWInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b01;
-        static constexpr usize FUNCT1 = 0b1;
+        static constexpr UInnerT FUNCT_ARITH = 0b01;
+        static constexpr UInnerT FUNCT1 = 0b1;
     };
 
     class CSUBWInst : public InstructionCA {
     public:
-        static constexpr usize FUNCT_ARITH = 0b00;
-        static constexpr usize FUNCT1 = 0b1;
+        static constexpr UInnerT FUNCT_ARITH = 0b00;
+        static constexpr UInnerT FUNCT1 = 0b1;
     };
 
 #endif // __RV_BIT_WIDTH__ == 64 || __RV_BIT_WIDTH__ == 128
 
     class CEBREAKInst : public InstructionCR {
     public:
-        static constexpr usize FUNCT1 = 0b1;
+        static constexpr UInnerT FUNCT1 = 0b1;
     };
 }
 

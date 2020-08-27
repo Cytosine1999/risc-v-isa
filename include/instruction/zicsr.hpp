@@ -9,7 +9,7 @@
 namespace riscv_isa {
     class InstructionCSRSet : public InstructionSystemSet {
     public:
-        usize get_csr() const { return get_bits<UInnerT, 32, 20>(inner); }
+        UInnerT get_csr() const { return get_bits<UInnerT, 32, 20>(inner); }
     };
 
     class CSRRWInst : public InstructionCSRSet {

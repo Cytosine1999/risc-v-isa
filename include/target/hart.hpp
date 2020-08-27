@@ -77,10 +77,10 @@ namespace riscv_isa {
 
         template<typename OP, typename InstT>
         RetT operate_reg(const InstT *inst) {
-            usize rd = inst->get_rd();
+            typename InstT::UInnerT rd = inst->get_rd();
             if (rd != 0) {
-                usize rs1 = inst->get_rs1();
-                usize rs2 = inst->get_rs2();
+                typename InstT::UInnerT rs1 = inst->get_rs1();
+                typename InstT::UInnerT rs2 = inst->get_rs2();
                 set_x(rd, OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2)));
             }
             sub_type()->inc_pc(InstT::INST_WIDTH);
@@ -90,9 +90,9 @@ namespace riscv_isa {
 
         template<typename OP, typename InstT>
         RetT operate_imm(const InstT *inst) {
-            usize rd = inst->get_rd();
+            typename InstT::UInnerT rd = inst->get_rd();
             if (rd != 0) {
-                usize rs1 = inst->get_rs1();
+                typename InstT::UInnerT rs1 = inst->get_rs1();
                 XLenT imm = inst->get_imm();
                 set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
             }
@@ -103,8 +103,8 @@ namespace riscv_isa {
 
         template<typename OP, typename InstT>
         RetT operate_branch(const InstT *inst) {
-            usize rs1 = inst->get_rs1();
-            usize rs2 = inst->get_rs2();
+            typename InstT::UInnerT rs1 = inst->get_rs1();
+            typename InstT::UInnerT rs2 = inst->get_rs2();
 
             if (OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2))) {
                 XLenT imm = inst->get_imm();
@@ -120,8 +120,8 @@ namespace riscv_isa {
         RetT operate_load(const InstT *inst) {
             static_assert(sizeof(ValT) <= sizeof(UXLenT), "load width exceed bit width!");
 
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
+            typename InstT::UInnerT rd = inst->get_rd();
+            typename InstT::UInnerT rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
             UXLenT addr = sub_type()->get_x(rs1) + imm;
 
@@ -144,8 +144,8 @@ namespace riscv_isa {
         RetT operate_store(const InstT *inst) {
             static_assert(sizeof(ValT) <= sizeof(UXLenT), "store width exceed bit width!");
 
-            usize rs1 = inst->get_rs1();
-            usize rs2 = inst->get_rs2();
+            typename InstT::UInnerT rs1 = inst->get_rs1();
+            typename InstT::UInnerT rs2 = inst->get_rs2();
             XLenT imm = inst->get_imm();
             UXLenT addr = sub_type()->get_x(rs1) + imm;
 
@@ -166,9 +166,9 @@ namespace riscv_isa {
 
         template<typename OP, typename InstT>
         RetT operate_imm_shift(const InstT *inst) {
-            usize rd = inst->get_rd();
+            typename InstT::UInnerT rd = inst->get_rd();
             if (rd != 0) {
-                usize rs1 = inst->get_rs1();
+                typename InstT::UInnerT rs1 = inst->get_rs1();
                 XLenT imm = inst->get_shamt();
                 set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
             }
@@ -240,7 +240,7 @@ namespace riscv_isa {
         }
 
         RetT visit_lui_inst(const LUIInst *inst) {
-            usize rd = inst->get_rd();
+            typename LUIInst::UInnerT rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
                 set_x(rd, imm);
@@ -251,7 +251,7 @@ namespace riscv_isa {
         }
 
         RetT visit_auipc_inst(const AUIPCInst *inst) {
-            usize rd = inst->get_rd();
+            typename AUIPCInst::UInnerT rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
                 set_x(rd, imm + sub_type()->get_pc());
@@ -262,7 +262,7 @@ namespace riscv_isa {
         }
 
         RetT visit_jal_inst(const JALInst *inst) {
-            usize rd = inst->get_rd();
+            typename JALInst::UInnerT rd = inst->get_rd();
             XLenT imm = inst->get_imm();
             UXLenT target = imm + sub_type()->get_pc();
             UXLenT save = sub_type()->get_pc() + JALInst::INST_WIDTH;
@@ -274,8 +274,8 @@ namespace riscv_isa {
         }
 
         RetT visit_jalr_inst(const JALRInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
+            typename JALRInst::UInnerT rd = inst->get_rd();
+            typename JALRInst::UInnerT rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
             UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(sub_type()->get_x(rs1) + imm);
             UXLenT save = sub_type()->get_pc() + JALInst::INST_WIDTH;
@@ -399,9 +399,9 @@ namespace riscv_isa {
             using ValT = typename OP::XLenT;
             static_assert(sizeof(ValT) <= sizeof(UXLenT), "load width exceed bit width!");
 
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
-            usize rs2 = inst->get_rs2();
+            typename InstT::UInnerT rd = inst->get_rd();
+            typename InstT::UInnerT rs1 = inst->get_rs1();
+            typename InstT::UInnerT rs2 = inst->get_rs2();
             UXLenT rs2_value = sub_type()->get_x(rs2);
             UXLenT addr = sub_type()->get_x(rs1);
 
@@ -422,8 +422,8 @@ namespace riscv_isa {
 
         // todo: only comare the value, memory ordering.
         RetT visit_lrw_inst(const LRWInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
+            typename LRWInst::UInnerT rd = inst->get_rd();
+            typename LRWInst::UInnerT rs1 = inst->get_rs1();
             UXLenT addr = sub_type()->get_x(rs1);
 
             if ((addr & (sizeof(u32) - 1)) != 0) {
@@ -445,9 +445,9 @@ namespace riscv_isa {
         }
 
         RetT visit_scw_inst(const SCWInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
-            usize rs2 = inst->get_rs2();
+            typename SCWInst::UInnerT rd = inst->get_rd();
+            typename SCWInst::UInnerT rs1 = inst->get_rs1();
+            typename SCWInst::UInnerT rs2 = inst->get_rs2();
             UXLenT addr = sub_type()->get_x(rs1);
 
             if ((addr & (sizeof(u32) - 1)) != 0) {
@@ -642,11 +642,11 @@ namespace riscv_isa {
 #undef _riscv_isa_set_csr
 
         RetT visit_csrrw_inst(const CSRRWInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRWInst::UInnerT rd = inst->get_rd();
+            typename CSRRWInst::UInnerT rs1 = inst->get_rs1();
+            typename CSRRWInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename SCWInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) set_x(rd, get_csr(index));
@@ -654,11 +654,11 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrs_inst(const CSRRSInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRSInst::UInnerT rd = inst->get_rd();
+            typename CSRRSInst::UInnerT rs1 = inst->get_rs1();
+            typename CSRRSInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename CSRRSInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -673,11 +673,11 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrc_inst(const CSRRCInst *inst) {
-            usize rd = inst->get_rd();
-            usize rs1 = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRCInst::UInnerT rd = inst->get_rd();
+            typename CSRRCInst::UInnerT rs1 = inst->get_rs1();
+            typename CSRRCInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename CSRRCInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -692,11 +692,11 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrwi_inst(const CSRRWIInst *inst) {
-            usize rd = inst->get_rd();
-            usize imm = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRWIInst::UInnerT rd = inst->get_rd();
+            typename CSRRWIInst::UInnerT imm = inst->get_rs1();
+            typename CSRRWIInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename CSRRWIInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) set_x(rd, get_csr(index));
@@ -704,11 +704,11 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrsi_inst(const CSRRSIInst *inst) {
-            usize rd = inst->get_rd();
-            usize imm = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRSIInst::UInnerT rd = inst->get_rd();
+            typename CSRRSIInst::UInnerT imm = inst->get_rs1();
+            typename CSRRSIInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename CSRRSIInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -724,11 +724,11 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrci_inst(const CSRRCIInst *inst) {
-            usize rd = inst->get_rd();
-            usize imm = inst->get_rs1();
-            usize csr = inst->get_csr();
+            typename CSRRCIInst::UInnerT rd = inst->get_rd();
+            typename CSRRCIInst::UInnerT imm = inst->get_rs1();
+            typename CSRRCIInst::UInnerT csr = inst->get_csr();
 
-            usize index = check_csr(csr);
+            typename CSRRCIInst::UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);

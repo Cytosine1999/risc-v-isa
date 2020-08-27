@@ -101,7 +101,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT FUNCT7 = 0b0001001;
 
-        SFENCEVAMInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
+        SFENCEVAMInst(UInnerT rs1, UInnerT rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const SFENCEVAMInst &inst) {
             stream << "sfence.vam\tx" << inst.get_rs1() << " x" << inst.get_rs2();
@@ -122,7 +122,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT FUNCT7 = 0b0010001;
 
-        HFENCEVVMAInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
+        HFENCEVVMAInst(UInnerT rs1, UInnerT rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const HFENCEVVMAInst &inst) {
             stream << "hfence.vvam\tx" << inst.get_rs1() << " x" << inst.get_rs2();
@@ -140,7 +140,7 @@ namespace riscv_isa {
 
         static constexpr UInnerT FUNCT7 = 0b0110001;
 
-        HFENCEGVMAInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
+        HFENCEGVMAInst(UInnerT rs1, UInnerT rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
         friend std::ostream &operator<<(std::ostream &stream, const HFENCEGVMAInst &inst) {
             stream << "hfence.gvam\tx" << inst.get_rs1() << " x" << inst.get_rs2();

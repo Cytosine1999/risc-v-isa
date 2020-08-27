@@ -14,10 +14,11 @@ namespace riscv_isa {
 #if defined(__RV_EXTENSION_C__)
 
     class Instruction16 : public Instruction {
-    protected:
+    public:
         using InnerT = i16;
         using UInnerT = u16;
 
+    protected:
         static UInnerT slice_rd_rs1(UInnerT val) { return get_bits<UInnerT, 12, 7>(val); }
 
         static UInnerT slice_rs2(UInnerT val) { return get_bits<UInnerT, 7, 2>(val); }
@@ -82,20 +83,21 @@ namespace riscv_isa {
             return (*reinterpret_cast<const u16 *>(self) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val;
         }
 
-        static constexpr usize INST_WIDTH = sizeof(UInnerT);
+        static constexpr UInnerT INST_WIDTH = sizeof(UInnerT);
 
-        usize get_op() const { return get_bits<UInnerT, 2, 0>(inner); }
+        UInnerT get_op() const { return get_bits<UInnerT, 2, 0>(inner); }
 
-        usize get_funct3() const { return get_bits<UInnerT, 16, 13>(inner); }
+        UInnerT get_funct3() const { return get_bits<UInnerT, 16, 13>(inner); }
     };
 
 #endif // defined(__RV_EXTENSION_C__)
 
     class Instruction32 : public Instruction {
-    protected:
+    public:
         using InnerT = i32;
         using UInnerT = u32;
 
+    protected:
         static UInnerT slice_rd(UInnerT val) {
 #if defined(__RV_BASE_I__)
             return get_bits<UInnerT, 12, 7>(val);
@@ -146,14 +148,14 @@ namespace riscv_isa {
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
 
-        usize get_op_code() const { return get_bits<UInnerT, 7, 2>(inner); }
+        UInnerT get_op_code() const { return get_bits<UInnerT, 7, 2>(inner); }
 
         u32 to_u32() const { return inner; }
     };
 
     class InstructionR : public Instruction32 {
     protected:
-        InstructionR(usize op, usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+        InstructionR(UInnerT op, UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT funct7)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -164,20 +166,20 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 7, 0, 25>(funct7))} {}
 
     public:
-        usize get_rd() const { return slice_rd(inner); }
+        UInnerT get_rd() const { return slice_rd(inner); }
 
-        usize get_funct3() const { return slice_funct3(inner); }
+        UInnerT get_funct3() const { return slice_funct3(inner); }
 
-        usize get_rs1() const { return slice_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rs1(inner); }
 
-        usize get_rs2() const { return slice_rs2(inner); }
+        UInnerT get_rs2() const { return slice_rs2(inner); }
 
-        usize get_funct7() const { return slice_funct7(inner); }
+        UInnerT get_funct7() const { return slice_funct7(inner); }
     };
 
     class InstructionI : public Instruction32 {
     protected:
-        InstructionI(usize op, usize rd, usize funct3, usize rs1, UInnerT imm)
+        InstructionI(UInnerT op, UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -187,18 +189,18 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 12, 0, 20>(imm))} {}
 
     public:
-        usize get_rd() const { return slice_rd(inner); }
+        UInnerT get_rd() const { return slice_rd(inner); }
 
-        usize get_funct3() const { return slice_funct3(inner); }
+        UInnerT get_funct3() const { return slice_funct3(inner); }
 
-        usize get_rs1() const { return slice_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rs1(inner); }
 
-        InnerT get_imm() const { return inner >> 20; }
+        InnerT get_imm() const { return inner >> 20u; }
     };
 
     class InstructionS : public Instruction32 {
     protected:
-        InstructionS(usize op, usize funct3, usize rs1, usize rs2, UInnerT imm)
+        InstructionS(UInnerT op, UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -209,22 +211,22 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 12, 5, 25>(imm))} {}
 
     public:
-        usize get_funct3() const { return slice_funct3(inner); }
+        UInnerT get_funct3() const { return slice_funct3(inner); }
 
-        usize get_rs1() const { return slice_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rs1(inner); }
 
-        usize get_rs2() const { return slice_rs2(inner); }
+        UInnerT get_rs2() const { return slice_rs2(inner); }
 
         InnerT get_imm() const {
             InnerT imm12_7 = get_bits<UInnerT, 12, 7, 0>(inner);
-            InnerT imm32_25 = inner >> 20 & bits_mask<UInnerT, 32, 5>::val;
+            InnerT imm32_25 = inner >> 20u & bits_mask<UInnerT, 32, 5>::val;
             return imm32_25 | imm12_7;
         }
     };
 
     class InstructionB : public Instruction32 {
     protected:
-        InstructionB(usize op, usize funct3, usize rs1, usize rs2, UInnerT imm)
+        InstructionB(UInnerT op, UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -237,11 +239,11 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 13, 12, 31>(imm))} {}
 
     public:
-        usize get_funct3() const { return slice_funct3(inner); }
+        UInnerT get_funct3() const { return slice_funct3(inner); }
 
-        usize get_rs1() const { return slice_rs1(inner); }
+        UInnerT get_rs1() const { return slice_rs1(inner); }
 
-        usize get_rs2() const { return slice_rs2(inner); }
+        UInnerT get_rs2() const { return slice_rs2(inner); }
 
         InnerT get_imm() const {
             UInnerT imm8_7 = get_bits<UInnerT, 8, 7, 11>(inner);
@@ -253,7 +255,7 @@ namespace riscv_isa {
 
     class InstructionU : public Instruction32 {
     protected:
-        InstructionU(usize op, usize rd, UInnerT imm)
+        InstructionU(UInnerT op, UInnerT rd, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -261,14 +263,14 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 32, 12, 12>(imm))} {}
 
     public:
-        usize get_rd() const { return slice_rd(inner); }
+        UInnerT get_rd() const { return slice_rd(inner); }
 
         InnerT get_imm() const { return get_bits<UInnerT, 32, 12, 12>(inner); }
     };
 
     class InstructionJ : public Instruction32 {
     protected:
-        InstructionJ(usize op, usize rd, UInnerT imm)
+        InstructionJ(UInnerT op, UInnerT rd, UInnerT imm)
                 : Instruction32{static_cast<InnerT>(
                                         bits_mask<UInnerT, 2, 0>::val |
                                         get_bits<UInnerT, 5, 0, 2>(op) |
@@ -279,7 +281,7 @@ namespace riscv_isa {
                                         get_bits<UInnerT, 21, 20, 31>(imm))} {}
 
     public:
-        usize get_rd() const { return slice_rd(inner); }
+        UInnerT get_rd() const { return slice_rd(inner); }
 
         InnerT get_imm() const {
             UInnerT imm20_12 = get_bits<UInnerT, 20, 12, 12>(inner);
@@ -291,7 +293,7 @@ namespace riscv_isa {
 
     class InstructionBranchSet : public InstructionB {
     protected:
-        InstructionBranchSet(usize funct3, usize rs1, usize rs2, UInnerT imm)
+        InstructionBranchSet(UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT imm)
                 : InstructionB{OP_CODE, funct3, rs1, rs2, imm} {}
 
     public:
@@ -304,7 +306,7 @@ namespace riscv_isa {
 
     class InstructionLoadSet : public InstructionI {
     protected:
-        InstructionLoadSet(usize rd, usize funct3, usize rs1, UInnerT imm)
+        InstructionLoadSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT imm)
                 : InstructionI{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -317,7 +319,7 @@ namespace riscv_isa {
 
     class InstructionStoreSet : public InstructionS {
     protected:
-        InstructionStoreSet(usize funct3, usize rs1, usize rs2, UInnerT imm)
+        InstructionStoreSet(UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT imm)
                 : InstructionS{OP_CODE, funct3, rs1, rs2, imm} {}
 
     public:
@@ -330,7 +332,7 @@ namespace riscv_isa {
 
     class InstructionArithImmSet : public InstructionI {
     protected:
-        InstructionArithImmSet(usize rd, usize funct3, usize rs1, UInnerT imm)
+        InstructionArithImmSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT imm)
                 : InstructionI{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -343,7 +345,7 @@ namespace riscv_isa {
 
     class InstructionArithRegSet : public InstructionR {
     protected:
-        InstructionArithRegSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+        InstructionArithRegSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT funct7)
                 : InstructionR{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
 
     public:
@@ -356,7 +358,7 @@ namespace riscv_isa {
 
     class InstructionFenceSet : public InstructionI {
     protected:
-        InstructionFenceSet(usize rd, usize funct3, usize rs1, UInnerT imm)
+        InstructionFenceSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT imm)
                 : InstructionI{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -369,7 +371,7 @@ namespace riscv_isa {
 
     class InstructionSystemSet : public InstructionR {
     protected:
-        InstructionSystemSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+        InstructionSystemSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT rs2, UInnerT funct7)
                 : InstructionR{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
 
     public:
@@ -382,7 +384,7 @@ namespace riscv_isa {
 
     class InstructionPrivilegedSet : public InstructionSystemSet {
     protected:
-        InstructionPrivilegedSet(usize rd, usize rs1, usize rs2, usize funct7)
+        InstructionPrivilegedSet(UInnerT rd, UInnerT rs1, UInnerT rs2, UInnerT funct7)
                 : InstructionSystemSet{rd, FUNCT3, rs1, rs2, funct7} {}
 
     public:
@@ -390,9 +392,11 @@ namespace riscv_isa {
     };
 
 #if defined(__RV_EXTENSION_A__)
+
     class InstructionAtomicSet : public InstructionR {
     protected:
-        InstructionAtomicSet(usize rd, usize funct3, usize rs1, usize rs2, bool aq, bool rl, usize funct_atomic) :
+        InstructionAtomicSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT rs2,
+                             bool aq, bool rl, UInnerT funct_atomic) :
                 InstructionR{OP_CODE, rd, funct3, rs1, rs2,
                              get_bit<UInnerT, 0, 0>(aq) |
                              get_bit<UInnerT, 0, 1>(rl) |
@@ -405,15 +409,16 @@ namespace riscv_isa {
 
         bool get_aq() const { return get_bit<UInnerT, 26>(inner); }
 
-        usize get_funct_atomic() const { return get_bits<UInnerT, 32, 27>(inner); }
+        UInnerT get_funct_atomic() const { return get_bits<UInnerT, 32, 27>(inner); }
     };
+
 #endif
 
 #if __RV_BIT_WIDTH__ == 64
 
     class InstructionArithImmWSet : public InstructionI {
     protected:
-        InstructionArithImmWSet(usize rd, usize funct3, usize rs1, UInnerT imm)
+        InstructionArithImmWSet(UInnerT rd, UInnerT funct3, UInnerT rs1, UInnerT imm)
                 : InstructionI{OP_CODE, rd, funct3, rs1, imm} {}
 
     public:
@@ -426,7 +431,7 @@ namespace riscv_isa {
 
     class InstructionArithRegWSet : public InstructionR {
     protected:
-        InstructionArithRegWSet(usize rd, usize funct3, usize rs1, usize rs2, usize funct7)
+        InstructionArithRegWSet(UInnerT rd, usizUInnerTct3, UInnerT rs1, UInnerT rs2, UInnerT funct7)
                 : InstructionR{OP_CODE, rd, funct3, rs1, rs2, funct7} {}
 
     public:

@@ -10,7 +10,7 @@
 namespace riscv_isa {
     class InstructionAtomicWSet : public InstructionAtomicSet {
     protected:
-        InstructionAtomicWSet(usize rd, usize rs1, usize rs2, bool aq, bool rl, usize funct_atomic) :
+        InstructionAtomicWSet(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl, UInnerT funct_atomic) :
                 InstructionAtomicSet{rd, FUNCT3, rs1, rs2, aq, rl, funct_atomic} {}
 
     public:
@@ -19,7 +19,7 @@ namespace riscv_isa {
 
     class LRWInst : public InstructionAtomicWSet {
     public:
-        LRWInst(usize rd, usize rs1, bool aq, bool rl) :
+        LRWInst(UInnerT rd, UInnerT rs1, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, 0, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b00010;
@@ -35,7 +35,7 @@ namespace riscv_isa {
 
     class SCWInst : public InstructionAtomicWSet {
     public:
-        SCWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        SCWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b00011;
@@ -51,7 +51,7 @@ namespace riscv_isa {
 
     class AMOSWAPWInst : public InstructionAtomicWSet {
     public:
-        AMOSWAPWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOSWAPWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b00001;
@@ -67,7 +67,7 @@ namespace riscv_isa {
 
     class AMOADDWInst : public InstructionAtomicWSet {
     public:
-        AMOADDWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOADDWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b00000;
@@ -83,7 +83,7 @@ namespace riscv_isa {
 
     class AMOXORWInst : public InstructionAtomicWSet {
     public:
-        AMOXORWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOXORWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b00100;
@@ -99,7 +99,7 @@ namespace riscv_isa {
 
     class AMOANDWInst : public InstructionAtomicWSet {
     public:
-        AMOANDWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOANDWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b01100;
@@ -115,7 +115,7 @@ namespace riscv_isa {
 
     class AMOORWInst : public InstructionAtomicWSet {
     public:
-        AMOORWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOORWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b01000;
@@ -131,7 +131,7 @@ namespace riscv_isa {
 
     class AMOMINWInst : public InstructionAtomicWSet {
     public:
-        AMOMINWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOMINWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b10000;
@@ -147,7 +147,7 @@ namespace riscv_isa {
 
     class AMOMAXWInst : public InstructionAtomicWSet {
     public:
-        AMOMAXWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOMAXWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b10100;
@@ -163,7 +163,7 @@ namespace riscv_isa {
 
     class AMOMINUWInst : public InstructionAtomicWSet {
     public:
-        AMOMINUWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOMINUWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b11000;
@@ -179,7 +179,7 @@ namespace riscv_isa {
 
     class AMOMAXUWInst : public InstructionAtomicWSet {
     public:
-        AMOMAXUWInst(usize rd, usize rs1, usize rs2, bool aq, bool rl) :
+        AMOMAXUWInst(UInnerT rd, UInnerT rs1, UInnerT rs2, bool aq, bool rl) :
                 InstructionAtomicWSet{rd, rs1, rs2, aq, rl, FUNCT_ATOMIC} {}
 
         static constexpr UInnerT FUNCT_ATOMIC = 0b11100;
