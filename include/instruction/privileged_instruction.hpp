@@ -12,8 +12,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<URETInst *>(self)->inner == URETInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const URETInst *>(self)->inner == URETInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0000000;
@@ -34,8 +34,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<SRETInst *>(self)->inner == SRETInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const SRETInst *>(self)->inner == SRETInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0001000;
@@ -55,8 +55,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<MRETInst *>(self)->inner == MRETInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const MRETInst *>(self)->inner == MRETInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0011000;
@@ -74,8 +74,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<WFIInst *>(self)->inner == WFIInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const WFIInst *>(self)->inner == WFIInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0001000;
@@ -95,7 +95,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7 && self->get_rd() == 0;
         }
 
@@ -103,7 +103,7 @@ namespace riscv_isa {
 
         SFENCEVAMInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
-        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const SFENCEVAMInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, const SFENCEVAMInst &inst) {
             stream << "sfence.vam\tx" << inst.get_rs1() << " x" << inst.get_rs2();
             return stream;
         }
@@ -116,7 +116,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7 && self->get_rd() == 0;
         }
 
@@ -124,7 +124,7 @@ namespace riscv_isa {
 
         HFENCEVVMAInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
-        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const HFENCEVVMAInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, const HFENCEVVMAInst &inst) {
             stream << "hfence.vvam\tx" << inst.get_rs1() << " x" << inst.get_rs2();
             return stream;
         }
@@ -134,7 +134,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7 && self->get_rd() == 0;
         }
 
@@ -142,7 +142,7 @@ namespace riscv_isa {
 
         HFENCEGVMAInst(usize rs1, usize rs2) : InstructionPrivilegedSet{0, rs1, rs2, FUNCT7} {}
 
-        friend std::ostream &operator<<(std::ostream &stream, riscv_isa_unused const HFENCEGVMAInst &inst) {
+        friend std::ostream &operator<<(std::ostream &stream, const HFENCEGVMAInst &inst) {
             stream << "hfence.gvam\tx" << inst.get_rs1() << " x" << inst.get_rs2();
             return stream;
         }

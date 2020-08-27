@@ -20,7 +20,7 @@
 #endif
 
 #if defined(__RV_BASE_E__) && __RV_BIT_WIDTH__ != 32
-#error "Base instruction set E only support 32 bits width!"
+#error "Base instruction set E only supports 32 bits width!"
 #endif
 
 #if defined(__RV_EXTENSION_F__) || defined(__RV_EXTENSION_D__) || defined(__RV_EXTENSION_Q__)
@@ -41,13 +41,12 @@
 
 namespace riscv_isa {
 #define riscv_isa_static_inline static inline __attribute__((always_inline))
-#define riscv_isa_force_inline inline __attribute__((always_inline))
 #define riscv_isa_unused __attribute__((unused))
 #define riscv_isa_no_return __attribute__((noreturn))
 #if defined(__DEBUG__)
-#define riscv_isa_inline
+#define riscv_isa_force_inline
 #else
-#define riscv_isa_inline inline __attribute__((__always_inline__))
+#define riscv_isa_force_inline inline __attribute__((__always_inline__))
 #endif
 
     riscv_isa_static_inline void _warn(const char *file, int line, const char *msg) {
@@ -216,7 +215,10 @@ namespace riscv_isa {
     template<typename T, typename U>
     bool is_type(U *self);
 
-    template<typename T, typename U, bool flag = std::is_same<typename T::BaseT, U>::value>
+    template<typename T,
+            typename U,
+            bool flag = std::is_same<typename std::decay<typename T::BaseT>::type,
+                    typename std::decay<U>::type>::value>
     struct _is_type;
 
     template<typename T, typename U>
@@ -228,14 +230,19 @@ namespace riscv_isa {
     template<typename T, typename U>
     struct _is_type<T, U, false> {
     private:
-        using BaseT = typename T::BaseT;
+        using BaseT = typename std::conditional<
+                std::is_const<U>::value,
+                const typename T::BaseT,
+                typename T::BaseT>::type;
 
     public:
-        static bool inner(U *self) { return is_type<BaseT>(self) && T::is_self_type(reinterpret_cast<BaseT *>(self)); }
+        static bool inner(U *self) {
+            return is_type<BaseT>(self) && T::is_self_type(reinterpret_cast<BaseT *>(self));
+        }
     };
 
     template<typename T, typename U>
-    bool is_type(U *self) { return _is_type<T, U>::inner(self); }
+    bool is_type(U *self) { return self != nullptr ? _is_type<T, U>::inner(self) : false; }
 
     template<typename T, typename U>
     T *dyn_cast(U *self);

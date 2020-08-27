@@ -52,7 +52,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01101;
 
@@ -68,7 +68,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00101;
 
@@ -84,7 +84,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11011;
 
@@ -100,8 +100,8 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *_self) {
-            InstructionI *self = reinterpret_cast<InstructionI *>(_self);
+        static bool is_self_type(const BaseT *_self) {
+            const InstructionI *self = reinterpret_cast<const InstructionI *>(_self);
             return self->get_op_code() == OP_CODE && self->get_funct3() == FUNCT3;
         }
 
@@ -120,7 +120,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -136,7 +136,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b001;
 
@@ -152,7 +152,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b100;
 
@@ -168,7 +168,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b101;
 
@@ -184,7 +184,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b110;
 
@@ -200,7 +200,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionBranchSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b111;
 
@@ -216,7 +216,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionLoadSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -232,7 +232,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionLoadSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b001;
 
@@ -248,7 +248,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionLoadSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b010;
 
@@ -264,7 +264,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionLoadSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b100;
 
@@ -280,7 +280,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionLoadSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b101;
 
@@ -296,7 +296,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionStoreSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -312,7 +312,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionStoreSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b001;
 
@@ -328,7 +328,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionStoreSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b010;
 
@@ -344,7 +344,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -360,7 +360,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b010;
 
@@ -376,7 +376,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b011;
 
@@ -392,7 +392,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b100;
 
@@ -408,7 +408,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b110;
 
@@ -424,7 +424,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b111;
 
@@ -441,9 +441,9 @@ namespace riscv_isa {
 
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<const InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT3 = 0b001;
@@ -466,9 +466,9 @@ namespace riscv_isa {
 
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<const InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT_SHIFT = 0b000000000000;
@@ -490,9 +490,9 @@ namespace riscv_isa {
 
         using BaseT = InstructionArithImmSet;
 
-        static bool is_self_type(BaseT *self) {
+        static bool is_self_type(const BaseT *self) {
             return self->get_funct3() == FUNCT3 &&
-                   reinterpret_cast<InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
+                   reinterpret_cast<const InstructionShiftImmSet *>(self)->get_funct_shift() == FUNCT_SHIFT;
         }
 
         static constexpr UInnerT FUNCT_SHIFT = 0b010000000000;
@@ -511,7 +511,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -527,7 +527,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -543,7 +545,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b001;
 
@@ -559,7 +563,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b010;
 
@@ -575,7 +581,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b011;
 
@@ -591,7 +599,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b100;
 
@@ -607,7 +617,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b101;
 
@@ -623,7 +635,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b101;
 
@@ -639,7 +653,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b110;
 
@@ -655,7 +671,9 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionArithRegSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7; }
+        static bool is_self_type(const BaseT *self) {
+            return self->get_funct3() == FUNCT3 && self->get_funct7() == FUNCT7;
+        }
 
         static constexpr UInnerT FUNCT3 = 0b111;
 
@@ -671,7 +689,7 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionFenceSet;
 
-        static bool is_self_type(BaseT *self) { return self->get_funct3() == FUNCT3; }
+        static bool is_self_type(const BaseT *self) { return self->get_funct3() == FUNCT3; }
 
         static constexpr UInnerT FUNCT3 = 0b000;
 
@@ -715,8 +733,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<ECALLInst *>(self)->inner == ECALLInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const ECALLInst *>(self)->inner == ECALLInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0000000;
@@ -734,8 +752,8 @@ namespace riscv_isa {
     public:
         using BaseT = InstructionSystemSet;
 
-        static bool is_self_type(BaseT *self) {
-            return reinterpret_cast<EBREAKInst *>(self)->inner == EBREAKInst().inner;
+        static bool is_self_type(const BaseT *self) {
+            return reinterpret_cast<const EBREAKInst *>(self)->inner == EBREAKInst().inner;
         }
 
         static constexpr UInnerT FUNCT7 = 0b0000000;

@@ -16,7 +16,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   ((shamt | funct_shift) << IMM_I);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -32,7 +32,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   ((shamt | funct_shift) << IMM_I);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
+        CheckVisitor<void>{}.visit_in_memory(_inst, 4);
         check_all_dyn_cast<void>(_inst);
     }
 
@@ -40,7 +40,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
                   (funct7 << FUNCT7);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
+        CheckVisitor<void>{}.visit_in_memory(_inst, 4);
         check_all_dyn_cast<void>(_inst);
     }
 
@@ -53,7 +53,7 @@ namespace riscv_isa {
                   (sr << 21u) | (so << 22u) | (si << 23u) | (pw << 24u) | (pr << 25u) | (po << 26u) | (pi << 27u) |
                   (fm << 28u);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<FENCEInst>{}.visit(_inst);
+        CheckVisitor<FENCEInst>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<FENCEInst>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -78,7 +78,7 @@ namespace riscv_isa {
                   ((imm_u & 0b10000000000u) << 10u) | ((imm_u & 0b1111111100000000000u) << 1u) |
                   ((imm_u & 0b10000000000000000000u) << 12u);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<JALInst>{}.visit(_inst);
+        CheckVisitor<JALInst>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<JALInst>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);

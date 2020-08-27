@@ -207,7 +207,7 @@ namespace riscv_isa {
     func(AMOMINUW, amominuw) \
     func(AMOMAXUW, amomaxuw)
 
-#elif
+#else
 #define riscv_isa_instruction_32a_map(func)
 #endif // defined(__RV_EXTENSION_A__)
 

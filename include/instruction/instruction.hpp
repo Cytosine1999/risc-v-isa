@@ -78,8 +78,8 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction;
 
-        static bool is_self_type(BaseT *self) {
-            return (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val;
+        static bool is_self_type(const BaseT *self) {
+            return (*reinterpret_cast<const u16 *>(self) & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val;
         }
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
@@ -139,9 +139,9 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction;
 
-        static bool is_self_type(BaseT *self) {
-            return (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 2, 0>::val) == bits_mask<u16, 2, 0>::val &&
-                   (*reinterpret_cast<u16 *>(self) & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val;
+        static bool is_self_type(const BaseT *self) {
+            return (*reinterpret_cast<const u16 *>(self) & bits_mask<u16, 2, 0>::val) == bits_mask<u16, 2, 0>::val &&
+                   (*reinterpret_cast<const u16 *>(self) & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val;
         }
 
         static constexpr usize INST_WIDTH = sizeof(UInnerT);
@@ -297,7 +297,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11000;
     };
@@ -310,7 +310,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00000;
     };
@@ -323,7 +323,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01000;
     };
@@ -336,7 +336,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00100;
     };
@@ -349,7 +349,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01100;
     };
@@ -362,7 +362,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00011;
     };
@@ -375,7 +375,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11100;
     };
@@ -419,7 +419,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00110;
     };
@@ -432,7 +432,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01110;
     };
@@ -444,7 +444,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b00010;
 
@@ -458,7 +458,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b01010;
 
@@ -472,7 +472,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b10110;
 
@@ -486,7 +486,7 @@ namespace riscv_isa {
     public:
         using BaseT = Instruction32;
 
-        static bool is_self_type(BaseT *self) { return self->get_op_code() == OP_CODE; }
+        static bool is_self_type(const BaseT *self) { return self->get_op_code() == OP_CODE; }
 
         static constexpr UInnerT OP_CODE = 0b11110;
 

@@ -41,16 +41,6 @@ namespace riscv_isa {
         }
 
     protected:
-        XLenT get_pc() const { return pc; }
-
-        void set_pc(XLenT val) { pc = val; }
-
-        void inc_pc(XLenT val) { pc += val; }
-
-        XLenT get_x(usize index) const { return int_reg.get_x(index); }
-
-        void set_x(usize index, XLenT val) { int_reg.set_x(index, val); }
-
 ///     these functions are required to be implemented.
 ///
 ///     void internal_interrupt_action(riscv_isa_unused UXLenT interrupt, riscv_isa_unused UXLenT trap_value) {
@@ -91,9 +81,9 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 usize rs2 = inst->get_rs2();
-                set_x(rd, OP::op(get_x(rs1), get_x(rs2)));
+                set_x(rd, OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2)));
             }
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
 
             return true;
         }
@@ -104,9 +94,9 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 XLenT imm = inst->get_imm();
-                set_x(rd, OP::op(get_x(rs1), imm));
+                set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
             }
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
 
             return true;
         }
@@ -116,19 +106,14 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
 
-            if (OP::op(get_x(rs1), get_x(rs2))) {
+            if (OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2))) {
                 XLenT imm = inst->get_imm();
-                UXLenT target = imm + get_pc();
-#if RISCV_IALIGN == 32
-                if (get_bits<UXLenT, 2, 0>(target) != 0)
-                    return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
-#endif
-                set_pc(target);
+                UXLenT target = imm + sub_type()->get_pc();
+                return sub_type()->jump_to_addr(target);
             } else {
-                inc_pc(InstT::INST_WIDTH);
+                sub_type()->inc_pc(InstT::INST_WIDTH);
+                return true;
             }
-
-            return true;
         }
 
         template<typename ValT, typename InstT>
@@ -138,20 +123,20 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            UXLenT addr = get_x(rs1) + imm;
+            UXLenT addr = sub_type()->get_x(rs1) + imm;
 
             if ((addr & (sizeof(ValT) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::LOAD_ACCESS_FAULT, addr);
             }
 
             auto *ptr = sub_type()->template address_load<ValT>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::LOAD_PAGE_FAULT, addr);
             } else {
                 if (rd != 0) { sub_type()->set_x(rd, *ptr); }
             }
 
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
@@ -162,20 +147,20 @@ namespace riscv_isa {
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
             XLenT imm = inst->get_imm();
-            UXLenT addr = get_x(rs1) + imm;
+            UXLenT addr = sub_type()->get_x(rs1) + imm;
 
             if ((addr & (sizeof(ValT) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_ACCESS_FAULT, addr);
             }
 
             auto *ptr = sub_type()->template address_store<ValT>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
             } else {
-                *ptr = static_cast<ValT>(get_x(rs2));
+                *ptr = static_cast<ValT>(sub_type()->get_x(rs2));
             }
 
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
@@ -185,172 +170,189 @@ namespace riscv_isa {
             if (rd != 0) {
                 usize rs1 = inst->get_rs1();
                 XLenT imm = inst->get_shamt();
-                set_x(rd, OP::op(get_x(rs1), imm));
+                set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
             }
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
 
             return true;
         }
 
     public:
         Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
-                pc{pc}, int_reg{reg}, reserve_address{0}, reserve_value{0},
+                pc{pc}, int_reg{reg},
+#if defined(__RV_EXTENSION_A__)
+                reserve_address{0}, reserve_value{0},
+#endif
                 csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
 
+        XLenT get_pc() const { return pc; }
+
+        bool jump_to_addr(XLenT val) {
+            pc = val;
+            return true;
+        }
+
+        void inc_pc(XLenT val) { pc += val; }
+
+        XLenT get_x(usize index) const { return int_reg.get_x(index); }
+
+        void set_x(usize index, XLenT val) { int_reg.set_x(index, val); }
+
         RetT visit() {
-            UXLenT inst_buffer = 0; // zeroing instruction buffer
+            ILenT inst_buffer = 0; // zeroing instruction buffer
+            UXLenT addr = sub_type()->get_pc();
 
-            UXLenT addr = get_pc();
-
+#if RISCV_IALIGN == 32
+            auto *ptr = sub_type()->template address_execute<u32>(addr);
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
+            }
+            inst_buffer = *ptr;
+#else
             auto *ptr = sub_type()->template address_execute<u16>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::INSTRUCTION_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
             }
-
             inst_buffer = *ptr;
 
 #if defined(__RV_EXTENSION_C__)
-            if ((inst_buffer & bits_mask<u16, 2, 0>::val) != bits_mask<u16, 2, 0>::val) {
+            if (is_type<Instruction16>(reinterpret_cast<Instruction *>(&inst_buffer))) {
                 return this->visit_16(reinterpret_cast<Instruction16 *>(&inst_buffer));
             }
 #endif // defined(__RV_EXTENSION_C__)
-            if ((inst_buffer & bits_mask<u16, 5, 2>::val) != bits_mask<u16, 5, 2>::val) {
-                ptr = sub_type()->template address_execute<u16>(addr + sizeof(u16));
-                if (ptr == nullptr) {
-                    return sub_type()->internal_interrupt(riscv_isa::trap::INSTRUCTION_PAGE_FAULT, addr);
-                }
 
-                inst_buffer += static_cast<u32>(*ptr) << 16u;
+            ptr = sub_type()->template address_execute<u16>(addr + sizeof(u16));
+            if (ptr == nullptr) {
+                return sub_type()->internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
+            }
+            inst_buffer |= static_cast<u32>(*ptr) << 16u;
+#endif
 
+            if (is_type<Instruction32>(reinterpret_cast<Instruction *>(&inst_buffer))) {
                 return this->visit_32(reinterpret_cast<Instruction32 *>(&inst_buffer));
             }
 
             return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&inst_buffer));
         }
 
-        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
-            return internal_interrupt(trap::ILLEGAL_INSTRUCTION, *reinterpret_cast<UXLenT *>(inst));
+        RetT illegal_instruction(const Instruction *inst) {
+            return internal_interrupt(trap::ILLEGAL_INSTRUCTION, *reinterpret_cast<const UXLenT *>(inst));
         }
 
-        RetT visit_lui_inst(LUIInst *inst) {
+        RetT visit_lui_inst(const LUIInst *inst) {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
                 set_x(rd, imm);
             }
-            inc_pc(LUIInst::INST_WIDTH);
+            sub_type()->inc_pc(LUIInst::INST_WIDTH);
 
             return true;
         }
 
-        RetT visit_auipc_inst(AUIPCInst *inst) {
+        RetT visit_auipc_inst(const AUIPCInst *inst) {
             usize rd = inst->get_rd();
             if (rd != 0) {
                 XLenT imm = inst->get_imm();
-                set_x(rd, imm + get_pc());
+                set_x(rd, imm + sub_type()->get_pc());
             }
-            inc_pc(LUIInst::INST_WIDTH);
+            sub_type()->inc_pc(LUIInst::INST_WIDTH);
 
             return true;
         }
 
-        RetT visit_jal_inst(JALInst *inst) {
+        RetT visit_jal_inst(const JALInst *inst) {
             usize rd = inst->get_rd();
             XLenT imm = inst->get_imm();
-            UXLenT target = imm + get_pc();
-#if RISCV_IALIGN == 32
-            if (get_bits<UXLenT, 2, 0>(target) != 0)
-                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
-#endif
+            UXLenT target = imm + sub_type()->get_pc();
+            UXLenT save = sub_type()->get_pc() + JALInst::INST_WIDTH;
 
-            if (rd != 0) set_x(rd, get_pc() + JALInst::INST_WIDTH);
-            set_pc(target);
+            if (!sub_type()->jump_to_addr(target)) { return false; }
+            if (rd != 0) { set_x(rd, save); }
 
             return true;
         }
 
-        RetT visit_jalr_inst(JALRInst *inst) {
+        RetT visit_jalr_inst(const JALRInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             XLenT imm = inst->get_imm();
-            UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(get_x(rs1) + imm);
-#if RISCV_IALIGN == 32
-            if (get_bits<UXLenT, 2, 0>(target) != 0)
-                return internal_interrupt(trap::INSTRUCTION_ADDRESS_MISALIGNED, target);
-#endif
-            if (rd != 0) set_x(rd, get_pc() + JALRInst::INST_WIDTH);
-            set_pc(target);
+            UXLenT target = get_bits<UXLenT, XLEN, 1, 1>(sub_type()->get_x(rs1) + imm);
+            UXLenT save = sub_type()->get_pc() + JALInst::INST_WIDTH;
+
+            if (!sub_type()->jump_to_addr(target)) { return false; }
+            if (rd != 0) { set_x(rd, save); }
 
             return true;
         }
 
-        RetT visit_beq_inst(BEQInst *inst) { return operate_branch<typename operators::EQ<xlen>>(inst); }
+        RetT visit_beq_inst(const BEQInst *inst) { return operate_branch<typename operators::EQ<xlen>>(inst); }
 
-        RetT visit_bne_inst(BNEInst *inst) { return operate_branch<typename operators::NE<xlen>>(inst); }
+        RetT visit_bne_inst(const BNEInst *inst) { return operate_branch<typename operators::NE<xlen>>(inst); }
 
-        RetT visit_blt_inst(BLTInst *inst) { return operate_branch<typename operators::LT<xlen>>(inst); }
+        RetT visit_blt_inst(const BLTInst *inst) { return operate_branch<typename operators::LT<xlen>>(inst); }
 
-        RetT visit_bge_inst(BGEInst *inst) { return operate_branch<typename operators::GE<xlen>>(inst); }
+        RetT visit_bge_inst(const BGEInst *inst) { return operate_branch<typename operators::GE<xlen>>(inst); }
 
-        RetT visit_bltu_inst(BLTUInst *inst) { return operate_branch<typename operators::LTU<xlen>>(inst); }
+        RetT visit_bltu_inst(const BLTUInst *inst) { return operate_branch<typename operators::LTU<xlen>>(inst); }
 
-        RetT visit_bgeu_inst(BGEUInst *inst) { return operate_branch<typename operators::GEU<xlen>>(inst); }
+        RetT visit_bgeu_inst(const BGEUInst *inst) { return operate_branch<typename operators::GEU<xlen>>(inst); }
 
-        RetT visit_lb_inst(LBInst *inst) { return operate_load<i8>(inst); }
+        RetT visit_lb_inst(const LBInst *inst) { return operate_load<i8>(inst); }
 
-        RetT visit_lh_inst(LHInst *inst) { return operate_load<i16>(inst); }
+        RetT visit_lh_inst(const LHInst *inst) { return operate_load<i16>(inst); }
 
-        RetT visit_lw_inst(LWInst *inst) { return operate_load<i32>(inst); }
+        RetT visit_lw_inst(const LWInst *inst) { return operate_load<i32>(inst); }
 
-        RetT visit_lbu_inst(LBUInst *inst) { return operate_load<u8>(inst); }
+        RetT visit_lbu_inst(const LBUInst *inst) { return operate_load<u8>(inst); }
 
-        RetT visit_lhu_inst(LHUInst *inst) { return operate_load<u16>(inst); }
+        RetT visit_lhu_inst(const LHUInst *inst) { return operate_load<u16>(inst); }
 
-        RetT visit_sb_inst(SBInst *inst) { return operate_store<u8>(inst); }
+        RetT visit_sb_inst(const SBInst *inst) { return operate_store<u8>(inst); }
 
-        RetT visit_sh_inst(SHInst *inst) { return operate_store<u16>(inst); }
+        RetT visit_sh_inst(const SHInst *inst) { return operate_store<u16>(inst); }
 
-        RetT visit_sw_inst(SWInst *inst) { return operate_store<u32>(inst); }
+        RetT visit_sw_inst(const SWInst *inst) { return operate_store<u32>(inst); }
 
-        RetT visit_addi_inst(ADDIInst *inst) { return operate_imm<typename operators::ADD<xlen>>(inst); }
+        RetT visit_addi_inst(const ADDIInst *inst) { return operate_imm<typename operators::ADD<xlen>>(inst); }
 
-        RetT visit_slti_inst(SLTIInst *inst) { return operate_imm<typename operators::SLT<xlen>>(inst); }
+        RetT visit_slti_inst(const SLTIInst *inst) { return operate_imm<typename operators::SLT<xlen>>(inst); }
 
-        RetT visit_sltiu_inst(SLTIUInst *inst) { return operate_imm<typename operators::SLTU<xlen>>(inst); }
+        RetT visit_sltiu_inst(const SLTIUInst *inst) { return operate_imm<typename operators::SLTU<xlen>>(inst); }
 
-        RetT visit_xori_inst(XORIInst *inst) { return operate_imm<typename operators::XOR<xlen>>(inst); }
+        RetT visit_xori_inst(const XORIInst *inst) { return operate_imm<typename operators::XOR<xlen>>(inst); }
 
-        RetT visit_ori_inst(ORIInst *inst) { return operate_imm<typename operators::OR<xlen>>(inst); }
+        RetT visit_ori_inst(const ORIInst *inst) { return operate_imm<typename operators::OR<xlen>>(inst); }
 
-        RetT visit_andi_inst(ANDIInst *inst) { return operate_imm<typename operators::AND<xlen>>(inst); }
+        RetT visit_andi_inst(const ANDIInst *inst) { return operate_imm<typename operators::AND<xlen>>(inst); }
 
-        RetT visit_slli_inst(SLLIInst *inst) { return operate_imm_shift<typename operators::SLL<xlen>>(inst); }
+        RetT visit_slli_inst(const SLLIInst *inst) { return operate_imm_shift<typename operators::SLL<xlen>>(inst); }
 
-        RetT visit_srli_inst(SRLIInst *inst) { return operate_imm_shift<typename operators::SRL<xlen>>(inst); }
+        RetT visit_srli_inst(const SRLIInst *inst) { return operate_imm_shift<typename operators::SRL<xlen>>(inst); }
 
-        RetT visit_srai_inst(SRAIInst *inst) { return operate_imm_shift<typename operators::SRA<xlen>>(inst); }
+        RetT visit_srai_inst(const SRAIInst *inst) { return operate_imm_shift<typename operators::SRA<xlen>>(inst); }
 
-        RetT visit_add_inst(ADDInst *inst) { return operate_reg<typename operators::ADD<xlen>>(inst); }
+        RetT visit_add_inst(const ADDInst *inst) { return operate_reg<typename operators::ADD<xlen>>(inst); }
 
-        RetT visit_sub_inst(SUBInst *inst) { return operate_reg<typename operators::SUB<xlen>>(inst); }
+        RetT visit_sub_inst(const SUBInst *inst) { return operate_reg<typename operators::SUB<xlen>>(inst); }
 
-        RetT visit_sll_inst(SLLInst *inst) { return operate_reg<typename operators::SLL<xlen>>(inst); }
+        RetT visit_sll_inst(const SLLInst *inst) { return operate_reg<typename operators::SLL<xlen>>(inst); }
 
-        RetT visit_slt_inst(SLTInst *inst) { return operate_reg<typename operators::SLT<xlen>>(inst); }
+        RetT visit_slt_inst(const SLTInst *inst) { return operate_reg<typename operators::SLT<xlen>>(inst); }
 
-        RetT visit_sltu_inst(SLTUInst *inst) { return operate_reg<typename operators::SLTU<xlen>>(inst); }
+        RetT visit_sltu_inst(const SLTUInst *inst) { return operate_reg<typename operators::SLTU<xlen>>(inst); }
 
-        RetT visit_xor_inst(XORInst *inst) { return operate_reg<typename operators::XOR<xlen>>(inst); }
+        RetT visit_xor_inst(const XORInst *inst) { return operate_reg<typename operators::XOR<xlen>>(inst); }
 
-        RetT visit_srl_inst(SRLInst *inst) { return operate_reg<typename operators::SRL<xlen>>(inst); }
+        RetT visit_srl_inst(const SRLInst *inst) { return operate_reg<typename operators::SRL<xlen>>(inst); }
 
-        RetT visit_sra_inst(SRAInst *inst) { return operate_reg<typename operators::SRA<xlen>>(inst); }
+        RetT visit_sra_inst(const SRAInst *inst) { return operate_reg<typename operators::SRA<xlen>>(inst); }
 
-        RetT visit_or_inst(ORInst *inst) { return operate_reg<typename operators::OR<xlen>>(inst); }
+        RetT visit_or_inst(const ORInst *inst) { return operate_reg<typename operators::OR<xlen>>(inst); }
 
-        RetT visit_and_inst(ANDInst *inst) { return operate_reg<typename operators::AND<xlen>>(inst); }
+        RetT visit_and_inst(const ANDInst *inst) { return operate_reg<typename operators::AND<xlen>>(inst); }
 
-        RetT visit_ecall_inst(riscv_isa_unused ECALLInst *inst) {
+        RetT visit_ecall_inst(riscv_isa_unused const ECALLInst *inst) {
             switch (cur_level) {
 #if defined(__RV_USER_MODE__)
                 case USER_MODE:
@@ -367,27 +369,27 @@ namespace riscv_isa {
             }
         }
 
-        RetT visit_ebreak_inst(riscv_isa_unused EBREAKInst *inst) {
-            return internal_interrupt(trap::BREAKPOINT, get_pc());
+        RetT visit_ebreak_inst(riscv_isa_unused const EBREAKInst *inst) {
+            return internal_interrupt(trap::BREAKPOINT, sub_type()->get_pc());
         }
 
 #if defined(__RV_EXTENSION_M__)
 
-        RetT visit_mul_inst(MULInst *inst) { return operate_reg<typename operators::MUL<xlen>>(inst); }
+        RetT visit_mul_inst(const MULInst *inst) { return operate_reg<typename operators::MUL<xlen>>(inst); }
 
-        RetT visit_mulh_inst(MULHInst *inst) { return operate_reg<typename operators::MULH<xlen>>(inst); }
+        RetT visit_mulh_inst(const MULHInst *inst) { return operate_reg<typename operators::MULH<xlen>>(inst); }
 
-        RetT visit_mulhsu_inst(MULHSUInst *inst) { return operate_reg<typename operators::MULHSU<xlen>>(inst); }
+        RetT visit_mulhsu_inst(const MULHSUInst *inst) { return operate_reg<typename operators::MULHSU<xlen>>(inst); }
 
-        RetT visit_mulhu_inst(MULHUInst *inst) { return operate_reg<typename operators::MULHU<xlen>>(inst); }
+        RetT visit_mulhu_inst(const MULHUInst *inst) { return operate_reg<typename operators::MULHU<xlen>>(inst); }
 
-        RetT visit_div_inst(DIVInst *inst) { return operate_reg<typename operators::DIV<xlen>>(inst); }
+        RetT visit_div_inst(const DIVInst *inst) { return operate_reg<typename operators::DIV<xlen>>(inst); }
 
-        RetT visit_divu_inst(DIVUInst *inst) { return operate_reg<typename operators::DIVU<xlen>>(inst); }
+        RetT visit_divu_inst(const DIVUInst *inst) { return operate_reg<typename operators::DIVU<xlen>>(inst); }
 
-        RetT visit_rem_inst(REMInst *inst) { return operate_reg<typename operators::REM<xlen>>(inst); }
+        RetT visit_rem_inst(const REMInst *inst) { return operate_reg<typename operators::REM<xlen>>(inst); }
 
-        RetT visit_remu_inst(REMUInst *inst) { return operate_reg<typename operators::REMU<xlen>>(inst); }
+        RetT visit_remu_inst(const REMUInst *inst) { return operate_reg<typename operators::REMU<xlen>>(inst); }
 
 #endif // defined(__RV_EXTENSION_M__)
 #if defined(__RV_EXTENSION_A__)
@@ -400,37 +402,37 @@ namespace riscv_isa {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
-            UXLenT rs2_value = get_x(rs2);
-            UXLenT addr = get_x(rs1);
+            UXLenT rs2_value = sub_type()->get_x(rs2);
+            UXLenT addr = sub_type()->get_x(rs1);
 
             if ((addr & (sizeof(ValT) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_ACCESS_FAULT, addr);
             }
 
             auto *ptr = sub_type()->template address_store<std::atomic<ValT>>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
             }
 
             set_x(rd, OP::op(ptr, rs2_value));
 
-            inc_pc(InstT::INST_WIDTH);
+            sub_type()->inc_pc(InstT::INST_WIDTH);
             return true;
         }
 
         // todo: only comare the value, memory ordering.
-        RetT visit_lrw_inst(LRWInst *inst) {
+        RetT visit_lrw_inst(const LRWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
-            UXLenT addr = get_x(rs1);
+            UXLenT addr = sub_type()->get_x(rs1);
 
             if ((addr & (sizeof(u32) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::LOAD_ACCESS_FAULT, addr);
             }
 
             auto *ptr = sub_type()->template address_load<u32>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::LOAD_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::LOAD_PAGE_FAULT, addr);
             } else {
                 auto value = *ptr;
                 reserve_address = addr;
@@ -438,109 +440,138 @@ namespace riscv_isa {
                 if (rd != 0) { set_x(rd, value); }
             }
 
-            inc_pc(LRWInst::INST_WIDTH);
+            sub_type()->inc_pc(LRWInst::INST_WIDTH);
             return true;
         }
 
-        RetT visit_scw_inst(SCWInst *inst) {
+        RetT visit_scw_inst(const SCWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize rs2 = inst->get_rs2();
-            UXLenT addr = get_x(rs1);
+            UXLenT addr = sub_type()->get_x(rs1);
 
             if ((addr & (sizeof(u32) - 1)) != 0) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_ACCESS_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_ACCESS_FAULT, addr);
             }
 
             auto *ptr = sub_type()->template address_store<std::atomic<u32>>(addr);
             if (ptr == nullptr) {
-                return sub_type()->internal_interrupt(riscv_isa::trap::STORE_AMO_PAGE_FAULT, addr);
+                return sub_type()->internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
             } else {
-                if (reserve_address == addr && ptr->compare_exchange_weak(reserve_value, get_x(rs2))) {
+                if (reserve_address == addr &&
+                    ptr->compare_exchange_weak(reserve_value, sub_type()->get_x(rs2))) {
                     set_x(rd, 0);
                 } else {
                     set_x(rd, 1);
                 }
             }
 
-            inc_pc(SCWInst::INST_WIDTH);
+            sub_type()->inc_pc(SCWInst::INST_WIDTH);
             return true;
         }
 
-        RetT visit_amoswapw_inst(AMOSWAPWInst *inst) {
+        RetT visit_amoswapw_inst(const AMOSWAPWInst *inst) {
             return operate_atomic<typename operators::AMOSWAP<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amoaddw_inst(AMOADDWInst *inst) {
+        RetT visit_amoaddw_inst(const AMOADDWInst *inst) {
             return operate_atomic<typename operators::AMOADD<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amoxorw_inst(AMOXORWInst *inst) {
+        RetT visit_amoxorw_inst(const AMOXORWInst *inst) {
             return operate_atomic<typename operators::AMOXOR<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amoandw_inst(AMOANDWInst *inst) {
+        RetT visit_amoandw_inst(const AMOANDWInst *inst) {
             return operate_atomic<typename operators::AMOAND<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amoorw_inst(AMOORWInst *inst) {
+        RetT visit_amoorw_inst(const AMOORWInst *inst) {
             return operate_atomic<typename operators::AMOOR<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amominw_inst(AMOMINWInst *inst) {
+        RetT visit_amominw_inst(const AMOMINWInst *inst) {
             return operate_atomic<typename operators::AMOMIN<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amomaxw_inst(AMOMAXWInst *inst) {
+        RetT visit_amomaxw_inst(const AMOMAXWInst *inst) {
             return operate_atomic<typename operators::AMOMAX<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amominuw_inst(AMOMINUWInst *inst) {
+        RetT visit_amominuw_inst(const AMOMINUWInst *inst) {
             return operate_atomic<typename operators::AMOMINU<xlen_32_trait>>(inst);
         }
 
-        RetT visit_amomaxuw_inst(AMOMAXUWInst *inst) {
+        RetT visit_amomaxuw_inst(const AMOMAXUWInst *inst) {
             return operate_atomic<typename operators::AMOMAXU<xlen_32_trait>>(inst);
         }
 
 #endif // defined(__RV_EXTENSION_A__)
 #if __RV_BIT_WIDTH__ == 64
 
-        RetT visit_ld_inst(LDInst *inst) { return operate_load<i64>(inst); }
+        RetT visit_ld_inst(const LDInst *inst) { return operate_load<i64>(inst); }
 
-        RetT visit_lwu_inst(LWUInst *inst) { return operate_load<u32>(inst); }
+        RetT visit_lwu_inst(const LWUInst *inst) { return operate_load<u32>(inst); }
 
-        RetT visit_sd_inst(SDInst *inst) { return operate_store<u64>(inst); }
+        RetT visit_sd_inst(const SDInst *inst) { return operate_store<u64>(inst); }
 
-        RetT visit_addiw_inst(ADDIWInst *inst) { return operate_imm<typename operators::ADD<xlen_32_trait>>(inst); }
+        RetT visit_addiw_inst(const ADDIWInst *inst) {
+            return operate_imm<typename operators::ADD<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_slliw_inst(SLLIWInst *inst) { return operate_imm<typename operators::SLL<xlen_32_trait>>(inst); }
+        RetT visit_slliw_inst(const SLLIWInst *inst) {
+            return operate_imm<typename operators::SLL<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_srliw_inst(SRLIWInst *inst) { return operate_imm<typename operators::SRL<xlen_32_trait>>(inst); }
+        RetT visit_srliw_inst(const SRLIWInst *inst) {
+            return operate_imm<typename operators::SRL<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_sraiw_inst(SRAIWInst *inst) { return operate_imm<typename operators::SRA<xlen_32_trait>>(inst); }
+        RetT visit_sraiw_inst(const SRAIWInst *inst) {
+            return operate_imm<typename operators::SRA<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_addw_inst(ADDWInst *inst) { return operate_reg<typename operators::ADD<xlen_32_trait>>(inst); }
+        RetT visit_addw_inst(const ADDWInst *inst) {
+            return operate_reg<typename operators::ADD<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_subw_inst(SUBWInst *inst) { return operate_reg<typename operators::SUB<xlen_32_trait>>(inst); }
+        RetT visit_subw_inst(const SUBWInst *inst) {
+            return operate_reg<typename operators::SUB<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_sllw_inst(SLLWInst *inst) { return operate_reg<typename operators::SLL<xlen_32_trait>>(inst); }
+        RetT visit_sllw_inst(const SLLWInst *inst) {
+            return operate_reg<typename operators::SLL<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_srlw_inst(SRLWInst *inst) { return operate_reg<typename operators::SRL<xlen_32_trait>>(inst); }
+        RetT visit_srlw_inst(const SRLWInst *inst) {
+            return operate_reg<typename operators::SRL<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_sraw_inst(SRAWInst *inst) { return operate_reg<typename operators::SRA<xlen_32_trait>>(inst); }
+        RetT visit_sraw_inst(const SRAWInst *inst) {
+            return operate_reg<typename operators::SRA<xlen_32_trait>>(inst);
+        }
 
 #if defined(__RV_EXTENSION_M__)
 
-        RetT visit_mulw_inst(MULWInst *inst) { return operate_reg<typename operators::MUL<xlen_32_trait>>(inst); }
+        RetT visit_mulw_inst(const MULWInst *inst) {
+            return operate_reg<typename operators::MUL<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_divw_inst(DIVWInst *inst) { return operate_reg<typename operators::DIV<xlen_32_trait>>(inst); }
+        RetT visit_divw_inst(const DIVWInst *inst) {
+            return operate_reg<typename operators::DIV<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_divuw_inst(DIVUWInst *inst) { return operate_reg<typename operators::DIVU<xlen_32_trait>>(inst); }
+        RetT visit_divuw_inst(const DIVUWInst *inst) {
+            return operate_reg<typename operators::DIVU<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_remw_inst(REMWInst *inst) { return operate_reg<typename operators::REM<xlen_32_trait>>(inst); }
+        RetT visit_remw_inst(const REMWInst *inst) {
+            return operate_reg<typename operators::REM<xlen_32_trait>>(inst);
+        }
 
-        RetT visit_remuw_inst(REMUWInst *inst) { return operate_reg<typename operators::REMU<xlen_32_trait>>(inst); }
+        RetT visit_remuw_inst(const REMUWInst *inst) {
+            return operate_reg<typename operators::REMU<xlen_32_trait>>(inst);
+        }
 
 #endif // defined(__RV_EXTENSION_M__)
 #endif // __RV_BIT_WIDTH__ == 64
@@ -610,7 +641,7 @@ namespace riscv_isa {
 
 #undef _riscv_isa_set_csr
 
-        RetT visit_csrrw_inst(CSRRWInst *inst) {
+        RetT visit_csrrw_inst(const CSRRWInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -619,10 +650,10 @@ namespace riscv_isa {
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) set_x(rd, get_csr(index));
-            return set_csr(index, get_x(rs1));
+            return set_csr(index, sub_type()->get_x(rs1));
         }
 
-        RetT visit_csrrs_inst(CSRRSInst *inst) {
+        RetT visit_csrrs_inst(const CSRRSInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -634,14 +665,14 @@ namespace riscv_isa {
             if (rs1 != 0) {
                 if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
                 if (rd != 0) set_x(rd, csr_val);
-                return set_csr(index, csr_val | get_x(rs1));
+                return set_csr(index, csr_val | sub_type()->get_x(rs1));
             } else {
                 if (rd != 0) set_x(rd, csr_val);
                 return true;
             }
         }
 
-        RetT visit_csrrc_inst(CSRRCInst *inst) {
+        RetT visit_csrrc_inst(const CSRRCInst *inst) {
             usize rd = inst->get_rd();
             usize rs1 = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -653,14 +684,14 @@ namespace riscv_isa {
             if (rs1 != 0) {
                 if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
                 if (rd != 0) set_x(rd, csr_val);
-                return set_csr(index, csr_val & ~get_x(rs1));
+                return set_csr(index, csr_val & ~sub_type()->get_x(rs1));
             } else {
                 if (rd != 0) set_x(rd, csr_val);
                 return true;
             }
         }
 
-        RetT visit_csrrwi_inst(CSRRWIInst *inst) {
+        RetT visit_csrrwi_inst(const CSRRWIInst *inst) {
             usize rd = inst->get_rd();
             usize imm = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -672,7 +703,7 @@ namespace riscv_isa {
             return set_csr(index, imm);
         }
 
-        RetT visit_csrrsi_inst(CSRRSIInst *inst) {
+        RetT visit_csrrsi_inst(const CSRRSIInst *inst) {
             usize rd = inst->get_rd();
             usize imm = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -692,7 +723,7 @@ namespace riscv_isa {
             }
         }
 
-        RetT visit_csrrci_inst(CSRRCIInst *inst) {
+        RetT visit_csrrci_inst(const CSRRCIInst *inst) {
             usize rd = inst->get_rd();
             usize imm = inst->get_rs1();
             usize csr = inst->get_csr();
@@ -715,63 +746,77 @@ namespace riscv_isa {
 
         RetT instruction_address_misaligned_handler(UXLenT addr) {
             std::cerr << "Instruction address misaligned at " << std::hex
-                      << get_pc() << ", jump to: " << addr << std::dec << std::endl;
+                      << sub_type()->get_pc() << ", jump to: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT instruction_access_fault_handler(UXLenT addr) {
             std::cerr << "Instruction access fault at " << std::hex
-                      << get_pc() << ", jump to: " << addr << std::dec << std::endl;
+                      << sub_type()->get_pc() << ", jump to: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT illegal_instruction_handler(UXLenT inst) {
-            std::cerr << "Illegal instruction at " << std::hex << get_pc() << ": " << std::dec
-                      << *reinterpret_cast<Instruction *>(&inst) << std::endl;
+            std::cerr << "Illegal instruction at " << std::hex << sub_type()->get_pc() << ": "
+                      << std::dec << *reinterpret_cast<Instruction *>(&inst) << std::endl;
             return false;
         }
 
-        bool break_point_handler(neutron_unused UXLenT addr) {
-            inc_pc(riscv_isa::ECALLInst::INST_WIDTH); // todo: c extension
-            return true;
+        RetT break_point_handler(riscv_isa_unused UXLenT addr) {
+#if defined(__RV_EXTENSION_C__)
+            if (is_type<const CEBREAKInst>(sub_type()->template address_execute<Instruction16>(addr))) {
+                sub_type()->inc_pc(CEBREAKInst::INST_WIDTH);
+                return true;
+            }
+#endif
+
+            if (is_type<const EBREAKInst>(sub_type()->template address_execute<Instruction32>(addr))) {
+                sub_type()->inc_pc(EBREAKInst::INST_WIDTH);
+                return true;
+            }
+
+            return false;
         }
 
         RetT load_address_misaligned_handler(UXLenT addr) {
-            std::cerr << "Load address misaligned at " << std::hex
-                      << get_pc() << ", load at: " << addr << std::dec << std::endl;
+            std::cerr << "Load address misaligned at " << std::hex << sub_type()->get_pc()
+                      << ", load at: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT load_access_fault_handler(UXLenT addr) {
-            std::cerr << "Load address access fault at " << std::hex
-                      << get_pc() << ", load at: " << addr << std::dec << std::endl;
+            std::cerr << "Load address access fault at " << std::hex << sub_type()->get_pc()
+                      << ", load at: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT store_amo_address_misaligned_handler(UXLenT addr) {
-            std::cerr << "Store or AMO address misaligned at " << std::hex
-                      << get_pc() << ", store or AMO at: " << addr << std::dec << std::endl;
+            std::cerr << "Store or AMO address misaligned at " << std::hex << sub_type()->get_pc()
+                      << ", store or AMO at: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT store_amo_access_fault_handler(UXLenT addr) {
-            std::cerr << "Store or AMO access fault at " << std::hex
-                      << get_pc() << ", store or AMO at: " << addr << std::dec << std::endl;
+            std::cerr << "Store or AMO access fault at " << std::hex << sub_type()->get_pc()
+                      << ", store or AMO at: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT u_mode_environment_call_handler() {
-            std::cerr << "User mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "User mode environment call at " << std::hex
+                      << sub_type()->get_pc() << std::dec << std::endl;
             return false;
         }
 
         RetT s_mode_environment_call_handler() {
-            std::cerr << "Supervisor mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "Supervisor mode environment call at " << std::hex
+                      << sub_type()->get_pc() << std::dec << std::endl;
             return false;
         }
 
         RetT m_mode_environment_call_handler() {
-            std::cerr << "Machine mode environment call at " << std::hex << get_pc() << std::dec << std::endl;
+            std::cerr << "Machine mode environment call at " << std::hex
+                      << sub_type()->get_pc() << std::dec << std::endl;
             return false;
         }
 
@@ -781,58 +826,80 @@ namespace riscv_isa {
         }
 
         RetT load_page_fault_handler(UXLenT addr) {
-            std::cerr << "Load page fault at " << std::hex
-                      << get_pc() << ", load address: " << addr << std::dec << std::endl;
+            std::cerr << "Load page fault at " << std::hex << sub_type()->get_pc()
+                      << ", load address: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT store_amo_page_fault_handler(UXLenT addr) {
-            std::cerr << "Store or AMO fault at " << std::hex
-                      << get_pc() << ", load address: " << addr << std::dec << std::endl;
+            std::cerr << "Store or AMO fault at " << std::hex << sub_type()->get_pc()
+                      << ", load address: " << addr << std::dec << std::endl;
             return false;
         }
 
         RetT platformed_specified_trap_handler(UXLenT cause, UXLenT trap_value) {
             std::cerr << "Unknown internal interrupt at " << std::hex
-                      << get_pc() << std::dec << ", cause: " << cause
+                      << sub_type()->get_pc() << std::dec << ", cause: " << cause
                       << ", trap value" << trap_value << std::endl;
             return false;
         }
 
-        bool trap_handler() {
+        RetT trap_handler() {
+            RetT ret;
+
             switch (csr_reg[CSRRegT::SCAUSE]) {
                 case trap::INSTRUCTION_ADDRESS_MISALIGNED:
-                    return sub_type()->instruction_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->instruction_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::INSTRUCTION_ACCESS_FAULT:
-                    return sub_type()->instruction_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->instruction_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::ILLEGAL_INSTRUCTION:
-                    return sub_type()->illegal_instruction_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->illegal_instruction_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::BREAKPOINT:
-                    return sub_type()->break_point_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->break_point_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::LOAD_ADDRESS_MISALIGNED:
-                    return sub_type()->load_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->load_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::LOAD_ACCESS_FAULT:
-                    return sub_type()->load_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->load_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::STORE_AMO_ADDRESS_MISALIGNED:
-                    return sub_type()->store_amo_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->store_amo_address_misaligned_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::STORE_AMO_ACCESS_FAULT:
-                    return sub_type()->store_amo_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->store_amo_access_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::U_MODE_ENVIRONMENT_CALL:
-                    return sub_type()->u_mode_environment_call_handler();
+                    ret = sub_type()->u_mode_environment_call_handler();
+                    break;
                 case trap::S_MODE_ENVIRONMENT_CALL:
-                    return sub_type()->s_mode_environment_call_handler();
+                    ret = sub_type()->s_mode_environment_call_handler();
+                    break;
                 case trap::M_MODE_ENVIRONMENT_CALL:
-                    return sub_type()->m_mode_environment_call_handler();
+                    ret = sub_type()->m_mode_environment_call_handler();
+                    break;
                 case trap::INSTRUCTION_PAGE_FAULT:
-                    return sub_type()->instruction_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->instruction_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::LOAD_PAGE_FAULT:
-                    return sub_type()->load_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->load_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 case trap::STORE_AMO_PAGE_FAULT:
-                    return sub_type()->store_amo_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->store_amo_page_fault_handler(csr_reg[CSRRegT::STVAL]);
+                    break;
                 default:
-                    return sub_type()->platformed_specified_trap_handler(csr_reg[CSRRegT::SCAUSE],
-                                                                         csr_reg[CSRRegT::STVAL]);
+                    ret = sub_type()->platformed_specified_trap_handler(csr_reg[CSRRegT::SCAUSE],
+                                                                        csr_reg[CSRRegT::STVAL]);
             }
+
+            return ret;
+        }
+
+        void start() {
+            while (sub_type()->visit() || sub_type()->trap_handler()) {}
         }
     };
 

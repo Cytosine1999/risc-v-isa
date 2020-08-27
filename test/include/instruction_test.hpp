@@ -3,6 +3,7 @@
 
 
 #include "riscv_isa_utility.hpp"
+#include "test.hpp"
 #include "instruction/instruction.hpp"
 #include "instruction/rv32i.hpp"
 #include "instruction/instruction_visitor.hpp"
@@ -39,12 +40,12 @@ namespace riscv_isa {
     public:
         using RetT = void;
 
-        RetT illegal_instruction(riscv_isa_unused Instruction *inst) {
+        RetT illegal_instruction(riscv_isa_unused const Instruction *inst) {
             ASSERT((std::is_same<void, InputT>::value));
         }
 
 #define _riscv_isa_check_instruction(NAME, name) \
-        RetT visit_##name##_inst(riscv_isa_unused NAME##Inst *inst) { \
+        RetT visit_##name##_inst(riscv_isa_unused const NAME##Inst *inst) { \
             ASSERT((std::is_same<NAME##Inst, InputT>::value)); \
         }
         riscv_isa_instruction_map(_riscv_isa_check_instruction)
@@ -92,7 +93,7 @@ namespace riscv_isa {
         for (u16 i = 0; i < 0b100000000000000; i += 5417) {
             u16 val = op_code + (i << 2u);
             auto _inst = reinterpret_cast<Instruction *>(&val);
-            CheckVisitor<void>{}.visit(_inst);
+            CheckVisitor<void>{}.visit_in_memory(_inst, 2);
             check_all_dyn_cast<void>(_inst);
         }
     }
@@ -101,7 +102,7 @@ namespace riscv_isa {
         for (u32 i = 0; i < 0b10000000000000000000000000; i += 999983) {
             u32 val = 0b11u + (op_code << OP_CODE) + (i << 7u);
             auto _inst = reinterpret_cast<Instruction *>(&val);
-            CheckVisitor<void>{}.visit(_inst);
+            CheckVisitor<void>{}.visit_in_memory(_inst, 4);
             check_all_dyn_cast<void>(_inst);
         }
     }
@@ -111,7 +112,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (imm_i << IMM_I);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -125,7 +126,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (imm_i << IMM_I);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
+        CheckVisitor<void>{}.visit_in_memory(_inst, 4);
         check_all_dyn_cast<void>(_inst);
     }
 
@@ -135,7 +136,7 @@ namespace riscv_isa {
                 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) | (rs2 << RS2) |
                 (imm_s_2 << IMM_S_2);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -149,7 +150,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (rs2 << RS2) | (imm_s_2 << IMM_S_2);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
+        CheckVisitor<void>{}.visit_in_memory(_inst, 4);
         check_all_dyn_cast<void>(_inst);
     }
 
@@ -158,7 +159,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (rs2 << RS2) | (imm_s_2 << IMM_S_2);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -174,7 +175,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (imm_s_1 << IMM_S_1) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (rs2 << RS2) | (imm_s_2 << IMM_S_2);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<void>{}.visit(_inst);
+        CheckVisitor<void>{}.visit_in_memory(_inst, 4);
         check_all_dyn_cast<void>(_inst);
     }
 
@@ -183,7 +184,7 @@ namespace riscv_isa {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (funct3 << FUNCT3) | (rs1 << RS1) |
                   (rs2 << RS2) | (funct7 << FUNCT7);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);
@@ -198,7 +199,7 @@ namespace riscv_isa {
     void check_u_type_inst(usize rd, typename xlen_32_trait::UXLenT imm_j) {
         u32 val = 0b11u | (op_code << OP_CODE) | (rd << RD) | (imm_j << IMM_U);
         auto _inst = reinterpret_cast<Instruction *>(&val);
-        CheckVisitor<T>{}.visit(_inst);
+        CheckVisitor<T>{}.visit_in_memory(_inst, 4);
         auto inst = check_all_dyn_cast<T>(_inst);
 
         ASSERT_EQ(inst->get_op_code(), op_code);

@@ -59,156 +59,57 @@ public:
         cur_level = USER_MODE;
     }
 
-    void internal_interrupt_action(UXLenT interrupt, riscv_isa_unused UXLenT trap_value) {
-        csr_reg[CSRRegT::SCAUSE] = interrupt;
-    }
+    template<typename ValT>
+    const ValT *address_load(UXLenT addr) { return mem.template address<ValT>(addr); }
 
     template<typename ValT>
-    RetT mmu_load_int_reg(usize dest, XLenT addr) {
-        ValT *ptr = mem.template address<ValT>(addr);
-        if (ptr == nullptr) {
-            return internal_interrupt(trap::LOAD_PAGE_FAULT, addr);
-        } else {
-            if (dest != 0) set_x(dest, *ptr);
-            return true;
-        }
-    }
+    ValT *address_store(UXLenT addr) { return mem.template address<ValT>(addr); }
 
     template<typename ValT>
-    RetT mmu_store_int_reg(usize src, XLenT addr) {
-        ValT *ptr = mem.template address<ValT>(addr);
-        if (ptr == nullptr) {
-            return internal_interrupt(trap::STORE_AMO_PAGE_FAULT, addr);
-        } else {
-            *ptr = static_cast<ValT>(get_x(src));
-            return true;
-        }
-    }
-
-    template<usize offset>
-    RetT mmu_load_inst_half(XLenT addr) {
-        u16 *ptr = mem.template address<u16>(addr + offset * sizeof(u16));
-        if (ptr == nullptr) {
-            return internal_interrupt(trap::INSTRUCTION_PAGE_FAULT, addr);
-        } else {
-            memcpy(reinterpret_cast<u16 *>(&this->inst_buffer) + offset, ptr, 2);
-            return true;
-        }
-    }
+    const ValT *address_execute(UXLenT addr) { return mem.template address<ValT>(addr); }
 
 #if defined(__RV_EXTENSION_ZICSR__)
 
-    UXLenT get_csr_reg(riscv_isa_unused UXLenT index) { return csr_reg[index]; }
+    UXLenT get_csr_reg(UXLenT index) { return csr_reg[index]; }
 
     RetT set_csr_reg(riscv_isa_unused UXLenT index, riscv_isa_unused UXLenT val) { return true; }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
 
-    RetT visit_fence_inst(riscv_isa_unused FENCEInst *inst) {
+    RetT visit_fence_inst(riscv_isa_unused const FENCEInst *inst) {
         inc_pc(FENCEInst::INST_WIDTH);
         return true;
     }
 
-#if defined(__RV_SUPERVISOR_MODE__)
+    RetT visit_inst(const riscv_isa::Instruction *inst) { return illegal_instruction(inst); }
 
-    RetT visit_sret_inst(riscv_isa_unused SRETInst *inst) { return illegal_instruction(inst); }
+    bool u_mode_environment_call_handler() {
+        bool ret = false;
 
-#endif // defined(__RV_SUPERVISOR_MODE__)
-
-    RetT visit_mret_inst(riscv_isa_unused MRETInst *inst) { return illegal_instruction(inst); }
-
-    RetT visit_wfi_inst(riscv_isa_unused WFIInst *inst) { return illegal_instruction(inst); }
-
-#if defined(__RV_SUPERVISOR_MODE__)
-
-    RetT visit_sfencevma_inst(riscv_isa_unused SFENCEVAMInst *inst) { return illegal_instruction(inst); }
-
-#endif // defined(__RV_SUPERVISOR_MODE__)
-
-    bool system_call() {
         switch (get_x(IntRegT::A0)) {
             case 1:
                 std::cout << std::dec << get_x(IntRegT::A1);
-
-                return true;
+                ret = true;
+                break;
             case 11:
                 std::cout << static_cast<char>(get_x(IntRegT::A1));
-
-                return true;
+                ret = true;
+                break;
             case 10:
                 std::cout << std::endl << "[exit]" << std::endl;
-
-                return false;
+                ret = false;
+                break;
             default:
                 std::cerr << "Invalid enviroment call number at " << std::hex << get_pc()
                           << ", call number " << std::dec << get_x(IntRegT::A7)
                           << std::endl;
-
-                return false;
+                ret = false;
+                break;
         }
-    }
 
-    void start() {
-        while (true) {
-            if (visit()) continue;
+        this->inc_pc(riscv_isa::ECALLInst::INST_WIDTH);
 
-            switch (csr_reg[CSRRegT::SCAUSE]) {
-                case trap::INSTRUCTION_ADDRESS_MISALIGNED:
-                case trap::INSTRUCTION_ACCESS_FAULT:
-                    std::cerr << "Instruction address misaligned at "
-                              << std::hex << get_pc() << std::dec << std::endl;
-
-                    return;
-                case trap::ILLEGAL_INSTRUCTION:
-                    std::cerr << "Illegal instruction at "
-                              << std::hex << get_pc() << ": " << std::dec
-                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
-
-                    return;
-                case trap::BREAKPOINT:
-                    std::cerr << "Break point at " << std::hex << get_pc() << std::dec << std::endl;
-                    inc_pc(ECALLInst::INST_WIDTH);
-
-                    break;
-                case trap::LOAD_ADDRESS_MISALIGNED:
-                case trap::LOAD_ACCESS_FAULT:
-                    std::cerr << "Load address misaligned at "
-                              << std::hex << get_pc() << ": " << std::dec
-                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
-
-                    return;
-                case trap::STORE_AMO_ADDRESS_MISALIGNED:
-                case trap::STORE_AMO_ACCESS_FAULT:
-                    std::cerr << "Store or AMO address misaligned at "
-                              << std::hex << get_pc() << ": " << std::dec
-                              << *reinterpret_cast<Instruction *>(&inst_buffer) << std::endl;
-
-                    return;
-                case trap::U_MODE_ENVIRONMENT_CALL:
-                    if (!system_call()) return;
-                    inc_pc(ECALLInst::INST_WIDTH);
-
-                    break;
-                case trap::S_MODE_ENVIRONMENT_CALL:
-                    riscv_isa_unreachable("no system mode interrupt!");
-                case trap::M_MODE_ENVIRONMENT_CALL:
-                    riscv_isa_unreachable("no machine mode interrupt!");
-                case trap::INSTRUCTION_PAGE_FAULT:
-                    std::cerr << "Instruction page fault at " << std::hex << get_pc() << std::dec << std::endl;
-
-                    return;
-                case trap::LOAD_PAGE_FAULT:
-                    std::cerr << "Load page fault at " << std::hex << get_pc() << std::dec << std::endl;
-
-                    return;
-                case trap::STORE_AMO_PAGE_FAULT:
-                    std::cerr << "Store or AMO page fault at " << std::hex << get_pc() << std::dec << std::endl;
-
-                    return;
-                default:
-                    riscv_isa_unreachable("unknown internal interrupt!");
-            }
-        }
+        return ret;
     }
 };
 
