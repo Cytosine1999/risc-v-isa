@@ -41,31 +41,17 @@ namespace riscv_isa {
         using RetT = RetT_;
 
         RetT visit_in_memory(const Instruction *inst, usize length) {
-            ILenT inst_buffer = 0;
-
-            if (length < 2) {
-                return sub_type()->illegal_instruction(reinterpret_cast<const Instruction *>(&inst_buffer));
-            }
-
-            inst_buffer = *reinterpret_cast<const u16 *>(inst);
-
 #if defined(__RV_EXTENSION_C__)
-            if (is_type<Instruction16>(reinterpret_cast<const Instruction *>(&inst_buffer))) {
-                return this->visit_16(reinterpret_cast<const Instruction16 *>(&inst_buffer));
+            if (length >= 2 && is_type<const Instruction16>(inst)) {
+                return this->visit_16(reinterpret_cast<const Instruction16 *>(inst));
             }
 #endif // defined(__RV_EXTENSION_C__)
 
-            if (length < 4) {
-                return sub_type()->illegal_instruction(reinterpret_cast<const Instruction *>(&inst_buffer));
+            if (length >= 4 && is_type<const Instruction32>(inst)) {
+                return this->visit_32(reinterpret_cast<const Instruction32 *>(inst));
             }
 
-            inst_buffer |= *reinterpret_cast<const u16 *>(reinterpret_cast<const u8 *>(inst) + 2) << 16u;
-
-            if (is_type<Instruction32>(reinterpret_cast<const Instruction *>(&inst_buffer))) {
-                return this->visit_32(reinterpret_cast<const Instruction32 *>(&inst_buffer));
-            }
-
-            return sub_type()->illegal_instruction(reinterpret_cast<const Instruction *>(&inst_buffer));
+            return sub_type()->illegal_instruction(inst);
         }
 
     protected:

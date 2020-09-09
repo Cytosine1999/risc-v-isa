@@ -2,7 +2,6 @@
 #define RISCV_ISA_DUMP_HPP
 
 
-#include <cstring>
 #include <ostream>
 
 #include "riscv_isa_utility.hpp"
@@ -31,19 +30,15 @@ namespace riscv_isa {
             return 0;
         }
 
-#define _riscv_isa_emit_instruction(NAME, name) \
+#define _riscv_isa_dump_instruction(NAME, name) \
         RetT visit_##name##_inst(const NAME##Inst *inst) { return dump_inst(inst); }
 
-        riscv_isa_instruction_map(_riscv_isa_emit_instruction)
+        riscv_isa_instruction_map(_riscv_isa_dump_instruction)
 
-#undef _riscv_isa_emit_instruction
+#undef _riscv_isa_dump_instruction
     };
 
-    std::ostream &operator<<(std::ostream &stream, const Instruction &inst) {
-        Dump dump{stream};
-        dump.visit_in_memory(const_cast<Instruction *>(&inst), RISCV_ILEN / 8);
-        return stream;
-    }
+    std::ostream &operator<<(std::ostream &stream, const Instruction &inst);
 }
 
 

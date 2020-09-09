@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstddef>
 #include <type_traits>
+#include <functional>
 
 
 #if !defined(__RV_BIT_WIDTH__)
@@ -177,7 +178,7 @@ namespace riscv_isa {
         static constexpr usize XLEN = XLEN_BYTE * 8;
         static constexpr usize HALF_WIDTH = XLEN_BYTE / 2;
         static constexpr typename T::UXLenT HALF_MASK = bits_mask<typename T::UXLenT, HALF_WIDTH, 0>::val;
-        static constexpr typename T::XLenT XLenTMin = static_cast<typename T::XLenT>(1u << (XLEN_BYTE - 1));
+        static constexpr typename T::XLenT XLEN_MIN = static_cast<typename T::XLenT>(1u << (XLEN_BYTE - 1));
     };
 
     using xlen_32_trait = _xlen_trait<_xlen_32_trait>;

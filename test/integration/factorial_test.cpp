@@ -1,3 +1,4 @@
+#include <cstring>
 #include <sys/mman.h>
 
 #include "target/hart.hpp"

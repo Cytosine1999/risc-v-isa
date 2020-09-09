@@ -584,7 +584,7 @@ namespace riscv_isa {
 #define riscv_isa_instruction_cflw_cld_map(func) \
     func(CLD, cld)
 #define riscv_isa_instruction_cfsw_csd_map(func) \
-    func(CLD, cld)
+    func(CSD, csd)
 #define riscv_isa_instruction_cflwsp_cldsp_map(func) \
     func(CLDSP, cldsp)
 #define riscv_isa_instruction_cfswsp_csdsp_map(func) \

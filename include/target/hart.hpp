@@ -23,8 +23,8 @@ namespace riscv_isa {
         static constexpr usize XLEN = xlen::XLEN;
 
     private:
-        xlen_trait::XLenT pc;
         IntRegT int_reg;
+        XLenT pc;
 #if defined(__RV_EXTENSION_A__)
         UXLenT reserve_address, reserve_value;
 #endif
@@ -38,67 +38,6 @@ namespace riscv_isa {
             static_assert(std::is_base_of<Hart, SubT>::value, "not subtype of visitor");
 
             return static_cast<SubT *>(this);
-        }
-
-    protected:
-///     these functions are required to be implemented.
-///
-///     void internal_interrupt_action(riscv_isa_unused UXLenT interrupt, riscv_isa_unused UXLenT trap_value) {
-///         riscv_isa_unreachable("internal interrupt action undefined!");
-///     }
-///
-///     if interrupt generates in following three memory related functions, false should be returned and internal
-///     interrupt should be invoked explicitly.
-///
-///     template<typename ValT>
-///     const ValT *address_load(UXLenT addr) {
-///         riscv_isa_unreachable("address load permission undefined!");
-///     }
-///
-///     template<typename ValT>
-///     ValT *address_store(UXLenT addr) {
-///         riscv_isa_unreachable("address store permission undefined!");
-///     }
-///
-///     template<typename ValT>
-///     const ValT *address_execute(UXLenT addr) {
-///         riscv_isa_unreachable("address execute permission undefined!");
-///     }
-
-        void internal_interrupt_action(UXLenT interrupt, UXLenT trap_value) {
-            csr_reg[CSRRegT::SCAUSE] = interrupt;
-            csr_reg[CSRRegT::STVAL] = trap_value;
-        }
-
-        RetT internal_interrupt(UXLenT interrupt, UXLenT trap_value) {
-            sub_type()->internal_interrupt_action(interrupt, trap_value);
-            return false;
-        }
-
-        template<typename OP, typename InstT>
-        RetT operate_reg(const InstT *inst) {
-            typename InstT::UInnerT rd = inst->get_rd();
-            if (rd != 0) {
-                typename InstT::UInnerT rs1 = inst->get_rs1();
-                typename InstT::UInnerT rs2 = inst->get_rs2();
-                set_x(rd, OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2)));
-            }
-            sub_type()->inc_pc(InstT::INST_WIDTH);
-
-            return true;
-        }
-
-        template<typename OP, typename InstT>
-        RetT operate_imm(const InstT *inst) {
-            typename InstT::UInnerT rd = inst->get_rd();
-            if (rd != 0) {
-                typename InstT::UInnerT rs1 = inst->get_rs1();
-                XLenT imm = inst->get_imm();
-                set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
-            }
-            sub_type()->inc_pc(InstT::INST_WIDTH);
-
-            return true;
         }
 
         template<typename OP, typename InstT>
@@ -165,6 +104,32 @@ namespace riscv_isa {
         }
 
         template<typename OP, typename InstT>
+        RetT operate_imm(const InstT *inst) {
+            typename InstT::UInnerT rd = inst->get_rd();
+            if (rd != 0) {
+                typename InstT::UInnerT rs1 = inst->get_rs1();
+                XLenT imm = inst->get_imm();
+                set_x(rd, OP::op(sub_type()->get_x(rs1), imm));
+            }
+            sub_type()->inc_pc(InstT::INST_WIDTH);
+
+            return true;
+        }
+
+        template<typename OP, typename InstT>
+        RetT operate_reg(const InstT *inst) {
+            typename InstT::UInnerT rd = inst->get_rd();
+            if (rd != 0) {
+                typename InstT::UInnerT rs1 = inst->get_rs1();
+                typename InstT::UInnerT rs2 = inst->get_rs2();
+                set_x(rd, OP::op(sub_type()->get_x(rs1), sub_type()->get_x(rs2)));
+            }
+            sub_type()->inc_pc(InstT::INST_WIDTH);
+
+            return true;
+        }
+
+        template<typename OP, typename InstT>
         RetT operate_imm_shift(const InstT *inst) {
             typename InstT::UInnerT rd = inst->get_rd();
             if (rd != 0) {
@@ -178,25 +143,33 @@ namespace riscv_isa {
         }
 
     public:
-        Hart(xlen_trait::UXLenT hart_id, xlen_trait::XLenT pc, IntRegT &reg) :
-                pc{pc}, int_reg{reg},
+        Hart(UXLenT hart_id, XLenT pc, IntRegT &reg) :
+                int_reg{reg}, pc{pc},
 #if defined(__RV_EXTENSION_A__)
                 reserve_address{0}, reserve_value{0},
 #endif
                 csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
 
-        XLenT get_pc() const { return pc; }
-
-        bool jump_to_addr(XLenT val) {
-            pc = val;
-            return true;
-        }
-
-        void inc_pc(XLenT val) { pc += val; }
-
-        XLenT get_x(usize index) const { return int_reg.get_x(index); }
-
-        void set_x(usize index, XLenT val) { int_reg.set_x(index, val); }
+///     these functions are required to be implemented.
+///
+///     if interrupt generates in following three memory related functions,
+///     false should be returned and internal interrupt should be invoked
+///     explicitly.
+///
+///     template<typename ValT>
+///     const ValT *address_load(UXLenT addr) {
+///         riscv_isa_unreachable("address load permission undefined!");
+///     }
+///
+///     template<typename ValT>
+///     ValT *address_store(UXLenT addr) {
+///         riscv_isa_unreachable("address store permission undefined!");
+///     }
+///
+///     template<typename ValT>
+///     const ValT *address_execute(UXLenT addr) {
+///         riscv_isa_unreachable("address execute permission undefined!");
+///     }
 
         RetT visit() {
             ILenT inst_buffer = 0; // zeroing instruction buffer
@@ -233,6 +206,29 @@ namespace riscv_isa {
             }
 
             return sub_type()->illegal_instruction(reinterpret_cast<Instruction *>(&inst_buffer));
+        }
+
+        XLenT get_pc() const { return pc; }
+
+        bool jump_to_addr(XLenT val) {
+            pc = val;
+            return true;
+        }
+
+        void inc_pc(XLenT val) { pc += val; }
+
+        XLenT get_x(usize index) const { return int_reg.get_x(index); }
+
+        void set_x(usize index, XLenT val) { int_reg.set_x(index, val); }
+
+        void internal_interrupt_action(UXLenT interrupt, UXLenT trap_value) {
+            csr_reg[CSRRegT::SCAUSE] = interrupt;
+            csr_reg[CSRRegT::STVAL] = trap_value;
+        }
+
+        RetT internal_interrupt(UXLenT interrupt, UXLenT trap_value) {
+            sub_type()->internal_interrupt_action(interrupt, trap_value);
+            return false;
         }
 
         RetT illegal_instruction(const Instruction *inst) {
@@ -642,11 +638,13 @@ namespace riscv_isa {
 #undef _riscv_isa_set_csr
 
         RetT visit_csrrw_inst(const CSRRWInst *inst) {
-            typename CSRRWInst::UInnerT rd = inst->get_rd();
-            typename CSRRWInst::UInnerT rs1 = inst->get_rs1();
-            typename CSRRWInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRWInst::UInnerT;
 
-            typename SCWInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT rs1 = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) set_x(rd, get_csr(index));
@@ -654,11 +652,13 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrs_inst(const CSRRSInst *inst) {
-            typename CSRRSInst::UInnerT rd = inst->get_rd();
-            typename CSRRSInst::UInnerT rs1 = inst->get_rs1();
-            typename CSRRSInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRSInst::UInnerT;
 
-            typename CSRRSInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT rs1 = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -673,11 +673,13 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrc_inst(const CSRRCInst *inst) {
-            typename CSRRCInst::UInnerT rd = inst->get_rd();
-            typename CSRRCInst::UInnerT rs1 = inst->get_rs1();
-            typename CSRRCInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRCInst::UInnerT;
 
-            typename CSRRCInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT rs1 = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -692,11 +694,13 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrwi_inst(const CSRRWIInst *inst) {
-            typename CSRRWIInst::UInnerT rd = inst->get_rd();
-            typename CSRRWIInst::UInnerT imm = inst->get_rs1();
-            typename CSRRWIInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRWIInst::UInnerT;
 
-            typename CSRRWIInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT imm = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             if (rd != 0) set_x(rd, get_csr(index));
@@ -704,11 +708,13 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrsi_inst(const CSRRSIInst *inst) {
-            typename CSRRSIInst::UInnerT rd = inst->get_rd();
-            typename CSRRSIInst::UInnerT imm = inst->get_rs1();
-            typename CSRRSIInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRSIInst::UInnerT;
 
-            typename CSRRSIInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT imm = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -724,11 +730,13 @@ namespace riscv_isa {
         }
 
         RetT visit_csrrci_inst(const CSRRCIInst *inst) {
-            typename CSRRCIInst::UInnerT rd = inst->get_rd();
-            typename CSRRCIInst::UInnerT imm = inst->get_rs1();
-            typename CSRRCIInst::UInnerT csr = inst->get_csr();
+            using UInnerT = typename CSRRCIInst::UInnerT;
 
-            typename CSRRCIInst::UInnerT index = check_csr(csr);
+            UInnerT rd = inst->get_rd();
+            UInnerT imm = inst->get_rs1();
+            UInnerT csr = inst->get_csr();
+
+            UInnerT index = check_csr(csr);
             if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
 
             UXLenT csr_val = get_csr(index);
@@ -775,7 +783,7 @@ namespace riscv_isa {
                 return true;
             }
 
-            return false;
+            riscv_isa_unreachable("Break point trap at non break point instruction!");
         }
 
         RetT load_address_misaligned_handler(UXLenT addr) {
@@ -898,9 +906,7 @@ namespace riscv_isa {
             return ret;
         }
 
-        void start() {
-            while (sub_type()->visit() || sub_type()->trap_handler()) {}
-        }
+        void start() { while (sub_type()->visit() || sub_type()->trap_handler()) {}}
     };
 
     template<typename SubT, typename xlen>

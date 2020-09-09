@@ -15,7 +15,7 @@
     static constexpr usize XLEN = xlen::XLEN; \
     static constexpr usize HALF_WIDTH = xlen::HALF_WIDTH; \
     static constexpr UXLenT HALF_MASK = xlen::HALF_MASK; \
-    static constexpr XLenT XLenTMin = xlen::XLenTMin
+    static constexpr XLenT XLEN_MIN = xlen::XLEN_MIN
 
 
 namespace riscv_isa {
@@ -189,7 +189,7 @@ namespace riscv_isa {
             
             static XLenT op(XLenT a, XLenT b) {
                 if (b == 0) return -1;
-                else if (a == XLenTMin && b == -1) return XLenTMin;
+                else if (a == XLEN_MIN && b == -1) return XLEN_MIN;
                 return a / b;
             }
         };
@@ -209,7 +209,7 @@ namespace riscv_isa {
             
             static XLenT op(XLenT a, XLenT b) {
                 if (b == 0) return a;
-                else if (a == XLenTMin && b == -1) return 0;
+                else if (a == XLEN_MIN && b == -1) return 0;
                 return a % b;
             }
         };
