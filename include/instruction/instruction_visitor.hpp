@@ -43,12 +43,12 @@ namespace riscv_isa {
         RetT visit_in_memory(const Instruction *inst, usize length) {
 #if defined(__RV_EXTENSION_C__)
             if (length >= 2 && is_type<const Instruction16>(inst)) {
-                return this->visit_16(reinterpret_cast<const Instruction16 *>(inst));
+                return visit_16(reinterpret_cast<const Instruction16 *>(inst));
             }
 #endif // defined(__RV_EXTENSION_C__)
 
             if (length >= 4 && is_type<const Instruction32>(inst)) {
-                return this->visit_32(reinterpret_cast<const Instruction32 *>(inst));
+                return visit_32(reinterpret_cast<const Instruction32 *>(inst));
             }
 
             return sub_type()->illegal_instruction(inst);
@@ -664,7 +664,7 @@ namespace riscv_isa {
         }
 
     public:
-///     this function is required to be implemented if any of visit_##name##_inst function is not being overwritten.
+///     this function is required to be implemented if any of visit_##name##_inst function is not overwritten.
 ///
 ///     RetT visit_inst(riscv_isa_unused const Instruction *inst) {
 ///         riscv_isa_unreachable("Uncaught instruction in visitor definition!");

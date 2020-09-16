@@ -25,12 +25,12 @@ namespace riscv_isa {
     private:
         IntRegT int_reg;
         XLenT pc;
-#if defined(__RV_EXTENSION_A__)
-        UXLenT reserve_address, reserve_value;
-#endif
 
     protected:
         CSRRegT csr_reg;
+#if defined(__RV_EXTENSION_A__)
+        UXLenT reserve_address, reserve_value;
+#endif
         PrivilegeLevel cur_level;
 
     private:
@@ -144,11 +144,11 @@ namespace riscv_isa {
 
     public:
         Hart(UXLenT hart_id, XLenT pc, IntRegT &reg) :
-                int_reg{reg}, pc{pc},
+                int_reg{reg}, pc{pc}, csr_reg{hart_id},
 #if defined(__RV_EXTENSION_A__)
                 reserve_address{0}, reserve_value{0},
 #endif
-                csr_reg{hart_id}, cur_level{MACHINE_MODE} {}
+                cur_level{MACHINE_MODE} {}
 
 ///     these functions are required to be implemented.
 ///
@@ -456,9 +456,9 @@ namespace riscv_isa {
             } else {
                 if (reserve_address == addr &&
                     ptr->compare_exchange_weak(reserve_value, sub_type()->get_x(rs2))) {
-                    set_x(rd, 0);
+                    if (rd != 0) { set_x(rd, 0); }
                 } else {
-                    set_x(rd, 1);
+                    if (rd != 0) { set_x(rd, 1); }
                 }
             }
 
@@ -602,8 +602,11 @@ namespace riscv_isa {
         RetT set_csr(usize index, UXLenT val) { return _set_csr_reg_table[index](this, val); }
 
         usize check_csr(usize num) {
-            if (CSRRegT::get_privilege_bits(num) > cur_level) return CSRRegT::CSR_REGISTER_NUM;
-            else return CSRRegT::get_index(num);
+            if (CSRRegT::get_privilege_bits(num) > cur_level) {
+                return CSRRegT::CSR_REGISTER_NUM;
+            } else {
+            return CSRRegT::get_index(num);
+            }
         }
 
     public:
@@ -645,10 +648,19 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
-            if (rd != 0) set_x(rd, get_csr(index));
-            return set_csr(index, sub_type()->get_x(rs1));
+            if (rd != 0) { set_x(rd, get_csr(index)); }
+
+            if (!set_csr(index, sub_type()->get_x(rs1))) {
+                return illegal_instruction(inst);
+            }
+
+            sub_type()->inc_pc(CSRRWInst::INST_WIDTH);
+
+            return true;
         }
 
         RetT visit_csrrs_inst(const CSRRSInst *inst) {
@@ -659,17 +671,28 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
             UXLenT csr_val = get_csr(index);
             if (rs1 != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
-                if (rd != 0) set_x(rd, csr_val);
-                return set_csr(index, csr_val | sub_type()->get_x(rs1));
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) {
+                    return illegal_instruction(inst);
+                }
+
+                if (rd != 0) { set_x(rd, csr_val); }
+
+                if (!set_csr(index, csr_val | sub_type()->get_x(rs1))) {
+                    return illegal_instruction(inst);
+                }
             } else {
-                if (rd != 0) set_x(rd, csr_val);
-                return true;
+                if (rd != 0) { set_x(rd, csr_val); }
             }
+
+            sub_type()->inc_pc(CSRRSInst::INST_WIDTH);
+
+            return true;
         }
 
         RetT visit_csrrc_inst(const CSRRCInst *inst) {
@@ -680,17 +703,28 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
             UXLenT csr_val = get_csr(index);
             if (rs1 != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
-                if (rd != 0) set_x(rd, csr_val);
-                return set_csr(index, csr_val & ~sub_type()->get_x(rs1));
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) {
+                    return illegal_instruction(inst);
+                }
+
+                if (rd != 0) { set_x(rd, csr_val); }
+
+                if (!set_csr(index, csr_val & ~sub_type()->get_x(rs1))) {
+                    return illegal_instruction(inst);
+                }
             } else {
-                if (rd != 0) set_x(rd, csr_val);
-                return true;
+                if (rd != 0) { set_x(rd, csr_val); }
             }
+
+            sub_type()->inc_pc(CSRRCInst::INST_WIDTH);
+
+            return true;
         }
 
         RetT visit_csrrwi_inst(const CSRRWIInst *inst) {
@@ -701,10 +735,19 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
-            if (rd != 0) set_x(rd, get_csr(index));
-            return set_csr(index, imm);
+            if (rd != 0) { set_x(rd, get_csr(index)); }
+
+            if (!set_csr(index, imm)) {
+                return illegal_instruction(inst);
+            }
+
+            sub_type()->inc_pc(CSRRWIInst::INST_WIDTH);
+
+            return true;
         }
 
         RetT visit_csrrsi_inst(const CSRRSIInst *inst) {
@@ -715,18 +758,29 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
             UXLenT csr_val = get_csr(index);
 
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
-                if (rd != 0) set_x(rd, csr_val);
-                return set_csr(index, csr_val | imm);
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) {
+                    return illegal_instruction(inst);
+                }
+
+                if (rd != 0) { set_x(rd, csr_val); }
+
+                if (!set_csr(index, csr_val | imm)) {
+                    return illegal_instruction(inst);
+                }
             } else {
-                if (rd != 0) set_x(rd, csr_val);
-                return true;
+                if (rd != 0) { set_x(rd, csr_val); }
             }
+
+            sub_type()->inc_pc(CSRRSIInst::INST_WIDTH);
+
+            return true;
         }
 
         RetT visit_csrrci_inst(const CSRRCIInst *inst) {
@@ -737,17 +791,28 @@ namespace riscv_isa {
             UInnerT csr = inst->get_csr();
 
             UInnerT index = check_csr(csr);
-            if (index >= CSRRegT::CSR_REGISTER_NUM) return illegal_instruction(inst);
+            if (index >= CSRRegT::CSR_REGISTER_NUM) {
+                return illegal_instruction(inst);
+            }
 
             UXLenT csr_val = get_csr(index);
             if (imm != 0) {
-                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) return illegal_instruction(inst);
-                set_x(rd, csr_val);
-                return set_csr(index, csr_val & ~imm);
+                if (CSRRegT::get_read_write_bits(csr) == CSRRegT::READ_ONLY_BITS) {
+                    return illegal_instruction(inst);
+                }
+
+                if (rd != 0) { set_x(rd, csr_val); }
+
+                if (!set_csr(index, csr_val & ~imm)) {
+                    return illegal_instruction(inst);
+                }
             } else {
-                set_x(rd, csr_val);
-                return true;
+                if (rd != 0) { set_x(rd, csr_val); }
             }
+
+            sub_type()->inc_pc(CSRRCIInst::INST_WIDTH);
+
+            return true;
         }
 
 #endif // defined(__RV_EXTENSION_ZICSR__)
