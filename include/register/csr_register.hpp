@@ -237,7 +237,9 @@ namespace riscv_isa {
 
         static usize get_read_write_bits(usize num) { return get_bits<usize, 12, 10>(num); }
 
-        static usize get_privilege_bits(usize num) { return get_bits<usize, 10, 8>(num); }
+        static PrivilegeLevel get_privilege_bits(usize num) {
+            return static_cast<PrivilegeLevel>(get_bits<usize, 10, 8>(num));
+        }
 
         CSRRegister(xlen_trait::UXLenT hart_id) { init_csr(hart_id); }
 

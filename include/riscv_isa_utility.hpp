@@ -251,7 +251,7 @@ namespace riscv_isa {
     template<typename T, typename U>
     T *dyn_cast(U *self) { return is_type<T>(self) ? reinterpret_cast<T *>(self) : nullptr; }
 
-    enum PrivilegeLevel : u8 {
+    enum class PrivilegeLevel : u8 {
 #if defined(__RV_USER_MODE__)
         USER_MODE = 0b00,
 #endif
@@ -261,11 +261,11 @@ namespace riscv_isa {
         MACHINE_MODE = 0b11,
     };
 
-    static constexpr xlen_trait::UXLenT R_BIT = 2;
-    static constexpr xlen_trait::UXLenT W_BIT = 4;
-    static constexpr xlen_trait::UXLenT X_BIT = 8;
+    static constexpr u8 R_BIT = 2;
+    static constexpr u8 W_BIT = 4;
+    static constexpr u8 X_BIT = 8;
 
-    enum MemoryProtection : xlen_trait::UXLenT {
+    enum class MemoryProtection : u8 {
         NOT_PRESENT = 0,
         READ = R_BIT,
         READ_WRITE = R_BIT | W_BIT,

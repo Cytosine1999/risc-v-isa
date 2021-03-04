@@ -57,7 +57,7 @@ protected:
 
 public:
     NoneHart(UXLenT hart_id, XLenT pc, IntRegT &reg, MemT &mem) : Hart{hart_id, pc, reg}, mem{mem} {
-        cur_level = USER_MODE;
+        cur_level = PrivilegeLevel::USER_MODE;
     }
 
     template<typename ValT>
